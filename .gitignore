@@ -1,0 +1,54 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies and Build Artifacts
+node_modules
+dist
+dist-ssr
+build
+out
+coverage
+*.local
+
+# Environment Configuration
+.env # <-- Added this line to ignore the environment variable file!
+
+# Modern Build Tool Artifacts (e.g., Vite, Webpack, Babel)
+.vite
+.parcel-cache
+.nuxt
+.next
+.svelte-kit
+.docusaurus
+
+# Package Manager Caches and Lock Files
+.npm
+.yarn
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Editor directories and files
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Other IDEs/OS
+.idea
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
