@@ -19,6 +19,7 @@ CREATE TYPE public.payment_method_type AS ENUM ('manual', 'gateway', 'offline');
 CREATE TABLE public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
+  email TEXT,
   phone TEXT,
   phone_verified BOOLEAN DEFAULT false,
   address JSONB,
@@ -186,10 +187,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, name)
+  INSERT INTO public.profiles (id, name, email)
   VALUES (
     new.id,
-    COALESCE(new.raw_user_meta_data->>'name', '')
+    COALESCE(new.raw_user_meta_data->>'name', ''),
+    new.email
   );
   
   INSERT INTO public.user_roles (user_id, role)

@@ -51,7 +51,7 @@ const AdminUsers = () => {
 
       const usersWithRoles = profiles?.map(profile => ({
         ...profile,
-        email: `user-${profile.id.slice(0, 8)}@example.com`, // Placeholder since email not in profiles
+        email: profile.email || 'No email', // Use email from profiles table
         roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || []
       })) || [];
 
