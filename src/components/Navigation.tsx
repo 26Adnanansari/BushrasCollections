@@ -90,7 +90,7 @@ const Navigation = () => {
             <Button variant="ghost" size="icon" className="hover:bg-accent">
               <Search className="h-5 w-5" />
             </Button>
-            
+
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -137,7 +137,7 @@ const Navigation = () => {
                 Sign In
               </Button>
             )}
-            
+
             <CartDrawer>
               <Button variant="ghost" size="icon" className="hover:bg-accent">
                 <ShoppingBag className="h-5 w-5" />
@@ -162,7 +162,7 @@ const Navigation = () => {
         <div
           className={cn(
             "md:hidden transition-all duration-300 ease-in-out overflow-hidden",
-            isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+            isMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100 overflow-y-auto" : "max-h-0 opacity-0"
           )}
         >
           <div className="py-4 space-y-4">
@@ -191,7 +191,7 @@ const Navigation = () => {
               <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
                 <Search className="h-5 w-5" />
               </Button>
-              
+
               {user ? (
                 <div className="flex flex-col space-y-2">
                   <div className="flex items-center space-x-2 p-2">
@@ -217,7 +217,7 @@ const Navigation = () => {
                   Sign In
                 </Button>
               )}
-              
+
               <CartDrawer>
                 <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
                   <ShoppingBag className="h-5 w-5" />

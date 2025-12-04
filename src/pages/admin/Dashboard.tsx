@@ -139,13 +139,13 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/hero-slider')}
                   className="w-full"
                 >
                   Manage Slider
                 </Button>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/hero-slider')}
                   className="w-full"
                   variant="destructive"
@@ -164,17 +164,17 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/products')}
                   className="w-full"
                   variant="outline"
                 >
                   Manage Products
                 </Button>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/products')}
-                  className="w-full"
-                  variant="destructive"
+                  className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  variant="ghost"
                   size="sm"
                 >
                   Delete All Products
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/orders')}
                   className="w-full"
                   variant="outline"
@@ -208,7 +208,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/users')}
                   className="w-full"
                   variant="outline"
@@ -226,7 +226,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/analytics')}
                   className="w-full"
                   variant="outline"
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/team')}
                   className="w-full"
                   variant="outline"
@@ -262,7 +262,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/payment-methods')}
                   className="w-full"
                   variant="outline"
@@ -280,7 +280,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => navigate('/admin/banners')}
                   className="w-full"
                   variant="outline"

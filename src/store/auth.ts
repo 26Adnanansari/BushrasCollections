@@ -23,7 +23,7 @@ export const useAuthStore = create<AuthState>()(
       session: null,
       loading: true,
       initialized: false,
-      
+
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
       setLoading: (loading) => set({ loading }),
@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>()(
       initialize: async () => {
         // Always initialize to ensure fresh auth state
         set({ loading: true, initialized: false });
-        
+
         try {
           // Helper function to fetch user with roles
           const fetchUserWithRoles = async (userId: string) => {
@@ -48,9 +48,9 @@ export const useAuthStore = create<AuthState>()(
                   .select('role')
                   .eq('user_id', userId)
               ]);
-              
+
               const roles = rolesResult.data?.map(r => r.role) || [];
-              
+
               return {
                 profile: profileResult.data,
                 roles
@@ -62,16 +62,18 @@ export const useAuthStore = create<AuthState>()(
 
           // Set up auth state listener
           supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'TOKEN_REFRESHED') return;
+
             set({ session, loading: true }); // KEEP loading true until roles are fetched
-            
+
             if (session?.user) {
               // Fetch profile and roles - must use setTimeout to avoid deadlock
               setTimeout(async () => {
                 const { profile, roles } = await fetchUserWithRoles(session.user.id);
-                
-                set({ 
-                  user: { 
-                    ...session.user, 
+
+                set({
+                  user: {
+                    ...session.user,
                     profile,
                     roles
                   } as AuthUser,
@@ -85,14 +87,14 @@ export const useAuthStore = create<AuthState>()(
 
           // Check for existing session
           const { data: { session } } = await supabase.auth.getSession();
-          
+
           if (session?.user) {
             set({ session, loading: true });
             const { profile, roles } = await fetchUserWithRoles(session.user.id);
-            
-            set({ 
-              user: { 
-                ...session.user, 
+
+            set({
+              user: {
+                ...session.user,
                 profile,
                 roles
               } as AuthUser,
@@ -109,7 +111,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         // Don't persist session, loading, or initialized - always start fresh
         user: state.user
       }),

@@ -254,11 +254,27 @@ const AdminProducts = () => {
         });
       } else {
         console.error('Error saving product:', error);
-        toast({
-          title: "Error",
-          description: "Failed to save product",
-          variant: "destructive"
-        });
+
+        // Check for specific Supabase errors
+        if ((error as any)?.code === '42703') { // Undefined column
+          toast({
+            title: "Database Schema Error",
+            description: "The database is missing required columns. Please run the migration script.",
+            variant: "destructive"
+          });
+        } else if ((error as any)?.code === '23505') { // Unique violation
+          toast({
+            title: "Duplicate Error",
+            description: "A product with this SKU already exists.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: (error as any)?.message || "Failed to save product",
+            variant: "destructive"
+          });
+        }
       }
     }
   };
@@ -316,7 +332,7 @@ const AdminProducts = () => {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ is_active: !product.is_active })
+        .update({ is_active: !product.is_active } as any)
         .eq('id', product.id);
 
       if (error) throw error;
