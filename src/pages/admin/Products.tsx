@@ -9,9 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, ArrowLeft, Upload, Download, Info } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowLeft, Upload, Download, Info, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
@@ -23,18 +25,40 @@ import { productSchema } from "@/schemas/productSchema";
 
 interface Product {
   id: string;
+  sku: string | null;
   name: string;
   description: string;
   price: number;
-  list_price: number;
+  list_price: number | null;
   category: string;
   brand: string;
   stock_quantity: number;
   is_active: boolean;
-  is_published: boolean;
-  images: any;
+  image_url: string | null;
+  // NEW BOUTIQUE FIELDS
+  fabric_type?: string | null;
+  available_sizes?: string[] | null;
+  available_colors?: string[] | null;
+  care_instructions?: string | null;
+  occasion_type?: string | null;
+  embellishment?: string | null;
   created_at: string;
 }
+
+const CATEGORIES = [
+  'Formal Dress',
+  'Casual Dress',
+  'Bridal Wear',
+  'Party Wear',
+  'Traditional Wear',
+  'Accessories',
+  'Footwear',
+];
+
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+const FABRIC_TYPES = ['Cotton', 'Silk', 'Chiffon', 'Georgette', 'Velvet', 'Satin', 'Lawn', 'Karandi'];
+const OCCASIONS = ['Wedding', 'Party', 'Casual', 'Formal', 'Eid', 'Mehendi', 'Walima'];
+const EMBELLISHMENTS = ['Embroidery', 'Sequins', 'Plain', 'Beadwork', 'Stone Work', 'Thread Work'];
 
 const AdminProducts = () => {
   const { user } = useAuthStore();
@@ -45,15 +69,22 @@ const AdminProducts = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
+    sku: '',
     name: '',
     description: '',
     price: '',
     list_price: '',
     category: '',
-    brand: 'Bushra\'s Collection',
+    brand: "Bushra's Collection",
     stock_quantity: '0',
-    is_published: true,
-    initial_review_count: '0',
+    is_active: true,
+    // NEW BOUTIQUE FIELDS
+    fabric_type: '',
+    available_sizes: [] as string[],
+    available_colors: [] as string[],
+    care_instructions: '',
+    occasion_type: '',
+    embellishment: '',
   });
   const [productImages, setProductImages] = useState<string[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -80,15 +111,21 @@ const AdminProducts = () => {
       const draft = loadDraft();
       if (draft) {
         setFormData({
+          sku: draft.sku || '',
           name: draft.name || '',
           description: draft.description || '',
           price: draft.price || '',
           list_price: draft.list_price || '',
           category: draft.category || '',
-          brand: draft.brand || 'Bushra\'s Collection',
+          brand: draft.brand || "Bushra's Collection",
           stock_quantity: draft.stock_quantity || '0',
-          is_published: draft.is_published ?? true,
-          initial_review_count: draft.initial_review_count || '0',
+          is_active: draft.is_active ?? true,
+          fabric_type: draft.fabric_type || '',
+          available_sizes: draft.available_sizes || [],
+          available_colors: draft.available_colors || [],
+          care_instructions: draft.care_instructions || '',
+          occasion_type: draft.occasion_type || '',
+          embellishment: draft.embellishment || '',
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -130,13 +167,20 @@ const AdminProducts = () => {
 
     try {
       const validatedData = productSchema.parse({
+        sku: formData.sku || undefined,
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        list_price: parseFloat(formData.list_price),
-        category: formData.category,
+        list_price: formData.list_price ? parseFloat(formData.list_price) : undefined,
+        category: formData.category === '__custom__' ? formData.category : formData.category,
         brand: formData.brand,
         stock_quantity: parseInt(formData.stock_quantity),
+        fabric_type: formData.fabric_type || undefined,
+        available_sizes: formData.available_sizes.length > 0 ? formData.available_sizes : undefined,
+        available_colors: formData.available_colors.length > 0 ? formData.available_colors : undefined,
+        care_instructions: formData.care_instructions || undefined,
+        occasion_type: formData.occasion_type || undefined,
+        embellishment: formData.embellishment || undefined,
       });
 
       if (productImages.length === 0) {
@@ -150,13 +194,11 @@ const AdminProducts = () => {
 
       const productData = {
         ...validatedData,
-        images: productImages,
-        is_published: formData.is_published,
-        initial_review_count: parseInt(formData.initial_review_count) || 0
+        image_url: productImages[0], // Use first image as primary
+        is_active: formData.is_active,
       };
 
       if (editingProduct) {
-        // Update existing product
         const { error } = await supabase
           .from('products')
           .update(productData)
@@ -169,7 +211,6 @@ const AdminProducts = () => {
           description: "Product updated successfully"
         });
       } else {
-        // Create new product
         const { error } = await supabase
           .from('products')
           .insert([productData]);
@@ -186,15 +227,21 @@ const AdminProducts = () => {
       setIsDialogOpen(false);
       setEditingProduct(null);
       setFormData({
+        sku: '',
         name: '',
         description: '',
         price: '',
         list_price: '',
         category: '',
-        brand: 'Bushra\'s Collection',
+        brand: "Bushra's Collection",
         stock_quantity: '0',
-        is_published: true,
-        initial_review_count: '0',
+        is_active: true,
+        fabric_type: '',
+        available_sizes: [],
+        available_colors: [],
+        care_instructions: '',
+        occasion_type: '',
+        embellishment: '',
       });
       setProductImages([]);
       fetchProducts();
@@ -219,17 +266,23 @@ const AdminProducts = () => {
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
+      sku: product.sku || '',
       name: product.name,
       description: product.description,
       price: product.price.toString(),
       list_price: product.list_price?.toString() || '',
       category: product.category,
       brand: product.brand,
-      stock_quantity: product.stock_quantity.toString(),
-      is_published: product.is_published ?? true,
-      initial_review_count: (product as any).initial_review_count?.toString() || '0',
+      stock_quantity: product.stock_quantity?.toString() || '0',
+      is_active: product.is_active ?? true,
+      fabric_type: product.fabric_type || '',
+      available_sizes: product.available_sizes || [],
+      available_colors: product.available_colors || [],
+      care_instructions: product.care_instructions || '',
+      occasion_type: product.occasion_type || '',
+      embellishment: product.embellishment || '',
     });
-    setProductImages(Array.isArray(product.images) ? product.images : []);
+    setProductImages(product.image_url ? [product.image_url] : []);
     setIsDialogOpen(true);
   };
 
@@ -260,11 +313,27 @@ const AdminProducts = () => {
   };
 
   const toggleActive = async (product: Product) => {
-    toast({
-      title: "Feature Unavailable",
-      description: "Product activation toggle is not available in the current database schema",
-      variant: "default"
-    });
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_active: !product.is_active })
+        .eq('id', product.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Product ${!product.is_active ? 'activated' : 'deactivated'} successfully`
+      });
+      fetchProducts();
+    } catch (error) {
+      console.error('Error updating product status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update product status",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleCsvUpload = async () => {
@@ -280,7 +349,7 @@ const AdminProducts = () => {
     setUploading(true);
     try {
       const Papa = await import('papaparse');
-      
+
       Papa.parse(csvFile, {
         header: true,
         skipEmptyLines: true,
@@ -291,32 +360,30 @@ const AdminProducts = () => {
 
             for (let i = 0; i < results.data.length; i++) {
               const row: any = results.data[i];
-              
+
               // Validate each row using same schema as manual form
               try {
                 const validated = productSchema.parse({
+                  sku: row.sku?.trim() || undefined,
                   name: row.name?.trim(),
                   description: row.description?.trim(),
                   price: parseFloat(row.price),
                   list_price: row.list_price && row.list_price.trim() !== '' ? parseFloat(row.list_price) : undefined,
                   brand: row.brand?.trim(),
                   category: row.category?.trim(),
-                  stock_quantity: parseInt(row.stock_quantity || '0')
+                  stock_quantity: parseInt(row.stock_quantity || '0'),
+                  fabric_type: row.fabric_type?.trim() || undefined,
+                  available_sizes: row.available_sizes ? row.available_sizes.split(',').map((s: string) => s.trim()) : undefined,
+                  available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()) : undefined,
+                  care_instructions: row.care_instructions?.trim() || undefined,
+                  occasion_type: row.occasion_type?.trim() || undefined,
+                  embellishment: row.embellishment?.trim() || undefined,
                 });
 
                 validProducts.push({
-                  name: validated.name,
-                  description: validated.description,
-                  price: validated.price,
-                  list_price: validated.list_price,
-                  brand: validated.brand,
-                  category: validated.category,
-                  stock_quantity: validated.stock_quantity,
-                  images: row.image_url ? [row.image_url.trim()] : [],
+                  ...validated,
+                  image_url: row.image_url?.trim() || null,
                   is_active: row.is_active?.toLowerCase() !== 'false',
-                  is_published: row.is_active?.toLowerCase() !== 'false',
-                  is_featured: false,
-                  initial_review_count: 0
                 });
               } catch (error: any) {
                 errors.push(`Row ${i + 2}: ${error.errors?.[0]?.message || 'Invalid data'}`);
@@ -346,7 +413,7 @@ const AdminProducts = () => {
             // Insert products directly via Supabase client
             const { error } = await supabase
               .from('products')
-              .insert(validProducts);
+              .insert(validProducts as any);
 
             if (error) throw error;
 
@@ -389,13 +456,13 @@ const AdminProducts = () => {
   };
 
   const downloadSampleCsv = () => {
-    const headers = ['name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity', 'image_url', 'is_active'];
+    const headers = ['name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity', 'image_url', 'is_active', 'sku', 'fabric_type', 'available_sizes', 'available_colors', 'occasion_type', 'care_instructions', 'embellishment'];
+
     const sampleData = [
-      ['Summer Dress', 'Beautiful floral summer dress perfect for warm weather occasions', '2999', '3499', 'Fashion Brand', 'Women', '10', 'https://example.com/image.jpg', 'true'],
-      ['Casual Shirt', 'Comfortable cotton casual shirt for everyday wear', '1499', '1799', 'Style Co', 'Men', '15', 'https://example.com/shirt.jpg', 'true'],
-      ['Kids T-Shirt', 'Soft cotton t-shirt for children', '799', '', "Bushra's Collection", 'Kids', '20', 'https://example.com/kids-tshirt.jpg', 'true']
+      ['Summer Dress', 'Beautiful floral summer dress', '2999', '3499', 'Fashion Brand', 'Formal Dress', '10', 'https://example.com/image.jpg', 'true', 'SKU-FO-12345', 'Cotton', 'S,M,L', 'Red,Blue', 'Party', 'Dry clean only', 'Embroidery'],
+      ['Casual Shirt', 'Comfortable cotton casual shirt', '1499', '1799', 'Style Co', 'Casual Dress', '15', 'https://example.com/shirt.jpg', 'true', '', 'Silk', 'M,L,XL', 'White,Black', 'Casual', 'Hand wash', 'Plain'],
     ];
-    
+
     const csv = [headers, ...sampleData].map(row => row.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -439,15 +506,21 @@ const AdminProducts = () => {
                   <Button onClick={() => {
                     setEditingProduct(null);
                     setFormData({
+                      sku: '',
                       name: '',
                       description: '',
                       price: '',
                       list_price: '',
                       category: '',
-                      brand: 'Bushra\'s Collection',
+                      brand: "Bushra's Collection",
                       stock_quantity: '0',
-                      is_published: true,
-                      initial_review_count: '0',
+                      is_active: true,
+                      fabric_type: '',
+                      available_sizes: [],
+                      available_colors: [],
+                      care_instructions: '',
+                      occasion_type: '',
+                      embellishment: '',
                     });
                     setProductImages([]);
                   }}>
@@ -469,6 +542,21 @@ const AdminProducts = () => {
 
                   <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
+                      {/* 1. SKU CODE (Auto-generated) */}
+                      <div>
+                        <Label htmlFor="sku">SKU Code (Auto-generated if empty)</Label>
+                        <Input
+                          id="sku"
+                          value={formData.sku}
+                          onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                          placeholder="Leave empty for auto-generation"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Format: SKU-{'{CATEGORY}'}-{'{5_DIGITS}'} (e.g., SKU-FO-10293)
+                        </p>
+                      </div>
+
+                      {/* 2. PRODUCT NAME */}
                       <div>
                         <Label htmlFor="name">Product Name *</Label>
                         <Input
@@ -479,17 +567,33 @@ const AdminProducts = () => {
                         />
                       </div>
 
+                      {/* 3. CATEGORY (Dropdown) */}
                       <div>
                         <Label htmlFor="category">Category *</Label>
-                        <Input
-                          id="category"
+                        <Select
                           value={formData.category}
-                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                          placeholder="e.g., Dress, Jewelry, Accessories"
-                          required
-                        />
+                          onValueChange={(value) => setFormData({ ...formData, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                            <SelectItem value="__custom__">Custom Category...</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {formData.category === '__custom__' && (
+                          <Input
+                            className="mt-2"
+                            placeholder="Enter custom category"
+                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                          />
+                        )}
                       </div>
 
+                      {/* 4. PRICES */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="price">Sale Price (PKR) *</Label>
@@ -502,7 +606,6 @@ const AdminProducts = () => {
                             required
                           />
                         </div>
-
                         <div>
                           <Label htmlFor="list_price">List Price (PKR) (Optional)</Label>
                           <Input
@@ -511,11 +614,12 @@ const AdminProducts = () => {
                             step="0.01"
                             value={formData.list_price}
                             onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
-                            placeholder="Original price for discount display"
+                            placeholder="Original price"
                           />
                         </div>
                       </div>
 
+                      {/* 5. STOCK */}
                       <div>
                         <Label htmlFor="stock_quantity">Stock Quantity *</Label>
                         <Input
@@ -527,6 +631,7 @@ const AdminProducts = () => {
                         />
                       </div>
 
+                      {/* 6. BRAND */}
                       <div>
                         <Label htmlFor="brand">Brand *</Label>
                         <Input
@@ -537,21 +642,7 @@ const AdminProducts = () => {
                         />
                       </div>
 
-                      <div>
-                        <Label htmlFor="initial_review_count">Legacy Review Count</Label>
-                        <Input
-                          id="initial_review_count"
-                          type="number"
-                          min="0"
-                          value={formData.initial_review_count || '0'}
-                          onChange={(e) => setFormData({ ...formData, initial_review_count: e.target.value })}
-                          placeholder="Reviews from past 20 years"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Enter existing review count from your legacy system
-                        </p>
-                      </div>
-
+                      {/* 7. PRODUCT IMAGES */}
                       <ImageUpload
                         images={productImages}
                         onChange={setProductImages}
@@ -559,6 +650,7 @@ const AdminProducts = () => {
                         maxSizeMB={1}
                       />
 
+                      {/* 8. DESCRIPTION */}
                       <div>
                         <Label htmlFor="description">Description *</Label>
                         <Textarea
@@ -568,18 +660,152 @@ const AdminProducts = () => {
                           rows={3}
                           required
                         />
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData({
+                              ...formData,
+                              description: `Elegant ${formData.name} perfect for special occasions`
+                            })}
+                          >
+                            Use Template
+                          </Button>
+                        </div>
                       </div>
 
+                      {/* 9. BOUTIQUE DETAILS (Collapsible) */}
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <Button type="button" variant="outline" className="w-full">
+                            <ChevronDown className="h-4 w-4 mr-2" />
+                            Additional Boutique Details (Optional)
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-4 mt-4">
+                          {/* Fabric Type */}
+                          <div>
+                            <Label htmlFor="fabric_type">Fabric Type</Label>
+                            <Select
+                              value={formData.fabric_type}
+                              onValueChange={(value) => setFormData({ ...formData, fabric_type: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select fabric" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {FABRIC_TYPES.map((fabric) => (
+                                  <SelectItem key={fabric} value={fabric}>{fabric}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Available Sizes */}
+                          <div>
+                            <Label>Available Sizes</Label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {SIZES.map((size) => (
+                                <div key={size} className="flex items-center">
+                                  <Checkbox
+                                    id={`size-${size}`}
+                                    checked={formData.available_sizes.includes(size)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setFormData({
+                                          ...formData,
+                                          available_sizes: [...formData.available_sizes, size]
+                                        });
+                                      } else {
+                                        setFormData({
+                                          ...formData,
+                                          available_sizes: formData.available_sizes.filter(s => s !== size)
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <Label htmlFor={`size-${size}`} className="ml-1">{size}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Available Colors */}
+                          <div>
+                            <Label htmlFor="available_colors">Available Colors</Label>
+                            <Input
+                              id="available_colors"
+                              placeholder="e.g., Red, Blue, Green (comma-separated)"
+                              value={formData.available_colors.join(', ')}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                available_colors: e.target.value.split(',').map(c => c.trim()).filter(Boolean)
+                              })}
+                            />
+                          </div>
+
+                          {/* Occasion Type */}
+                          <div>
+                            <Label htmlFor="occasion_type">Occasion Type</Label>
+                            <Select
+                              value={formData.occasion_type}
+                              onValueChange={(value) => setFormData({ ...formData, occasion_type: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select occasion" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {OCCASIONS.map((occasion) => (
+                                  <SelectItem key={occasion} value={occasion}>{occasion}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Embellishment */}
+                          <div>
+                            <Label htmlFor="embellishment">Embellishment</Label>
+                            <Select
+                              value={formData.embellishment}
+                              onValueChange={(value) => setFormData({ ...formData, embellishment: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select embellishment" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {EMBELLISHMENTS.map((emb) => (
+                                  <SelectItem key={emb} value={emb}>{emb}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Care Instructions */}
+                          <div>
+                            <Label htmlFor="care_instructions">Care Instructions</Label>
+                            <Textarea
+                              id="care_instructions"
+                              value={formData.care_instructions}
+                              onChange={(e) => setFormData({ ...formData, care_instructions: e.target.value })}
+                              rows={2}
+                              placeholder="e.g., Dry clean only, Hand wash recommended"
+                            />
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+
+                      {/* 10. PUBLISH CHECKBOX */}
                       <div className="flex items-center space-x-2">
                         <Checkbox
-                          id="is_published"
-                          checked={formData.is_published}
-                          onCheckedChange={(checked) => 
-                            setFormData({ ...formData, is_published: checked as boolean })
+                          id="is_active"
+                          checked={formData.is_active}
+                          onCheckedChange={(checked) =>
+                            setFormData({ ...formData, is_active: checked as boolean })
                           }
                         />
-                        <Label 
-                          htmlFor="is_published"
+                        <Label
+                          htmlFor="is_active"
                           className="text-sm font-normal cursor-pointer"
                         >
                           Publish this product (uncheck to save as draft)
@@ -635,8 +861,8 @@ const AdminProducts = () => {
                         {products.map((product) => (
                           <TableRow key={product.id}>
                             <TableCell>
-                              <img 
-                                src={Array.isArray(product.images) && product.images[0] || '/placeholder.svg'} 
+                              <img
+                                src={product.image_url || '/placeholder.svg'}
                                 alt={product.name}
                                 className="w-12 h-12 object-cover rounded"
                               />
@@ -654,9 +880,6 @@ const AdminProducts = () => {
                                 >
                                   {product.is_active ? "Active" : "Inactive"}
                                 </Badge>
-                                {!product.is_published && (
-                                  <Badge variant="outline">Draft</Badge>
-                                )}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -732,6 +955,13 @@ const AdminProducts = () => {
                           <li><strong>stock_quantity*</strong> (required, integer ≥ 0) - Available quantity</li>
                           <li><strong>image_url*</strong> (required) - Single image URL</li>
                           <li><strong>is_active</strong> (optional, true/false) - Product visibility (defaults to true)</li>
+                          <li><strong>sku</strong> (optional) - SKU Code</li>
+                          <li><strong>fabric_type</strong> (optional) - Fabric Type</li>
+                          <li><strong>available_sizes</strong> (optional) - Comma separated sizes (e.g. S,M,L)</li>
+                          <li><strong>available_colors</strong> (optional) - Comma separated colors</li>
+                          <li><strong>occasion_type</strong> (optional) - Occasion Type</li>
+                          <li><strong>care_instructions</strong> (optional) - Care Instructions</li>
+                          <li><strong>embellishment</strong> (optional) - Embellishment details</li>
                         </ul>
                         <p className="text-xs text-amber-600 mt-3">
                           ⚠️ Validation rules match manual form exactly. All required fields must be filled.

@@ -1,6 +1,7 @@
 -- ============================================
 -- BUSHRAS COLLECTION - COMPLETE DATABASE SCHEMA
 -- Single consolidated migration for fresh database setup
+-- WITH BOUTIQUE ENHANCEMENTS
 -- ============================================
 
 -- ============================================
@@ -35,19 +36,27 @@ CREATE TABLE public.user_roles (
   UNIQUE(user_id, role)
 );
 
--- Products table
+-- Products table (WITH BOUTIQUE ENHANCEMENTS)
 CREATE TABLE public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sku TEXT UNIQUE,
   name TEXT NOT NULL,
   description TEXT,
   price NUMERIC(10,2) NOT NULL,
   list_price NUMERIC(10,2),
-  brand TEXT,
+  brand TEXT NOT NULL,
   image_url TEXT,
-  category TEXT,
+  category TEXT NOT NULL,
   stock INTEGER DEFAULT 0,
   is_featured BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
+  -- Boutique-specific fields (all optional)
+  fabric_type TEXT,
+  available_sizes JSONB DEFAULT '[]'::jsonb,
+  available_colors JSONB DEFAULT '[]'::jsonb,
+  care_instructions TEXT,
+  occasion_type TEXT,
+  embellishment TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -204,6 +213,24 @@ BEGIN
 END;
 $$;
 
+-- Auto-generate SKU if not provided
+CREATE OR REPLACE FUNCTION public.generate_sku()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.sku IS NULL OR NEW.sku = '' THEN
+    NEW.sku := CONCAT(
+      'SKU-',
+      UPPER(SUBSTRING(COALESCE(NEW.category, 'GEN'), 1, 2)),
+      '-',
+      LPAD(CAST(FLOOR(RANDOM() * 99999) AS TEXT), 5, '0')
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
 -- ============================================
 -- 5. CREATE TRIGGERS
 -- ============================================
@@ -244,6 +271,12 @@ CREATE TRIGGER set_updated_at
   BEFORE UPDATE ON public.promotional_banners
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
+
+-- Trigger to auto-generate SKU
+CREATE TRIGGER generate_product_sku
+  BEFORE INSERT ON public.products
+  FOR EACH ROW
+  EXECUTE FUNCTION public.generate_sku();
 
 -- ============================================
 -- 6. ENABLE ROW LEVEL SECURITY
@@ -363,7 +396,9 @@ CREATE INDEX idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX idx_user_roles_role ON public.user_roles(role);
 
 -- Products indexes
+CREATE INDEX idx_products_sku ON public.products(sku) WHERE sku IS NOT NULL;
 CREATE INDEX idx_products_category ON public.products(category);
+CREATE INDEX idx_products_brand ON public.products(brand);
 CREATE INDEX idx_products_is_featured ON public.products(is_featured);
 CREATE INDEX idx_products_created_at ON public.products(created_at DESC);
 CREATE INDEX idx_products_price ON public.products(price);
@@ -421,21 +456,20 @@ CREATE POLICY "Anyone can view product images"
   TO public
   USING (bucket_id = 'product-images');
 
-CREATE POLICY "Admins can upload product images"
+CREATE POLICY "Authenticated users can upload product images"
   ON storage.objects FOR INSERT
   TO authenticated
-  WITH CHECK (bucket_id = 'product-images' AND public.is_admin(auth.uid()));
+  WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Admins can update product images"
+CREATE POLICY "Authenticated users can update product images"
   ON storage.objects FOR UPDATE
   TO authenticated
-  USING (bucket_id = 'product-images' AND public.is_admin(auth.uid()))
-  WITH CHECK (bucket_id = 'product-images' AND public.is_admin(auth.uid()));
+  USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Admins can delete product images"
+CREATE POLICY "Authenticated users can delete product images"
   ON storage.objects FOR DELETE
   TO authenticated
-  USING (bucket_id = 'product-images' AND public.is_admin(auth.uid()));
+  USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 
 -- Hero media policies
 CREATE POLICY "Anyone can view hero media"
@@ -443,21 +477,20 @@ CREATE POLICY "Anyone can view hero media"
   TO public
   USING (bucket_id = 'hero-media');
 
-CREATE POLICY "Admins can upload hero media"
+CREATE POLICY "Authenticated users can upload hero media"
   ON storage.objects FOR INSERT
   TO authenticated
-  WITH CHECK (bucket_id = 'hero-media' AND public.is_admin(auth.uid()));
+  WITH CHECK (bucket_id = 'hero-media' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Admins can update hero media"
+CREATE POLICY "Authenticated users can update hero media"
   ON storage.objects FOR UPDATE
   TO authenticated
-  USING (bucket_id = 'hero-media' AND public.is_admin(auth.uid()))
-  WITH CHECK (bucket_id = 'hero-media' AND public.is_admin(auth.uid()));
+  USING (bucket_id = 'hero-media' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Admins can delete hero media"
+CREATE POLICY "Authenticated users can delete hero media"
   ON storage.objects FOR DELETE
   TO authenticated
-  USING (bucket_id = 'hero-media' AND public.is_admin(auth.uid()));
+  USING (bucket_id = 'hero-media' AND auth.role() = 'authenticated');
 
 -- ============================================
 -- 11. INSERT DEFAULT DATA
@@ -477,5 +510,6 @@ ON CONFLICT DO NOTHING;
 -- ============================================
 -- SETUP COMPLETE ✓
 -- All demo/dummy data removed for production
--- Add your own products, hero slides, and banners through the admin UI
+-- Boutique enhancements added (SKU, fabric, sizes, colors, etc.)
+-- Add your own products through the admin UI
 -- ============================================

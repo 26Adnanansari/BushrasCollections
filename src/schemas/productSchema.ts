@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
 export const productSchema = z.object({
+  sku: z
+    .string()
+    .trim()
+    .max(50, 'SKU must be less than 50 characters')
+    .optional(),
   name: z
     .string()
     .trim()
@@ -9,7 +14,7 @@ export const productSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(1, 'Description is required')
+    .min(10, 'Description must be at least 10 characters')
     .max(2000, 'Description must be less than 2000 characters'),
   price: z
     .number()
@@ -34,6 +39,33 @@ export const productSchema = z.object({
     .number()
     .int('Stock must be a whole number')
     .min(0, 'Stock quantity must be 0 or greater'),
+  // Boutique-specific optional fields
+  fabric_type: z
+    .string()
+    .trim()
+    .max(100, 'Fabric type must be less than 100 characters')
+    .optional(),
+  available_sizes: z
+    .array(z.string())
+    .optional(),
+  available_colors: z
+    .array(z.string())
+    .optional(),
+  care_instructions: z
+    .string()
+    .trim()
+    .max(500, 'Care instructions must be less than 500 characters')
+    .optional(),
+  occasion_type: z
+    .string()
+    .trim()
+    .max(100, 'Occasion type must be less than 100 characters')
+    .optional(),
+  embellishment: z
+    .string()
+    .trim()
+    .max(100, 'Embellishment must be less than 100 characters')
+    .optional(),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

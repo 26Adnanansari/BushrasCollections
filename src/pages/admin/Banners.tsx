@@ -168,21 +168,21 @@ const AdminBanners = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background p-10 ">
 
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Promotional Banners</h1>
-          <p className="text-muted-foreground">Manage promotional banners displayed on the site</p>
+          <h1 className="text-3xl font-bold px-3">Promotional Banners</h1>
+          <p className="text-muted-foreground px-3">Manage promotional banners displayed on the site</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="mr-3">
+              <Plus className="h-4 w-4 mr-2 " />
               Add Banner
             </Button>
           </DialogTrigger>
