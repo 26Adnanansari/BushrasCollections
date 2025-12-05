@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import {
   Calendar,
   Download,
   Filter,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,11 +21,113 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Analytics = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [dateRange, setDateRange] = useState("this_month");
   const [searchQuery, setSearchQuery] = useState("");
+  const [customerSegment, setCustomerSegment] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  // Real data state
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    avgOrderValue: 0
+  });
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [customerSegments, setCustomerSegments] = useState({
+    new: 0,
+    returning: 0,
+    vip: 0,
+    inactive: 0
+  });
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [dateRange, customerSegment]);
+
+  const fetchAnalyticsData = async () => {
+    setLoading(true);
+    try {
+      // Fetch customers with profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (profilesError) throw profilesError;
+
+      // Fetch orders
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (ordersError) throw ordersError;
+
+      // Calculate stats
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+      const totalOrders = ordersData?.length || 0;
+      const totalCustomers = profilesData?.length || 0;
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+      setStats({
+        totalRevenue,
+        totalOrders,
+        totalCustomers,
+        avgOrderValue
+      });
+
+      setCustomers(profilesData || []);
+      setOrders(ordersData || []);
+
+      // Calculate customer segments
+      const segments = {
+        new: profilesData?.filter(p => !p.last_order_date ||
+          new Date(p.last_order_date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length || 0,
+        returning: profilesData?.filter(p => (p.total_orders || 0) >= 2 && (p.total_orders || 0) < 5).length || 0,
+        vip: profilesData?.filter(p => (p.total_orders || 0) >= 5 || (p.total_spent || 0) >= 50000).length || 0,
+        inactive: profilesData?.filter(p => p.last_order_date &&
+          new Date(p.last_order_date) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)).length || 0
+      };
+
+      setCustomerSegments(segments);
+
+    } catch (error: any) {
+      console.error('Error fetching analytics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load analytics data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCustomers = customers.filter(customer => {
+    const matchesSearch = searchQuery === "" ||
+      customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phone?.includes(searchQuery);
+
+    const matchesSegment = customerSegment === "all" || customer.customer_segment === customerSegment;
+
+    return matchesSearch && matchesSegment;
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -61,59 +164,65 @@ const Analytics = () => {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">PKR 450,000</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
-          </CardContent>
-        </Card>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">PKR {stats.totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                From {stats.totalOrders} orders
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">150</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              <p className="text-xs text-muted-foreground">
+                All time orders
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">85</div>
-            <p className="text-xs text-muted-foreground">
-              +8 new this month
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+              <p className="text-xs text-muted-foreground">
+                Registered users
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">PKR 3,000</div>
-            <p className="text-xs text-muted-foreground">
-              +5% from last month
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">PKR {Math.round(stats.avgOrderValue).toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Per order average
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Detailed Data Tabs */}
       <Tabs defaultValue="customers" className="space-y-4">
@@ -145,7 +254,7 @@ const Analytics = () => {
                     className="pl-10"
                   />
                 </div>
-                <Select defaultValue="all">
+                <Select value={customerSegment} onValueChange={setCustomerSegment}>
                   <SelectTrigger className="w-[180px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter by segment" />
@@ -164,41 +273,87 @@ const Analytics = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <Card className="bg-blue-50 dark:bg-blue-950">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">45</div>
+                    <div className="text-2xl font-bold">{customerSegments.new}</div>
                     <p className="text-sm text-muted-foreground">New Customers</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-green-50 dark:bg-green-950">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">80</div>
+                    <div className="text-2xl font-bold">{customerSegments.returning}</div>
                     <p className="text-sm text-muted-foreground">Returning</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-purple-50 dark:bg-purple-950">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">15</div>
+                    <div className="text-2xl font-bold">{customerSegments.vip}</div>
                     <p className="text-sm text-muted-foreground">VIP</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-orange-50 dark:bg-orange-950">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">30</div>
+                    <div className="text-2xl font-bold">{customerSegments.inactive}</div>
                     <p className="text-sm text-muted-foreground">Inactive</p>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Data Table Placeholder */}
-              <div className="border rounded-lg p-8 text-center text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="mb-2">Customer data table will appear here</p>
-                <p className="text-sm">
-                  Showing: Name, Email, Phone, WhatsApp, Total Orders, Total Spent, Last Order, Segment
-                </p>
-                <Button className="mt-4" onClick={() => navigate("/admin/customers")}>
-                  View Full Customer List
-                </Button>
-              </div>
+              {/* Customer Data Table */}
+              {filteredCustomers.length === 0 ? (
+                <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="mb-2">No customers found</p>
+                  <p className="text-sm">Try adjusting your search or filters</p>
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>WhatsApp</TableHead>
+                        <TableHead className="text-right">Orders</TableHead>
+                        <TableHead className="text-right">Total Spent</TableHead>
+                        <TableHead>Last Order</TableHead>
+                        <TableHead>Segment</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCustomers.slice(0, 10).map((customer) => (
+                        <TableRow key={customer.id}>
+                          <TableCell className="font-medium">{customer.name || '-'}</TableCell>
+                          <TableCell>{customer.email || '-'}</TableCell>
+                          <TableCell>{customer.phone || '-'}</TableCell>
+                          <TableCell>{customer.whatsapp_number || customer.phone || '-'}</TableCell>
+                          <TableCell className="text-right">{customer.total_orders || 0}</TableCell>
+                          <TableCell className="text-right">PKR {(customer.total_spent || 0).toLocaleString()}</TableCell>
+                          <TableCell>
+                            {customer.last_order_date
+                              ? new Date(customer.last_order_date).toLocaleDateString()
+                              : 'Never'}
+                          </TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                              {customer.customer_segment || 'new'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {filteredCustomers.length > 10 && (
+                    <div className="p-4 text-center border-t">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Showing 10 of {filteredCustomers.length} customers
+                      </p>
+                      <Button variant="outline" onClick={() => navigate("/admin/users")}>
+                        View All Customers
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
