@@ -299,28 +299,28 @@ ALTER TABLE public.promotional_banners ENABLE ROW LEVEL SECURITY;
 -- Profiles policies
 CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = id);
+  USING ((SELECT auth.uid()) = id);
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING ((SELECT auth.uid()) = id);
 
 CREATE POLICY "Admins can view all profiles"
   ON public.profiles FOR SELECT
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- User roles policies
 CREATE POLICY "Users can view their own roles"
   ON public.user_roles FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Admins can view all roles"
   ON public.user_roles FOR SELECT
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 CREATE POLICY "Super admins can manage roles"
   ON public.user_roles FOR ALL
-  USING (public.is_super_admin(auth.uid()));
+  USING (public.is_super_admin((SELECT auth.uid())));
 
 -- Products policies
 CREATE POLICY "Anyone can view products"
@@ -329,24 +329,24 @@ CREATE POLICY "Anyone can view products"
 
 CREATE POLICY "Admins can manage products"
   ON public.products FOR ALL
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- Orders policies
 CREATE POLICY "Users can view their own orders"
   ON public.orders FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can create their own orders"
   ON public.orders FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Admins can view all orders"
   ON public.orders FOR SELECT
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 CREATE POLICY "Admins can update orders"
   ON public.orders FOR UPDATE
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- Hero slides policies
 CREATE POLICY "Anyone can view active hero slides"
@@ -355,11 +355,11 @@ CREATE POLICY "Anyone can view active hero slides"
 
 CREATE POLICY "Admins can view all hero slides"
   ON public.hero_slides FOR SELECT
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 CREATE POLICY "Admins can manage hero slides"
   ON public.hero_slides FOR ALL
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- Payment methods policies
 CREATE POLICY "Anyone can view active payment methods"
@@ -368,11 +368,11 @@ CREATE POLICY "Anyone can view active payment methods"
 
 CREATE POLICY "Admins can view all payment methods"
   ON public.payment_methods FOR SELECT
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 CREATE POLICY "Admins can manage payment methods"
   ON public.payment_methods FOR ALL
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- Promotional banners policies
 CREATE POLICY "Anyone can view active banners"
@@ -383,11 +383,11 @@ CREATE POLICY "Anyone can view active banners"
 
 CREATE POLICY "Admins can view all banners"
   ON public.promotional_banners FOR SELECT
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 CREATE POLICY "Admins can manage banners"
   ON public.promotional_banners FOR ALL
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_admin((SELECT auth.uid())));
 
 -- ============================================
 -- 8. CREATE INDEXES FOR PERFORMANCE
