@@ -78,7 +78,7 @@ const Orders = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         <h1 className="text-4xl font-serif font-bold text-foreground mb-8">My Orders</h1>
 
@@ -116,7 +116,7 @@ const Orders = () => {
 
                     <div className="text-right">
                       <div className="text-2xl font-bold text-primary mb-2">
-                        PKR {order.total_amount.toLocaleString()}
+                        PKR {(order?.total_amount || order?.total || 0).toLocaleString()}
                       </div>
                       <Button
                         variant="outline"
