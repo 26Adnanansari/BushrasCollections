@@ -3,19 +3,14 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useAuthStore } from "@/store/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Package, ShoppingCart, Heart, User } from "lucide-react";
-import { AvatarSelectionModal } from "@/components/AvatarSelectionModal";
-import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { user, initialized, loading } = useAuthStore();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   useEffect(() => {
     if (initialized && !loading) {
@@ -23,49 +18,9 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         setIsLoading(false);
-        checkAvatarStatus();
       }
     }
   }, [initialized, loading, user, navigate]);
-
-  const checkAvatarStatus = async () => {
-    if (!user?.id) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single();
-
-    // Show avatar selection on first login if no avatar set
-    if (!profile?.avatar_url) {
-      setShowAvatarModal(true);
-    }
-  };
-
-  const handleAvatarSelect = async (avatarUrl: string) => {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ avatar_url: avatarUrl })
-        .eq("id", user!.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Avatar updated successfully",
-      });
-
-      setShowAvatarModal(false);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update avatar",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -151,12 +106,6 @@ const Dashboard = () => {
       </div>
 
       <Footer />
-
-      <AvatarSelectionModal
-        open={showAvatarModal}
-        onSelect={handleAvatarSelect}
-        onClose={() => setShowAvatarModal(false)}
-      />
     </main>
   );
 };

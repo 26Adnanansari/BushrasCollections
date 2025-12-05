@@ -1,252 +1,354 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, TrendingUp, ShoppingBag, Package, Users } from "lucide-react";
-import Navigation from "@/components/Navigation";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Users,
+  ShoppingBag,
+  TrendingUp,
+  Calendar,
+  Download,
+  Filter,
+  Search
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Analytics = () => {
-  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalRevenue: 0,
-    totalOrders: 0,
-    totalProducts: 0,
-    totalCustomers: 0,
-  });
-  const [salesData, setSalesData] = useState<any[]>([]);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [orderStatus, setOrderStatus] = useState<any[]>([]);
-
-  useEffect(() => {
-    checkAdminAndFetch();
-  }, []);
-
-  const checkAdminAndFetch = async () => {
-    if (!user || !user.roles?.includes('admin')) {
-      navigate('/');
-      return;
-    }
-
-    await Promise.all([
-      fetchStats(),
-      fetchSalesData(),
-      fetchTopProducts(),
-      fetchOrderStatus(),
-    ]);
-    setLoading(false);
-  };
-
-  const fetchStats = async () => {
-    const { data: orders } = await supabase.from('orders').select('total');
-    const { count: productsCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
-    const { count: customersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-
-    setStats({
-      totalRevenue: orders?.reduce((sum, order) => sum + Number(order.total || 0), 0) || 0,
-      totalOrders: orders?.length || 0,
-      totalProducts: productsCount || 0,
-      totalCustomers: customersCount || 0,
-    });
-  };
-
-  const fetchSalesData = async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select('created_at, total')
-      .order('created_at', { ascending: true });
-
-    if (data) {
-      const groupedData = data.reduce((acc: any, order) => {
-        const date = new Date(order.created_at).toLocaleDateString();
-        if (!acc[date]) {
-          acc[date] = { date, revenue: 0, orders: 0 };
-        }
-        acc[date].revenue += Number(order.total || 0);
-        acc[date].orders += 1;
-        return acc;
-      }, {});
-
-      setSalesData(Object.values(groupedData).slice(-30));
-    }
-  };
-
-  const fetchTopProducts = async () => {
-    // Top products feature requires order_items table
-    setTopProducts([]);
-  };
-
-  const fetchOrderStatus = async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select('status');
-
-    if (data) {
-      const statusCount = data.reduce((acc: any, order) => {
-        if (!acc[order.status]) {
-          acc[order.status] = { name: order.status, value: 0 };
-        }
-        acc[order.status].value += 1;
-        return acc;
-      }, {});
-
-      setOrderStatus(Object.values(statusCount));
-    }
-  };
-
-  const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
-
-  if (!user || !user.roles?.includes('admin')) {
-    return null;
-  }
+  const [dateRange, setDateRange] = useState("this_month");
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-6">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-
-          <h1 className="text-3xl font-serif font-bold mb-8">Analytics Dashboard</h1>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">PKR {stats.totalRevenue.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalOrders}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalProducts}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Revenue Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Trend (Last 30 Days)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={salesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" name="Revenue (PKR)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Top Products */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Selling Products</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={topProducts}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="sales" fill="#8b5cf6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Order Status Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Status Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={orderStatus}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => entry.name}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {orderStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Daily Orders */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Daily Orders (Last 30 Days)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={salesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="orders" stroke="#ec4899" name="Orders" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-4xl font-serif font-bold text-foreground mb-2">
+          Analytics Dashboard
+        </h1>
+        <p className="text-muted-foreground">
+          Comprehensive view of your business performance
+        </p>
       </div>
+
+      {/* Date Range Filter */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <Select value={dateRange} onValueChange={setDateRange}>
+          <SelectTrigger className="w-[200px]">
+            <Calendar className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Select period" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="this_week">This Week</SelectItem>
+            <SelectItem value="this_month">This Month</SelectItem>
+            <SelectItem value="last_month">Last Month</SelectItem>
+            <SelectItem value="this_year">This Year</SelectItem>
+            <SelectItem value="custom">Custom Range</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Export Data
+        </Button>
+      </div>
+
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">PKR 450,000</div>
+            <p className="text-xs text-muted-foreground">
+              +20.1% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">150</div>
+            <p className="text-xs text-muted-foreground">
+              +12% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">85</div>
+            <p className="text-xs text-muted-foreground">
+              +8 new this month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">PKR 3,000</div>
+            <p className="text-xs text-muted-foreground">
+              +5% from last month
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Data Tabs */}
+      <Tabs defaultValue="customers" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="marketing">Marketing</TabsTrigger>
+        </TabsList>
+
+        {/* Customers Tab */}
+        <TabsContent value="customers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Database</CardTitle>
+              <CardDescription>
+                View and manage all customer information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Search */}
+              <div className="flex gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, email, or phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter by segment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Customers</SelectItem>
+                    <SelectItem value="new">New Customers</SelectItem>
+                    <SelectItem value="returning">Returning</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Customer Segments */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card className="bg-blue-50 dark:bg-blue-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">45</div>
+                    <p className="text-sm text-muted-foreground">New Customers</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-green-50 dark:bg-green-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">80</div>
+                    <p className="text-sm text-muted-foreground">Returning</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-purple-50 dark:bg-purple-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">15</div>
+                    <p className="text-sm text-muted-foreground">VIP</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-orange-50 dark:bg-orange-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">30</div>
+                    <p className="text-sm text-muted-foreground">Inactive</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Data Table Placeholder */}
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-2">Customer data table will appear here</p>
+                <p className="text-sm">
+                  Showing: Name, Email, Phone, WhatsApp, Total Orders, Total Spent, Last Order, Segment
+                </p>
+                <Button className="mt-4" onClick={() => navigate("/admin/customers")}>
+                  View Full Customer List
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Orders Tab */}
+        <TabsContent value="orders" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Analytics</CardTitle>
+              <CardDescription>
+                Track and analyze order performance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Order Status Breakdown */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">25</div>
+                    <p className="text-xs text-muted-foreground">Pending</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">15</div>
+                    <p className="text-xs text-muted-foreground">Confirmed</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">30</div>
+                    <p className="text-xs text-muted-foreground">Processing</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">20</div>
+                    <p className="text-xs text-muted-foreground">Shipped</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">55</div>
+                    <p className="text-xs text-muted-foreground">Delivered</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">5</div>
+                    <p className="text-xs text-muted-foreground">Cancelled</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                <ShoppingBag className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-2">Order analytics charts will appear here</p>
+                <p className="text-sm">
+                  Revenue trends, order volume, payment status, delivery tracking
+                </p>
+                <Button className="mt-4" onClick={() => navigate("/admin/orders")}>
+                  View All Orders
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Products Tab */}
+        <TabsContent value="products" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Performance</CardTitle>
+              <CardDescription>
+                Analyze best-selling products and inventory
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-2">Product analytics will appear here</p>
+                <p className="text-sm">
+                  Top sellers, low stock alerts, category performance
+                </p>
+                <Button className="mt-4" onClick={() => navigate("/admin/products")}>
+                  Manage Products
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Marketing Tab */}
+        <TabsContent value="marketing" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Marketing Insights</CardTitle>
+              <CardDescription>
+                Customer acquisition and campaign performance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Customer Sources */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">40%</div>
+                    <p className="text-xs text-muted-foreground">Organic</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">25%</div>
+                    <p className="text-xs text-muted-foreground">Facebook</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">20%</div>
+                    <p className="text-xs text-muted-foreground">Instagram</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">10%</div>
+                    <p className="text-xs text-muted-foreground">WhatsApp</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">5%</div>
+                    <p className="text-xs text-muted-foreground">Referrals</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-2">Marketing analytics will appear here</p>
+                <p className="text-sm">
+                  Campaign performance, customer lifetime value, retention rates
+                </p>
+                <Button className="mt-4">
+                  Create Campaign
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
