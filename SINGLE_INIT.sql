@@ -21,9 +21,20 @@ CREATE TABLE public.profiles (
   name TEXT,
   email TEXT,
   phone TEXT,
+  whatsapp_number TEXT,
   phone_verified BOOLEAN DEFAULT false,
   address JSONB,
   avatar_url TEXT,
+  -- Marketing preferences
+  marketing_consent BOOLEAN DEFAULT true,
+  whatsapp_consent BOOLEAN DEFAULT true,
+  preferred_contact_method TEXT DEFAULT 'whatsapp',
+  -- Customer segmentation
+  customer_segment TEXT DEFAULT 'new',
+  total_orders INTEGER DEFAULT 0,
+  total_spent NUMERIC(10,2) DEFAULT 0,
+  last_order_date TIMESTAMPTZ,
+  saved_addresses JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -65,11 +76,19 @@ CREATE TABLE public.products (
 -- Orders table
 CREATE TABLE public.orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number TEXT UNIQUE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending',
   total NUMERIC(10,2) NOT NULL,
   items JSONB NOT NULL,
   shipping_address JSONB,
+  whatsapp_number TEXT,
+  alternate_phone TEXT,
+  tracking_number TEXT,
+  estimated_delivery DATE,
+  customer_source TEXT,
+  referral_code TEXT,
+  admin_notes TEXT,
   payment_method_id UUID,
   payment_status TEXT DEFAULT 'pending_payment',
   transaction_id TEXT,
@@ -120,6 +139,49 @@ CREATE TABLE public.promotional_banners (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Order items table (stores product details for each order)
+CREATE TABLE public.order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id),
+  product_name TEXT NOT NULL,
+  product_image TEXT,
+  size TEXT,
+  color TEXT,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  price NUMERIC(10,2) NOT NULL,
+  subtotal NUMERIC(10,2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Order tracking table
+CREATE TABLE public.order_tracking (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+  status TEXT NOT NULL,
+  notes TEXT,
+  location TEXT,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Marketing campaigns table
+CREATE TABLE public.marketing_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  target_segment TEXT,
+  message_template TEXT NOT NULL,
+  scheduled_at TIMESTAMPTZ,
+  sent_at TIMESTAMPTZ,
+  status TEXT DEFAULT 'draft',
+  recipients_count INTEGER DEFAULT 0,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 
 -- ============================================
 -- 3. ADD FOREIGN KEYS (after all tables created)
@@ -233,6 +295,73 @@ BEGIN
 END;
 $$;
 
+-- Create sequence for order numbers
+CREATE SEQUENCE IF NOT EXISTS order_number_seq START 1;
+
+-- Generate order number function
+CREATE OR REPLACE FUNCTION generate_order_number()
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  next_num INTEGER;
+  order_num TEXT;
+BEGIN
+  next_num := nextval('order_number_seq');
+  order_num := 'BC-' || LPAD(next_num::TEXT, 5, '0');
+  RETURN order_num;
+END;
+$$;
+
+-- Set order number trigger function
+CREATE OR REPLACE FUNCTION set_order_number()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.order_number IS NULL THEN
+    NEW.order_number := generate_order_number();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Update customer stats function
+CREATE OR REPLACE FUNCTION public.update_customer_stats()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') AND NEW.status = 'delivered' THEN
+    UPDATE public.profiles
+    SET 
+      total_orders = (
+        SELECT COUNT(*) 
+        FROM public.orders 
+        WHERE user_id = NEW.user_id AND status = 'delivered'
+      ),
+      total_spent = (
+        SELECT COALESCE(SUM(total), 0) 
+        FROM public.orders 
+        WHERE user_id = NEW.user_id AND status = 'delivered'
+      ),
+      last_order_date = NEW.created_at,
+      customer_segment = CASE 
+        WHEN (SELECT COUNT(*) FROM public.orders WHERE user_id = NEW.user_id AND status = 'delivered') >= 5 
+          OR (SELECT COALESCE(SUM(total), 0) FROM public.orders WHERE user_id = NEW.user_id AND status = 'delivered') >= 50000 
+          THEN 'vip'
+        WHEN (SELECT COUNT(*) FROM public.orders WHERE user_id = NEW.user_id AND status = 'delivered') >= 2 
+          THEN 'returning'
+        ELSE 'new'
+      END
+    WHERE id = NEW.user_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
 -- ============================================
 -- 5. CREATE TRIGGERS
 -- ============================================
@@ -280,6 +409,19 @@ CREATE TRIGGER generate_product_sku
   FOR EACH ROW
   EXECUTE FUNCTION public.generate_sku();
 
+-- Trigger to auto-generate order number
+CREATE TRIGGER set_order_number_trigger
+  BEFORE INSERT ON public.orders
+  FOR EACH ROW
+  EXECUTE FUNCTION set_order_number();
+
+-- Trigger to update customer stats
+CREATE TRIGGER update_customer_stats_trigger
+  AFTER INSERT OR UPDATE ON public.orders
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_customer_stats();
+
+
 -- ============================================
 -- 6. ENABLE ROW LEVEL SECURITY
 -- ============================================
@@ -288,9 +430,13 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_tracking ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.marketing_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotional_banners ENABLE ROW LEVEL SECURITY;
+
 
 -- ============================================
 -- 7. CREATE RLS POLICIES
@@ -389,6 +535,46 @@ CREATE POLICY "Admins can manage banners"
   ON public.promotional_banners FOR ALL
   USING (public.is_admin((SELECT auth.uid())));
 
+-- Order items policies
+CREATE POLICY "Users can view their own order items"
+  ON public.order_items FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.orders 
+      WHERE orders.id = order_items.order_id 
+      AND orders.user_id = (SELECT auth.uid())
+    )
+  );
+
+CREATE POLICY "Admins can view all order items"
+  ON public.order_items FOR SELECT
+  USING (public.is_admin((SELECT auth.uid())));
+
+CREATE POLICY "Admins can manage order items"
+  ON public.order_items FOR ALL
+  USING (public.is_admin((SELECT auth.uid())));
+
+-- Order tracking policies
+CREATE POLICY "Users can view their own order tracking"
+  ON public.order_tracking FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.orders 
+      WHERE orders.id = order_tracking.order_id 
+      AND orders.user_id = (SELECT auth.uid())
+    )
+  );
+
+CREATE POLICY "Admins can manage all order tracking"
+  ON public.order_tracking FOR ALL
+  USING (public.is_admin((SELECT auth.uid())));
+
+-- Marketing campaigns policies
+CREATE POLICY "Admins can manage campaigns"
+  ON public.marketing_campaigns FOR ALL
+  USING (public.is_admin((SELECT auth.uid())));
+
+
 -- ============================================
 -- 8. CREATE INDEXES FOR PERFORMANCE
 -- ============================================
@@ -421,6 +607,19 @@ CREATE INDEX idx_hero_slides_active ON public.hero_slides(is_active, order_index
 -- Promotional banners indexes
 CREATE INDEX idx_promotional_banners_active ON public.promotional_banners(is_active, display_order) WHERE is_active = true;
 CREATE INDEX idx_promotional_banners_dates ON public.promotional_banners(start_date, end_date);
+
+-- Order items indexes
+CREATE INDEX idx_order_items_order_id ON public.order_items(order_id);
+CREATE INDEX idx_order_items_product_id ON public.order_items(product_id);
+
+-- Order tracking indexes
+CREATE INDEX idx_order_tracking_order_id ON public.order_tracking(order_id);
+CREATE INDEX idx_order_tracking_created_at ON public.order_tracking(created_at DESC);
+
+-- Marketing campaigns indexes
+CREATE INDEX idx_campaigns_status ON public.marketing_campaigns(status);
+CREATE INDEX idx_campaigns_created_at ON public.marketing_campaigns(created_at DESC);
+
 
 -- ============================================
 -- 9. CREATE STORAGE BUCKETS
