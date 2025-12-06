@@ -60,7 +60,7 @@ const Checkout = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
-  
+
   const [shippingInfo, setShippingInfo] = useState({
     name: user?.profile?.name || '',
     phone: user?.profile?.phone || '',
@@ -89,7 +89,7 @@ const Checkout = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setShippingInfo({ ...shippingInfo, [name]: value });
-    
+
     // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
@@ -99,7 +99,7 @@ const Checkout = () => {
   const handlePlaceOrder = async () => {
     // Validate all fields
     const validation = shippingSchema.safeParse(shippingInfo);
-    
+
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
       validation.error.issues.forEach((issue) => {
@@ -108,7 +108,7 @@ const Checkout = () => {
         }
       });
       setErrors(fieldErrors);
-      
+
       toast({
         title: "Validation Error",
         description: "Please fix the errors in the form",
@@ -125,13 +125,13 @@ const Checkout = () => {
       });
       return;
     }
-    
+
     setErrors({});
     setIsSubmitting(true);
 
     try {
       const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
-      
+
       // Create order in database
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -140,10 +140,11 @@ const Checkout = () => {
           total: getTotalPrice(),
           items: JSON.parse(JSON.stringify(items)),
           shipping_address: JSON.parse(JSON.stringify(shippingInfo)),
+          whatsapp_number: shippingInfo.phone, // Save phone as WhatsApp number
           status: 'pending',
           payment_method_id: selectedPaymentMethod,
-          payment_status: selectedMethod?.type === 'manual' ? 'pending_payment' : 
-                         selectedMethod?.type === 'offline' ? 'pending_verification' : 'pending'
+          payment_status: selectedMethod?.type === 'manual' ? 'pending_payment' :
+            selectedMethod?.type === 'offline' ? 'pending_verification' : 'pending'
         }])
         .select()
         .single();
@@ -151,7 +152,7 @@ const Checkout = () => {
       if (orderError) throw orderError;
 
       // Show success message with payment instructions
-      const instructions = selectedMethod?.instructions || 
+      const instructions = selectedMethod?.instructions ||
         'Your order has been placed successfully. We will contact you shortly.';
 
       toast({
@@ -195,7 +196,7 @@ const Checkout = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -215,63 +216,63 @@ const Checkout = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
-                    <Input 
-                      id="name" 
-                      name="name" 
-                      value={shippingInfo.name} 
-                      onChange={handleInputChange} 
+                    <Input
+                      id="name"
+                      name="name"
+                      value={shippingInfo.name}
+                      onChange={handleInputChange}
                       className={errors.name ? "border-destructive" : ""}
-                      required 
+                      required
                     />
                     {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number *</Label>
-                    <Input 
-                      id="phone" 
-                      name="phone" 
-                      value={shippingInfo.phone} 
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={shippingInfo.phone}
                       onChange={handleInputChange}
                       placeholder="03001234567"
                       className={errors.phone ? "border-destructive" : ""}
-                      required 
+                      required
                     />
                     {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="address">Complete Address *</Label>
-                  <Textarea 
-                    id="address" 
-                    name="address" 
-                    value={shippingInfo.address} 
+                  <Textarea
+                    id="address"
+                    name="address"
+                    value={shippingInfo.address}
                     onChange={handleInputChange}
                     className={errors.address ? "border-destructive" : ""}
-                    required 
+                    required
                   />
                   {errors.address && <p className="text-sm text-destructive mt-1">{errors.address}</p>}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="city">City *</Label>
-                    <Input 
-                      id="city" 
-                      name="city" 
-                      value={shippingInfo.city} 
+                    <Input
+                      id="city"
+                      name="city"
+                      value={shippingInfo.city}
                       onChange={handleInputChange}
                       className={errors.city ? "border-destructive" : ""}
-                      required 
+                      required
                     />
                     {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
                   </div>
                   <div>
                     <Label htmlFor="postalCode">Postal Code</Label>
-                    <Input 
-                      id="postalCode" 
-                      name="postalCode" 
-                      value={shippingInfo.postalCode} 
+                    <Input
+                      id="postalCode"
+                      name="postalCode"
+                      value={shippingInfo.postalCode}
                       onChange={handleInputChange}
                       placeholder="54000"
                       className={errors.postalCode ? "border-destructive" : ""}
@@ -279,14 +280,14 @@ const Checkout = () => {
                     {errors.postalCode && <p className="text-sm text-destructive mt-1">{errors.postalCode}</p>}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="notes">Order Notes (Optional)</Label>
-                  <Textarea 
-                    id="notes" 
-                    name="notes" 
-                    value={shippingInfo.notes} 
-                    onChange={handleInputChange} 
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={shippingInfo.notes}
+                    onChange={handleInputChange}
                     placeholder="Any special instructions?"
                     className={errors.notes ? "border-destructive" : ""}
                   />
@@ -295,7 +296,7 @@ const Checkout = () => {
 
                 <div className="pt-4 border-t">
                   <h3 className="font-semibold text-foreground mb-3">Payment Method</h3>
-                  
+
                   {loadingPaymentMethods ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -326,9 +327,9 @@ const Checkout = () => {
                     </RadioGroup>
                   )}
 
-                  <Button 
-                    className="w-full mt-4" 
-                    size="lg" 
+                  <Button
+                    className="w-full mt-4"
+                    size="lg"
                     onClick={handlePlaceOrder}
                     disabled={isSubmitting || paymentMethods.length === 0}
                   >
@@ -356,9 +357,9 @@ const Checkout = () => {
                     <div className="font-semibold">PKR {(item.price * item.quantity).toLocaleString()}</div>
                   </div>
                 ))}
-                
+
                 <Separator />
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
