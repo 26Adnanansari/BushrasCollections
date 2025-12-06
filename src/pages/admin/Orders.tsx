@@ -12,12 +12,17 @@ import Navigation from "@/components/Navigation";
 
 interface Order {
   id: string;
+  order_number: string;
   user_id: string;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  whatsapp_number?: string;
+  shipping_address?: any;
   created_at: string;
   profiles: {
     name: string;
+    phone?: string;
+    whatsapp_number?: string;
   };
 }
 
@@ -47,10 +52,10 @@ const AdminOrders = () => {
 
       if (ordersError) throw ordersError;
 
-      // Fetch all profiles
+      // Fetch all profiles with contact info
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name');
+        .select('id, name, phone, whatsapp_number');
 
       if (profilesError) throw profilesError;
 
@@ -173,8 +178,9 @@ const AdminOrders = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Order ID</TableHead>
+                      <TableHead>Order #</TableHead>
                       <TableHead>Customer</TableHead>
+                      <TableHead>Contact</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
@@ -185,12 +191,17 @@ const AdminOrders = () => {
                     {orders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">
-                          #{order.id.slice(-8)}
+                          {order.order_number || `#${order.id.slice(-8)}`}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
                         </TableCell>
-                        <TableCell>PKR {order.total}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>PKR {order.total.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(order.status)}>
                             {order.status}
