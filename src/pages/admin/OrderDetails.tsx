@@ -291,18 +291,19 @@ const OrderDetailsPage = () => {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    {shippingAddr.street || shippingAddr.city ? (
+                                    {shippingAddr.address || shippingAddr.city ? (
                                         <div className="space-y-2">
-                                            <p className="font-medium">{shippingAddr.street || 'No street address'}</p>
-                                            {shippingAddr.landmark && (
-                                                <p className="text-sm text-muted-foreground">
-                                                    Landmark: {shippingAddr.landmark}
-                                                </p>
-                                            )}
+                                            <p className="font-medium">{shippingAddr.address || 'No address provided'}</p>
                                             <p>
-                                                {shippingAddr.city}, {shippingAddr.state} {shippingAddr.postal_code}
+                                                {shippingAddr.city}{shippingAddr.postalCode ? `, ${shippingAddr.postalCode}` : ''}
                                             </p>
-                                            <p>{shippingAddr.country || 'Pakistan'}</p>
+                                            <p>Pakistan</p>
+                                            {shippingAddr.notes && (
+                                                <div className="mt-3 pt-3 border-t">
+                                                    <p className="text-sm font-medium text-muted-foreground">Delivery Notes:</p>
+                                                    <p className="text-sm">{shippingAddr.notes}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <p className="text-muted-foreground">No shipping address provided</p>

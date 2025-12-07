@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 
 const OrderTracking = () => {
-  const { orderId } = useParams();
+  const { orderId } = useParams(); // Can be order_number (BC-00001) or UUID
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -32,12 +32,18 @@ const OrderTracking = () => {
     if (!orderId || !user) return;
 
     try {
-      const { data: orderData, error: orderError } = await supabase
+      // Check if orderId is an order_number (starts with BC-) or UUID
+      const isOrderNumber = orderId.startsWith('BC-');
+
+      const query = supabase
         .from('orders')
         .select('*')
-        .eq('id', orderId)
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
+
+      // Query by order_number or id
+      const { data: orderData, error: orderError } = isOrderNumber
+        ? await query.eq('order_number', orderId).single()
+        : await query.eq('id', orderId).single();
 
       if (orderError) throw orderError;
 
@@ -108,7 +114,7 @@ const OrderTracking = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         <Button variant="ghost" onClick={() => navigate('/orders')} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -121,7 +127,7 @@ const OrderTracking = () => {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-2xl">Order #{order.id.slice(0, 8)}</CardTitle>
+                    <CardTitle className="text-2xl">Order {order.order_number || `#${order.id.slice(0, 8)}`}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
                       Placed on {new Date(order.created_at).toLocaleDateString()}
                     </p>

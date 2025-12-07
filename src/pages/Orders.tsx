@@ -31,7 +31,7 @@ const Orders = () => {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('id, order_number, total, status, payment_status, created_at, items')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -97,7 +97,7 @@ const Orders = () => {
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div className="flex-1 min-w-[200px]">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">Order #{order.id.slice(0, 8)}</h3>
+                        <h3 className="font-semibold text-lg">Order {order.order_number || `#${order.id.slice(0, 8)}`}</h3>
                         <Badge className={getStatusColor(order.status)}>
                           {order.status}
                         </Badge>
@@ -120,7 +120,7 @@ const Orders = () => {
                       </div>
                       <Button
                         variant="outline"
-                        onClick={() => navigate(`/orders/${order.id}`)}
+                        onClick={() => navigate(`/orders/${order.order_number || order.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
