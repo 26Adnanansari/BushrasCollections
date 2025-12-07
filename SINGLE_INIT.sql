@@ -182,6 +182,40 @@ CREATE TABLE public.marketing_campaigns (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Order payments table (tracks all payment transactions)
+CREATE TABLE public.order_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+  
+  -- Payment details
+  amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+  payment_method TEXT NOT NULL, -- 'cash', 'bank_transfer', 'online', 'other'
+  payment_status TEXT NOT NULL DEFAULT 'completed', -- 'pending', 'completed', 'failed'
+  
+  -- Bank transfer details (optional)
+  bank_name TEXT,
+  account_holder TEXT,
+  transaction_id TEXT,
+  transaction_proof_url TEXT, -- Screenshot/proof stored in Supabase Storage
+  
+  -- Metadata
+  payment_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+  notes TEXT,
+  recorded_by UUID REFERENCES auth.users(id), -- Admin who recorded it
+  
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+-- ============================================
+-- 2B. ADD PAYMENT TRACKING COLUMNS TO ORDERS
+-- ============================================
+
+ALTER TABLE public.orders 
+ADD COLUMN IF NOT EXISTS total_paid NUMERIC(10,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS balance_due NUMERIC(10,2);
+
 
 -- ============================================
 -- 3. ADD FOREIGN KEYS (after all tables created)
@@ -361,6 +395,49 @@ BEGIN
 END;
 $$;
 
+-- Update order payment totals function
+CREATE OR REPLACE FUNCTION public.update_order_payment_totals()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Calculate total_paid and balance_due for the order
+  UPDATE public.orders
+  SET 
+    total_paid = (
+      SELECT COALESCE(SUM(amount), 0)
+      FROM public.order_payments
+      WHERE order_id = COALESCE(NEW.order_id, OLD.order_id)
+      AND payment_status = 'completed'
+    ),
+    balance_due = total - (
+      SELECT COALESCE(SUM(amount), 0)
+      FROM public.order_payments
+      WHERE order_id = COALESCE(NEW.order_id, OLD.order_id)
+      AND payment_status = 'completed'
+    ),
+    payment_status = CASE 
+      WHEN (
+        SELECT COALESCE(SUM(amount), 0)
+        FROM public.order_payments
+        WHERE order_id = COALESCE(NEW.order_id, OLD.order_id)
+        AND payment_status = 'completed'
+      ) = 0 THEN 'pending_payment'
+      WHEN (
+        SELECT COALESCE(SUM(amount), 0)
+        FROM public.order_payments
+        WHERE order_id = COALESCE(NEW.order_id, OLD.order_id)
+        AND payment_status = 'completed'
+      ) < total THEN 'partial_payment'
+      ELSE 'paid'
+    END
+  WHERE id = COALESCE(NEW.order_id, OLD.order_id);
+  
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
 
 -- ============================================
 -- 5. CREATE TRIGGERS
@@ -421,6 +498,18 @@ CREATE TRIGGER update_customer_stats_trigger
   FOR EACH ROW
   EXECUTE FUNCTION public.update_customer_stats();
 
+-- Trigger to auto-update payment totals
+CREATE TRIGGER update_payment_totals_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON public.order_payments
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_order_payment_totals();
+
+-- Trigger to auto-update updated_at on order_payments
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.order_payments
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
 
 -- ============================================
 -- 6. ENABLE ROW LEVEL SECURITY
@@ -431,11 +520,13 @@ ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_tracking ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotional_banners ENABLE ROW LEVEL SECURITY;
+
 
 
 -- ============================================
@@ -492,6 +583,23 @@ CREATE POLICY "Admins can view all orders"
 
 CREATE POLICY "Admins can update orders"
   ON public.orders FOR UPDATE
+  USING (public.is_admin((SELECT auth.uid())));
+
+-- Order payments policies
+CREATE POLICY "Admins can view all payments"
+  ON public.order_payments FOR SELECT
+  USING (public.is_admin((SELECT auth.uid())));
+
+CREATE POLICY "Admins can insert payments"
+  ON public.order_payments FOR INSERT
+  WITH CHECK (public.is_admin((SELECT auth.uid())));
+
+CREATE POLICY "Admins can update payments"
+  ON public.order_payments FOR UPDATE
+  USING (public.is_admin((SELECT auth.uid())));
+
+CREATE POLICY "Admins can delete payments"
+  ON public.order_payments FOR DELETE
   USING (public.is_admin((SELECT auth.uid())));
 
 -- Hero slides policies
@@ -646,6 +754,19 @@ VALUES (
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'video/mp4']
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- Order documents bucket (payment proofs, admin only)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'order-documents', 
+  'order-documents', 
+  true, 
+  5242880, 
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'application/pdf']
+)
+ON CONFLICT (id) DO NOTHING;
+
+
 
 -- ============================================
 -- 10. CREATE STORAGE POLICIES
