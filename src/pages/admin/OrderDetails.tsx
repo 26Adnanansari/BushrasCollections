@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import PaymentHistory from "@/components/PaymentHistory";
 import AddPayment from "@/components/AddPayment";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { Save } from "lucide-react";
 
 interface OrderDetails {
     id: string;
@@ -60,7 +62,17 @@ const OrderDetailsPage = () => {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
     const [trackingNumber, setTrackingNumber] = useState("");
-    const [adminNotes, setAdminNotes] = useState("");
+
+    const {
+        formData: adminNotes,
+        setFormData: setAdminNotes,
+        hasDraft: hasNotesDraft,
+        clearDraft: clearNotesDraft,
+        lastSaved: lastNotesSaved
+    } = useFormDraft({
+        formId: `admin_notes_${orderId}`,
+        initialData: ""
+    });
 
     useEffect(() => {
         if (!user || !user.roles?.includes('admin')) {
@@ -106,7 +118,16 @@ const OrderDetailsPage = () => {
             setPayments(paymentsData || []);
 
             setTrackingNumber(orderData.tracking_number || "");
-            setAdminNotes(orderData.admin_notes || "");
+
+            // Only set admin notes from DB if we don't have a local draft
+            if (!hasNotesDraft) {
+                setAdminNotes(orderData.admin_notes || "");
+            } else {
+                toast({
+                    title: "Draft Found",
+                    description: "Showing your unsaved admin notes instead of the server version.",
+                });
+            }
         } catch (error) {
             console.error('Error fetching order:', error);
             toast({
@@ -178,6 +199,7 @@ const OrderDetailsPage = () => {
                 title: "Success",
                 description: "Notes saved"
             });
+            clearNotesDraft();
         } catch (error) {
             toast({
                 title: "Error",
@@ -451,7 +473,15 @@ const OrderDetailsPage = () => {
                             {/* Admin Notes */}
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Admin Notes</CardTitle>
+                                    <CardTitle className="flex items-center justify-between">
+                                        Admin Notes
+                                        {hasNotesDraft && (
+                                            <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                                                <Save className="h-3 w-3" />
+                                                Draft saved {lastNotesSaved && new Date(lastNotesSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <Textarea

@@ -5,6 +5,7 @@ import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Promotions from "./pages/admin/Promotions";
 import { useAuthStore } from "@/store/auth";
+import { useVisitorStore } from "@/store/visitor";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -32,11 +33,13 @@ import AdminOrderDetails from "./pages/admin/OrderDetails";
 import AdminPaymentMethods from "./pages/admin/PaymentMethods";
 
 const App = () => {
-  const initialize = useAuthStore((state) => state.initialize);
+  const initializeAuth = useAuthStore((state) => state.initialize);
+  const initializeVisitor = useVisitorStore((state) => state.initialize);
 
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    initializeAuth();
+    initializeVisitor();
+  }, [initializeAuth, initializeVisitor]);
 
   return (
     <TooltipProvider>

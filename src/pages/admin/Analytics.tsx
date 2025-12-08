@@ -55,6 +55,12 @@ const Analytics = () => {
     vip: 0,
     inactive: 0
   });
+  const [visitorStats, setVisitorStats] = useState({
+    total: 0,
+    returning: 0,
+    mobile: 0,
+    desktop: 0
+  });
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -77,6 +83,20 @@ const Analytics = () => {
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
+
+      // Fetch visitor stats
+      const { data: visitorsData, error: visitorsError } = await supabase
+        .from('visitor_sessions')
+        .select('*');
+
+      if (!visitorsError && visitorsData) {
+        setVisitorStats({
+          total: visitorsData.length,
+          returning: visitorsData.filter(v => v.visit_count > 1).length,
+          mobile: visitorsData.filter(v => v.device_type === 'mobile').length,
+          desktop: visitorsData.filter(v => v.device_type === 'desktop').length
+        });
+      }
 
       // Calculate stats
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
@@ -230,6 +250,9 @@ const Analytics = () => {
           <TabsTrigger value="customers">Customers</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="visitors">Visitors</TabsTrigger>
           <TabsTrigger value="marketing">Marketing</TabsTrigger>
         </TabsList>
 
@@ -441,6 +464,54 @@ const Analytics = () => {
                 <Button className="mt-4" onClick={() => navigate("/admin/products")}>
                   Manage Products
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Visitors Tab */}
+        <TabsContent value="visitors" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Visitor Analytics</CardTitle>
+              <CardDescription>
+                Track website traffic and user behavior
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card className="bg-blue-50 dark:bg-blue-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{visitorStats.total}</div>
+                    <p className="text-sm text-muted-foreground">Total Visitors</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-green-50 dark:bg-green-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{visitorStats.returning}</div>
+                    <p className="text-sm text-muted-foreground">Returning</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-purple-50 dark:bg-purple-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{visitorStats.mobile}</div>
+                    <p className="text-sm text-muted-foreground">Mobile Users</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-orange-50 dark:bg-orange-950">
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">{visitorStats.desktop}</div>
+                    <p className="text-sm text-muted-foreground">Desktop Users</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-2">Real-time visitor tracking is active</p>
+                <p className="text-sm">
+                  Data is synced from client cookies to the database
+                </p>
               </div>
             </CardContent>
           </Card>

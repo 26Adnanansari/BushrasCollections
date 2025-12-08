@@ -1,105 +1,88 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface UseFormDraftOptions<T> {
   formId: string;
-  defaultValues: T;
-  enabled?: boolean;
+  initialData: T;
+  expiryHours?: number;
 }
 
-interface DraftState {
-  lastSaved: string | null;
-  isDirty: boolean;
+interface FormDraftState<T> {
+  data: T;
+  lastSaved: number;
 }
 
-export function useFormDraft<T extends Record<string, any>>({
-  formId,
-  defaultValues,
-  enabled = true,
-}: UseFormDraftOptions<T>) {
-  const [draftState, setDraftState] = useState<DraftState>({
-    lastSaved: null,
-    isDirty: false,
-  });
+export function useFormDraft<T>({ formId, initialData, expiryHours = 24 }: UseFormDraftOptions<T>) {
+  const [formData, setFormData] = useState<T>(initialData);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+  const { toast } = useToast();
 
-  const draftKey = `draft_${formId}`;
+  const STORAGE_KEY = `form_draft_${formId}`;
 
-  // Load draft from localStorage
-  const loadDraft = useCallback((): T | null => {
-    if (!enabled) return null;
-    
+  // Load draft on mount
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem(draftKey);
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        setDraftState({
-          lastSaved: parsed.timestamp,
-          isDirty: false,
-        });
-        return parsed.data;
+        const parsed: FormDraftState<T> = JSON.parse(saved);
+        const now = Date.now();
+        const expiryTime = expiryHours * 60 * 60 * 1000;
+
+        if (now - parsed.lastSaved < expiryTime) {
+          setFormData(parsed.data);
+          setLastSaved(new Date(parsed.lastSaved));
+          setHasDraft(true);
+
+          toast({
+            title: "Draft Restored",
+            description: `Restored your unsaved changes from ${new Date(parsed.lastSaved).toLocaleTimeString()}`,
+            duration: 4000,
+          });
+        } else {
+          // Expired
+          localStorage.removeItem(STORAGE_KEY);
+        }
       }
     } catch (error) {
-      console.error('Failed to load draft:', error);
+      console.error('Error loading draft:', error);
+      localStorage.removeItem(STORAGE_KEY);
     }
-    return null;
-  }, [draftKey, enabled]);
+  }, [STORAGE_KEY, expiryHours, toast]);
 
-  // Save draft to localStorage
-  const saveDraft = useCallback((data: T) => {
-    if (!enabled) return;
-    
-    try {
-      const timestamp = new Date().toISOString();
-      localStorage.setItem(draftKey, JSON.stringify({
-        data,
-        timestamp,
-      }));
-      setDraftState({
-        lastSaved: timestamp,
-        isDirty: true,
-      });
-    } catch (error) {
-      console.error('Failed to save draft:', error);
-    }
-  }, [draftKey, enabled]);
-
-  // Clear draft from localStorage
-  const clearDraft = useCallback(() => {
-    if (!enabled) return;
-    
-    try {
-      localStorage.removeItem(draftKey);
-      setDraftState({
-        lastSaved: null,
-        isDirty: false,
-      });
-    } catch (error) {
-      console.error('Failed to clear draft:', error);
-    }
-  }, [draftKey, enabled]);
-
-  // Auto-save immediately on every change
-  const autoSave = useCallback((data: T) => {
-    saveDraft(data);
-  }, [saveDraft]);
-
-  // Warning on navigate away
+  // Save draft with debounce
   useEffect(() => {
-    if (!enabled || !draftState.isDirty) return;
+    const handler = setTimeout(() => {
+      // Don't save if it matches initial data exactly (empty form)
+      if (JSON.stringify(formData) === JSON.stringify(initialData)) {
+        return;
+      }
 
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
+      const state: FormDraftState<T> = {
+        data: formData,
+        lastSaved: Date.now()
+      };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [enabled, draftState.isDirty]);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setLastSaved(new Date());
+      setHasDraft(true);
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(handler);
+  }, [formData, STORAGE_KEY, initialData]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setFormData(initialData);
+    setLastSaved(null);
+    setHasDraft(false);
+  }, [STORAGE_KEY, initialData]);
 
   return {
-    loadDraft,
-    saveDraft: autoSave,
-    clearDraft,
-    draftState,
-    hasDraft: !!draftState.lastSaved,
+    formData,
+    setFormData,
+    lastSaved,
+    hasDraft,
+    clearDraft
   };
 }

@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PlusCircle, Upload, Loader2 } from "lucide-react";
+import { PlusCircle, Upload, Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 interface AddPaymentProps {
     orderId: string;
@@ -20,12 +21,17 @@ const AddPayment = ({ orderId, balanceDue, onPaymentAdded }: AddPaymentProps) =>
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-    const [formData, setFormData] = useState({
+    const initialFormState = {
         amount: '',
         payment_method: 'cash',
         bank_name: '',
         transaction_id: '',
         notes: ''
+    };
+
+    const { formData, setFormData, hasDraft, clearDraft, lastSaved } = useFormDraft({
+        formId: `add_payment_${orderId}`,
+        initialData: initialFormState
     });
 
     const [proofFile, setProofFile] = useState<File | null>(null);
@@ -148,14 +154,10 @@ const AddPayment = ({ orderId, balanceDue, onPaymentAdded }: AddPaymentProps) =>
                 description: `PKR ${amount.toLocaleString()} payment added successfully`
             });
 
-            // Reset form
-            setFormData({
-                amount: '',
-                payment_method: 'cash',
-                bank_name: '',
-                transaction_id: '',
-                notes: ''
-            });
+            // Reset form and clear draft
+            clearDraft();
+            setProofFile(null);
+            setProofUrl('');
             setProofFile(null);
             setProofUrl('');
 
@@ -179,6 +181,12 @@ const AddPayment = ({ orderId, balanceDue, onPaymentAdded }: AddPaymentProps) =>
                 <CardTitle className="flex items-center gap-2">
                     <PlusCircle className="h-5 w-5" />
                     Record Payment
+                    {hasDraft && (
+                        <span className="ml-auto text-xs font-normal text-muted-foreground flex items-center gap-1">
+                            <Save className="h-3 w-3" />
+                            Draft saved {lastSaved && new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                    )}
                 </CardTitle>
             </CardHeader>
             <CardContent>

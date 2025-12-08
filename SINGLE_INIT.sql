@@ -207,6 +207,31 @@ CREATE TABLE public.order_payments (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Visitor sessions table (for analytics)
+CREATE TABLE IF NOT EXISTS public.visitor_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  visitor_id UUID NOT NULL, -- The UUID from the cookie
+  user_id UUID REFERENCES auth.users(id), -- Optional: Link if they log in
+  
+  -- Session Metrics
+  visit_count INTEGER DEFAULT 1,
+  first_visit TIMESTAMPTZ DEFAULT now(),
+  last_visit TIMESTAMPTZ DEFAULT now(),
+  
+  -- Device/Browser Info
+  user_agent TEXT,
+  device_type TEXT, -- 'mobile', 'desktop', 'tablet'
+  
+  -- Marketing Attribution
+  referrer TEXT,
+  utm_source TEXT,
+  utm_medium TEXT,
+  utm_campaign TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 
 -- ============================================
 -- 2B. ADD PAYMENT TRACKING COLUMNS TO ORDERS
@@ -308,6 +333,23 @@ AS $$
 BEGIN
   new.updated_at = now();
   RETURN new;
+END;
+$$;
+
+$$;
+
+-- Sync email from auth.users to profiles
+CREATE OR REPLACE FUNCTION public.sync_user_email()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.profiles
+  SET email = NEW.email
+  WHERE id = NEW.id;
+  RETURN NEW;
 END;
 $$;
 
@@ -449,6 +491,12 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
+-- Trigger to sync email on user update
+CREATE TRIGGER sync_email_on_update
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.sync_user_email();
+
 -- Triggers to auto-update updated_at columns
 CREATE TRIGGER set_updated_at
   BEFORE UPDATE ON public.profiles
@@ -526,6 +574,7 @@ ALTER TABLE public.marketing_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotional_banners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.visitor_sessions ENABLE ROW LEVEL SECURITY;
 
 
 
@@ -678,8 +727,21 @@ CREATE POLICY "Admins can manage all order tracking"
   USING (public.is_admin((SELECT auth.uid())));
 
 -- Marketing campaigns policies
-CREATE POLICY "Admins can manage campaigns"
-  ON public.marketing_campaigns FOR ALL
+-- Visitor sessions policies
+-- Allow anyone (anon) to insert their OWN session
+CREATE POLICY "Allow public insert of visitor sessions"
+  ON public.visitor_sessions FOR INSERT
+  TO public
+  WITH CHECK (true);
+
+CREATE POLICY "Allow public update of own session"
+  ON public.visitor_sessions FOR UPDATE
+  TO public
+  USING (true);
+
+-- Allow Admins to view all sessions
+CREATE POLICY "Admins can view all visitor sessions"
+  ON public.visitor_sessions FOR SELECT
   USING (public.is_admin((SELECT auth.uid())));
 
 
@@ -705,6 +767,11 @@ CREATE INDEX idx_orders_created_at ON public.orders(created_at DESC);
 CREATE INDEX idx_orders_status ON public.orders(status);
 CREATE INDEX idx_orders_payment_status ON public.orders(payment_status);
 
+-- Order payments indexes
+CREATE INDEX idx_order_payments_order_id ON public.order_payments(order_id);
+CREATE INDEX idx_order_payments_created_at ON public.order_payments(created_at DESC);
+CREATE INDEX idx_order_payments_payment_date ON public.order_payments(payment_date DESC);
+
 -- Payment methods indexes
 CREATE INDEX idx_payment_methods_active ON public.payment_methods(is_active) WHERE is_active = true;
 CREATE INDEX idx_payment_methods_display_order ON public.payment_methods(display_order);
@@ -727,6 +794,13 @@ CREATE INDEX idx_order_tracking_created_at ON public.order_tracking(created_at D
 -- Marketing campaigns indexes
 CREATE INDEX idx_campaigns_status ON public.marketing_campaigns(status);
 CREATE INDEX idx_campaigns_created_at ON public.marketing_campaigns(created_at DESC);
+
+-- Visitor sessions indexes
+CREATE INDEX idx_visitor_sessions_last_visit ON public.visitor_sessions(last_visit DESC);
+CREATE INDEX idx_visitor_sessions_visit_count ON public.visitor_sessions(visit_count DESC);
+
+-- Order number index (for fast lookups)
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders(order_number);
 
 
 -- ============================================
@@ -813,6 +887,27 @@ CREATE POLICY "Authenticated users can delete hero media"
   ON storage.objects FOR DELETE
   TO authenticated
   USING (bucket_id = 'hero-media' AND auth.role() = 'authenticated');
+
+-- Order documents policies (payment proofs)
+CREATE POLICY "Anyone can view order documents"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'order-documents');
+
+CREATE POLICY "Authenticated users can upload order documents"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'order-documents' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update order documents"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'order-documents' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete order documents"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'order-documents' AND auth.role() = 'authenticated');
 
 -- ============================================
 -- 11. INSERT DEFAULT DATA
