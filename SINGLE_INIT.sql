@@ -59,7 +59,7 @@ CREATE TABLE public.products (
   brand TEXT NOT NULL,
   image_url TEXT,
   category TEXT NOT NULL,
-  stock INTEGER DEFAULT 0,
+  stock_quantity INTEGER DEFAULT 0,
   is_featured BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
   -- Boutique-specific fields (all optional)
@@ -92,6 +92,11 @@ CREATE TABLE public.orders (
   payment_method_id UUID,
   payment_status TEXT DEFAULT 'pending_payment',
   transaction_id TEXT,
+  
+  -- Payment Tracking
+  total_paid NUMERIC(10,2) DEFAULT 0,
+  balance_due NUMERIC(10,2),
+  
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -235,11 +240,8 @@ CREATE TABLE IF NOT EXISTS public.visitor_sessions (
 
 -- ============================================
 -- 2B. ADD PAYMENT TRACKING COLUMNS TO ORDERS
+-- (Moved to CREATE TABLE definition above)
 -- ============================================
-
-ALTER TABLE public.orders 
-ADD COLUMN IF NOT EXISTS total_paid NUMERIC(10,2) DEFAULT 0,
-ADD COLUMN IF NOT EXISTS balance_due NUMERIC(10,2);
 
 
 -- ============================================
