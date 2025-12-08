@@ -47,7 +47,7 @@ export default function PaymentMethods() {
     display_order: 0,
   });
 
-  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+  const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: editingMethod ? `payment_${editingMethod.id}` : 'payment_new',
     defaultValues: formData,
     enabled: dialogOpen,

@@ -250,8 +250,6 @@ const Analytics = () => {
           <TabsTrigger value="customers">Customers</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="visitors">Visitors</TabsTrigger>
           <TabsTrigger value="marketing">Marketing</TabsTrigger>
         </TabsList>

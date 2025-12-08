@@ -38,13 +38,13 @@ const HeroSlider = () => {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  
+
   const [newSlides, setNewSlides] = useState<NewSlideForm[]>([
     { title: "", subtitle: "", cta_text: "", cta_link: "", file: null }
   ]);
 
   const draftData = newSlides.map(({ file, ...rest }) => rest);
-  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+  const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: 'hero_slides',
     defaultValues: draftData,
     enabled: true,
@@ -90,7 +90,7 @@ const HeroSlider = () => {
     }
 
     const isAdmin = roleData?.some(r => r.role === 'admin');
-    
+
     if (!isAdmin) {
       toast({
         title: "Access denied",
@@ -274,7 +274,7 @@ const HeroSlider = () => {
     try {
       // Extract filename from URL
       const fileName = mediaUrl.split("/").pop();
-      
+
       // Delete from storage
       if (fileName) {
         await supabase.storage.from("hero-media").remove([fileName]);
@@ -325,9 +325,9 @@ const HeroSlider = () => {
         <Card className="p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Add New Slides</h2>
-            <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
+            <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
           </div>
-          
+
           <div className="space-y-6">
             {newSlides.map((slide, index) => (
               <div key={index} className="p-4 border border-border rounded-lg relative">
@@ -425,7 +425,7 @@ const HeroSlider = () => {
         {/* Slides List */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Existing Slides ({slides.length})</h2>
-          
+
           {slides.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
               No slides yet. Add your first slide above!
@@ -435,7 +435,7 @@ const HeroSlider = () => {
               <Card key={slide.id} className="p-4">
                 <div className="flex items-center gap-4">
                   <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-                  
+
                   <div className="w-32 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
                     <img src={slide.image_url} alt={slide.title || ''} className="w-full h-full object-cover" />
                   </div>

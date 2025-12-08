@@ -3,25 +3,26 @@ import { useToast } from '@/hooks/use-toast';
 
 interface UseFormDraftOptions<T> {
   formId: string;
-  initialData: T;
+  initialData?: T;
+  defaultValues?: T;
   expiryHours?: number;
+  enabled?: boolean;
 }
 
-interface FormDraftState<T> {
-  data: T;
-  lastSaved: number;
-}
+export function useFormDraft<T>({ formId, initialData, defaultValues, expiryHours = 24, enabled = true }: UseFormDraftOptions<T>) {
+  const dataToUse = initialData || defaultValues;
+  if (!dataToUse) {
+    throw new Error("Either initialData or defaultValues must be provided");
+  }
 
-export function useFormDraft<T>({ formId, initialData, expiryHours = 24 }: UseFormDraftOptions<T>) {
-  const [formData, setFormData] = useState<T>(initialData);
+  const [formData, setFormData] = useState<T>(dataToUse);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
   const { toast } = useToast();
 
   const STORAGE_KEY = `form_draft_${formId}`;
 
-  // Load draft on mount
-  useEffect(() => {
+  const loadDraft = useCallback(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -39,8 +40,9 @@ export function useFormDraft<T>({ formId, initialData, expiryHours = 24 }: UseFo
             description: `Restored your unsaved changes from ${new Date(parsed.lastSaved).toLocaleTimeString()}`,
             duration: 4000,
           });
+
+          return parsed.data;
         } else {
-          // Expired
           localStorage.removeItem(STORAGE_KEY);
         }
       }
@@ -48,41 +50,48 @@ export function useFormDraft<T>({ formId, initialData, expiryHours = 24 }: UseFo
       console.error('Error loading draft:', error);
       localStorage.removeItem(STORAGE_KEY);
     }
+    return null;
   }, [STORAGE_KEY, expiryHours, toast]);
 
-  // Save draft with debounce
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      // Don't save if it matches initial data exactly (empty form)
-      if (JSON.stringify(formData) === JSON.stringify(initialData)) {
-        return;
-      }
+  const saveDraft = useCallback((data: T) => {
+    if (!enabled) return;
 
-      const state: FormDraftState<T> = {
-        data: formData,
-        lastSaved: Date.now()
-      };
+    // Don't save if it matches initial data exactly
+    if (JSON.stringify(data) === JSON.stringify(dataToUse)) {
+      return;
+    }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      setLastSaved(new Date());
-      setHasDraft(true);
-    }, 1000); // 1 second debounce
+    const state: FormDraftState<T> = {
+      data,
+      lastSaved: Date.now()
+    };
 
-    return () => clearTimeout(handler);
-  }, [formData, STORAGE_KEY, initialData]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    setLastSaved(new Date());
+    setHasDraft(true);
+  }, [STORAGE_KEY, dataToUse, enabled]);
 
   const clearDraft = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setFormData(initialData);
+    setFormData(dataToUse);
     setLastSaved(null);
     setHasDraft(false);
-  }, [STORAGE_KEY, initialData]);
+  }, [STORAGE_KEY, dataToUse]);
+
+  // Auto-load on mount if enabled
+  useEffect(() => {
+    if (enabled) {
+      loadDraft();
+    }
+  }, [enabled, loadDraft]);
 
   return {
     formData,
     setFormData,
     lastSaved,
     hasDraft,
-    clearDraft
+    clearDraft,
+    loadDraft,
+    saveDraft
   };
 }

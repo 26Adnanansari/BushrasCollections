@@ -91,7 +91,7 @@ const AdminProducts = () => {
   const [uploading, setUploading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+  const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: editingProduct ? `product_${editingProduct.id}` : 'product_new',
     defaultValues: { ...formData, productImages },
     enabled: isDialogOpen,
@@ -554,7 +554,7 @@ const AdminProducts = () => {
                     </DialogDescription>
                   </DialogHeader>
 
-                  <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
+                  <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
 
                   <form onSubmit={handleSubmit}>
                     <div className="space-y-4">

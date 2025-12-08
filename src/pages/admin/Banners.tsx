@@ -31,7 +31,7 @@ const AdminBanners = () => {
     display_order: 0,
   });
 
-  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+  const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: editingBanner ? `banner_${editingBanner.id}` : 'banner_new',
     defaultValues: formData,
     enabled: dialogOpen,
@@ -79,7 +79,7 @@ const AdminBanners = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingBanner) {
         const { error } = await supabase
@@ -170,172 +170,172 @@ const AdminBanners = () => {
   return (
     <div className="min-h-screen bg-background p-10 ">
 
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold px-3">Promotional Banners</h1>
-          <p className="text-muted-foreground px-3">Manage promotional banners displayed on the site</p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold px-3">Promotional Banners</h1>
+            <p className="text-muted-foreground px-3">Manage promotional banners displayed on the site</p>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button className="mr-3">
+                <Plus className="h-4 w-4 mr-2 " />
+                Add Banner
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingBanner ? 'Edit' : 'Add'} Banner</DialogTitle>
+                <DialogDescription>
+                  {editingBanner ? 'Update' : 'Create'} a promotional banner for your store
+                </DialogDescription>
+              </DialogHeader>
+              <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Banner Image *</Label>
+                  <SingleImageUpload
+                    bucket="hero-media"
+                    currentImageUrl={formData.image_url}
+                    onUploadComplete={(url) => setFormData({ ...formData, image_url: url })}
+                    label="Banner Image"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="cta_text">Button Text</Label>
+                    <Input
+                      id="cta_text"
+                      value={formData.cta_text}
+                      onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
+                      placeholder="Shop Now"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cta_link">Button Link</Label>
+                    <Input
+                      id="cta_link"
+                      value={formData.cta_link}
+                      onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
+                      placeholder="/products"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="display_order">Display Order</Label>
+                    <Input
+                      id="display_order"
+                      type="number"
+                      value={formData.display_order}
+                      onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 pt-8">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
+                    <Label htmlFor="is_active">Active</Label>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingBanner ? 'Update' : 'Create'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button className="mr-3">
-              <Plus className="h-4 w-4 mr-2 " />
-              Add Banner
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingBanner ? 'Edit' : 'Add'} Banner</DialogTitle>
-              <DialogDescription>
-                {editingBanner ? 'Update' : 'Create'} a promotional banner for your store
-              </DialogDescription>
-            </DialogHeader>
-            <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label>Banner Image *</Label>
-                <SingleImageUpload
-                  bucket="hero-media"
-                  currentImageUrl={formData.image_url}
-                  onUploadComplete={(url) => setFormData({ ...formData, image_url: url })}
-                  label="Banner Image"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="cta_text">Button Text</Label>
-                  <Input
-                    id="cta_text"
-                    value={formData.cta_text}
-                    onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
-                    placeholder="Shop Now"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cta_link">Button Link</Label>
-                  <Input
-                    id="cta_link"
-                    value={formData.cta_link}
-                    onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
-                    placeholder="/products"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="display_order">Display Order</Label>
-                  <Input
-                    id="display_order"
-                    type="number"
-                    value={formData.display_order}
-                    onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="flex items-center space-x-2 pt-8">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                  />
-                  <Label htmlFor="is_active">Active</Label>
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingBanner ? 'Update' : 'Create'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Banners</CardTitle>
-          <CardDescription>Manage your promotional banners</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {banners.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No banners yet. Create your first promotional banner.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Preview</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {banners.map((banner) => (
-                  <TableRow key={banner.id}>
-                    <TableCell>
-                      <img
-                        src={banner.image_url}
-                        alt={banner.title}
-                        className="w-20 h-12 object-cover rounded"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{banner.title}</TableCell>
-                    <TableCell>{banner.display_order}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs ${banner.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {banner.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(banner)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(banner.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
+        <Card>
+          <CardHeader>
+            <CardTitle>Banners</CardTitle>
+            <CardDescription>Manage your promotional banners</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {banners.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                No banners yet. Create your first promotional banner.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Preview</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {banners.map((banner) => (
+                    <TableRow key={banner.id}>
+                      <TableCell>
+                        <img
+                          src={banner.image_url}
+                          alt={banner.title}
+                          className="w-20 h-12 object-cover rounded"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{banner.title}</TableCell>
+                      <TableCell>{banner.display_order}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs ${banner.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {banner.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(banner)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(banner.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
