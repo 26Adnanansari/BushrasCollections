@@ -97,7 +97,7 @@ const Orders = () => {
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div className="flex-1 min-w-[200px]">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">Order {order.order_number || `#${order.id.slice(0, 8)}`}</h3>
+                        <h3 className="font-semibold text-lg font-sans">Order {order.order_number || `#${order.id.slice(0, 8)}`}</h3>
                         <Badge className={getStatusColor(order.status)}>
                           {order.status}
                         </Badge>

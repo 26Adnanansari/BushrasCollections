@@ -12,12 +12,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Phone, Mail, MapPin, Package, CreditCard, Truck, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
+import PaymentHistory from "@/components/PaymentHistory";
+import AddPayment from "@/components/AddPayment";
 
 interface OrderDetails {
     id: string;
     order_number: string;
     user_id: string;
     total: number;
+    total_paid?: number;
+    balance_due?: number;
     status: string;
     payment_status: string;
     items: any;
@@ -35,12 +39,25 @@ interface OrderDetails {
     };
 }
 
+interface Payment {
+    id: string;
+    amount: number;
+    payment_method: string;
+    payment_status: string;
+    bank_name?: string;
+    transaction_id?: string;
+    transaction_proof_url?: string;
+    payment_date: string;
+    notes?: string;
+}
+
 const OrderDetailsPage = () => {
     const { orderId } = useParams();
     const { user } = useAuthStore();
     const navigate = useNavigate();
     const { toast } = useToast();
     const [order, setOrder] = useState<OrderDetails | null>(null);
+    const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
     const [trackingNumber, setTrackingNumber] = useState("");
     const [adminNotes, setAdminNotes] = useState("");
@@ -73,10 +90,20 @@ const OrderDetailsPage = () => {
 
             if (profileError) throw profileError;
 
+            // Fetch payments
+            const { data: paymentsData, error: paymentsError } = await supabase
+                .from('order_payments')
+                .select('*')
+                .eq('order_id', orderId)
+                .order('payment_date', { ascending: false });
+
+            if (paymentsError) throw paymentsError;
+
             setOrder({
                 ...orderData,
                 profiles: profileData
             });
+            setPayments(paymentsData || []);
 
             setTrackingNumber(orderData.tracking_number || "");
             setAdminNotes(orderData.admin_notes || "");
@@ -218,7 +245,7 @@ const OrderDetailsPage = () => {
 
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
+                                <h1 className="text-3xl font-sans font-bold text-foreground mb-2">
                                     Order {order.order_number || `#${order.id.slice(-8)}`}
                                 </h1>
                                 <p className="text-muted-foreground">
@@ -362,26 +389,20 @@ const OrderDetailsPage = () => {
                         {/* Right Column */}
                         <div className="space-y-6">
                             {/* Payment Information */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <CreditCard className="h-5 w-5" />
-                                        Payment
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-2">
-                                    <div>
-                                        <Label className="text-muted-foreground">Status</Label>
-                                        <p className="font-medium">{order.payment_status || 'Pending'}</p>
-                                    </div>
-                                    <div>
-                                        <Label className="text-muted-foreground">Total Amount</Label>
-                                        <p className="text-2xl font-bold text-primary">
-                                            PKR {order.total.toLocaleString()}
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            {/* Payment History */}
+                            <PaymentHistory
+                                payments={payments}
+                                totalAmount={order.total}
+                                totalPaid={order.total_paid || 0}
+                                balanceDue={order.balance_due ?? order.total}
+                            />
+
+                            {/* Add Payment */}
+                            <AddPayment
+                                orderId={order.id}
+                                balanceDue={order.balance_due ?? order.total}
+                                onPaymentAdded={fetchOrderDetails}
+                            />
 
                             {/* Order Status */}
                             <Card>
