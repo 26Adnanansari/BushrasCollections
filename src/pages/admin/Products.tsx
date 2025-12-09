@@ -163,6 +163,78 @@ const AdminProducts = () => {
     }
   };
 
+  const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    Papa.parse(file, {
+      header: true,
+      complete: async (results) => {
+        try {
+          const productsToUpload = results.data
+            .filter((row: any) => row.name && row.price) // Basic validation
+            .map((row: any) => {
+              // Handle multiple images from CSV (comma separated in image_url or images column)
+              let images: string[] = [];
+              if (row.images) {
+                images = row.images.split(',').map((url: string) => url.trim());
+              } else if (row.image_url) {
+                images = row.image_url.split(',').map((url: string) => url.trim());
+              }
+
+              return {
+                sku: row.sku || null,
+                name: row.name,
+                description: row.description,
+                price: parseFloat(row.price),
+                list_price: row.list_price ? parseFloat(row.list_price) : null,
+                category: row.category,
+                brand: row.brand || "Bushra's Collection",
+                stock_quantity: parseInt(row.stock_quantity) || 0,
+                is_active: row.is_active === 'TRUE' || row.is_active === 'true' || row.is_active === true,
+                image_url: images[0] || null, // Primary image
+                images: images, // All images array
+                fabric_type: row.fabric_type,
+                available_sizes: row.available_sizes ? row.available_sizes.split(',').map((s: string) => s.trim()) : [],
+                available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()) : [],
+                care_instructions: row.care_instructions,
+                occasion_type: row.occasion_type,
+                embellishment: row.embellishment
+              };
+            });
+
+          if (productsToUpload.length === 0) {
+            throw new Error("No valid products found in CSV");
+          }
+
+          const { error } = await supabase
+            .from('products')
+            .insert(productsToUpload);
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: `Uploaded ${productsToUpload.length} products successfully`
+          });
+          fetchProducts();
+          setIsDialogOpen(false);
+        } catch (error: any) {
+          console.error('Error uploading CSV:', error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to upload products from CSV",
+            variant: "destructive"
+          });
+        } finally {
+          setUploading(false);
+          if (event.target) event.target.value = '';
+        }
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -196,6 +268,7 @@ const AdminProducts = () => {
       const productData = {
         ...validatedData,
         image_url: productImages[0], // Use first image as primary
+        images: productImages, // Save all images
         is_active: formData.is_active,
       };
 
@@ -282,6 +355,13 @@ const AdminProducts = () => {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    // Load images from the new images array, fallback to image_url if empty
+    const images = (product as any).images && (product as any).images.length > 0
+      ? (product as any).images
+      : (product.image_url ? [product.image_url] : []);
+
+    setProductImages(images);
+
     setFormData({
       sku: product.sku || '',
       name: product.name,
@@ -299,9 +379,9 @@ const AdminProducts = () => {
       occasion_type: product.occasion_type || '',
       embellishment: product.embellishment || '',
     });
-    setProductImages(product.image_url ? [product.image_url] : []);
     setIsDialogOpen(true);
   };
+
 
   const handleDelete = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
@@ -353,124 +433,7 @@ const AdminProducts = () => {
     }
   };
 
-  const handleCsvUpload = async () => {
-    if (!csvFile) {
-      toast({
-        title: "Error",
-        description: "Please select a CSV file",
-        variant: "destructive"
-      });
-      return;
-    }
 
-    setUploading(true);
-    try {
-      const Papa = await import('papaparse');
-
-      Papa.parse(csvFile, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async (results) => {
-          try {
-            const validProducts = [];
-            const errors = [];
-
-            for (let i = 0; i < results.data.length; i++) {
-              const row: any = results.data[i];
-
-              // Validate each row using same schema as manual form
-              try {
-                const validated = productSchema.parse({
-                  sku: row.sku?.trim() || undefined,
-                  name: row.name?.trim(),
-                  description: row.description?.trim(),
-                  price: parseFloat(row.price),
-                  list_price: row.list_price && row.list_price.trim() !== '' ? parseFloat(row.list_price) : undefined,
-                  brand: row.brand?.trim(),
-                  category: row.category?.trim(),
-                  stock_quantity: parseInt(row.stock_quantity || '0'),
-                  fabric_type: row.fabric_type?.trim() || undefined,
-                  available_sizes: row.available_sizes ? row.available_sizes.split(',').map((s: string) => s.trim()) : undefined,
-                  available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()) : undefined,
-                  care_instructions: row.care_instructions?.trim() || undefined,
-                  occasion_type: row.occasion_type?.trim() || undefined,
-                  embellishment: row.embellishment?.trim() || undefined,
-                });
-
-                validProducts.push({
-                  ...validated,
-                  image_url: row.image_url?.trim() || null,
-                  is_active: row.is_active?.toLowerCase() !== 'false',
-                });
-              } catch (error: any) {
-                errors.push(`Row ${i + 2}: ${error.errors?.[0]?.message || 'Invalid data'}`);
-              }
-            }
-
-            if (errors.length > 0) {
-              toast({
-                title: "CSV Validation Errors",
-                description: `${errors.slice(0, 3).join('. ')}${errors.length > 3 ? '...' : ''}`,
-                variant: "destructive"
-              });
-              setUploading(false);
-              return;
-            }
-
-            if (validProducts.length === 0) {
-              toast({
-                title: "Error",
-                description: "No valid products found in CSV",
-                variant: "destructive"
-              });
-              setUploading(false);
-              return;
-            }
-
-            // Insert products directly via Supabase client
-            const { error } = await supabase
-              .from('products')
-              .insert(validProducts as any);
-
-            if (error) throw error;
-
-            toast({
-              title: "Success",
-              description: `Successfully uploaded ${validProducts.length} products`
-            });
-            setCsvFile(null);
-            fetchProducts();
-          } catch (error: any) {
-            console.error('CSV processing error:', error);
-            toast({
-              title: "Error",
-              description: error.message || 'Failed to process CSV',
-              variant: "destructive"
-            });
-          } finally {
-            setUploading(false);
-          }
-        },
-        error: (error) => {
-          console.error('CSV parsing error:', error);
-          toast({
-            title: "Error",
-            description: 'Failed to parse CSV file',
-            variant: "destructive"
-          });
-          setUploading(false);
-        }
-      });
-    } catch (error: any) {
-      console.error('CSV upload error:', error);
-      toast({
-        title: "Error",
-        description: error.message || 'Failed to upload CSV',
-        variant: "destructive"
-      });
-      setUploading(false);
-    }
-  };
 
   const downloadSampleCsv = () => {
     const headers = ['name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity', 'image_url', 'is_active', 'sku', 'fabric_type', 'available_sizes', 'available_colors', 'occasion_type', 'care_instructions', 'embellishment'];
