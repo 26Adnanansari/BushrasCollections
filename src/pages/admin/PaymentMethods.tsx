@@ -316,7 +316,7 @@ export default function PaymentMethods() {
               Configure payment options for your customers
             </DialogDescription>
           </DialogHeader>
-          <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
+          <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">

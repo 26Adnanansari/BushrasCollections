@@ -9,9 +9,14 @@ interface UseFormDraftOptions<T> {
   enabled?: boolean;
 }
 
+interface FormDraftState<T> {
+  data: T;
+  lastSaved: number;
+}
+
 export function useFormDraft<T>({ formId, initialData, defaultValues, expiryHours = 24, enabled = true }: UseFormDraftOptions<T>) {
-  const dataToUse = initialData || defaultValues;
-  if (!dataToUse) {
+  const dataToUse = initialData !== undefined ? initialData : defaultValues;
+  if (dataToUse === undefined) {
     throw new Error("Either initialData or defaultValues must be provided");
   }
 
