@@ -213,7 +213,7 @@ const ProductDetail = () => {
           {/* Product Images with Zoom */}
           <div className="space-y-4">
             <div
-              className="aspect-[4/5] rounded-2xl overflow-hidden bg-card relative cursor-crosshair"
+              className="aspect-[4/5] rounded-2xl overflow-hidden bg-card relative cursor-crosshair group"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
@@ -234,26 +234,29 @@ const ProductDetail = () => {
                   }}
                 />
               )}
+              {/* Image Counter */}
+              <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                {selectedImage + 1} / {productImages.length}
+              </div>
             </div>
 
-            {productImages.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
-                {productImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-primary' : 'border-transparent'
-                      }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-contain"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Always show thumbnails for debugging/better UX */}
+            <div className="grid grid-cols-4 gap-4">
+              {productImages.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-primary' : 'border-transparent'
+                    }`}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    className="w-full h-full object-contain"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Product Information */}
