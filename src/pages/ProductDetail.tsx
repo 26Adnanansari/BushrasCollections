@@ -42,6 +42,11 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isZoomed, setIsZoomed] = useState(false);
+
+  // Variation State
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
+
   const { addItem } = useCartStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -73,8 +78,35 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
+  // Reset selections when product changes
+  useEffect(() => {
+    if (product) {
+      setSelectedSize("");
+      setSelectedColor("");
+    }
+  }, [product]);
+
   const handleAddToCart = () => {
     if (!product) return;
+
+    // Validate Variations
+    if (product.available_sizes && product.available_sizes.length > 0 && !selectedSize) {
+      toast({
+        title: "Select Size",
+        description: "Please select a size to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (product.available_colors && product.available_colors.length > 0 && !selectedColor) {
+      toast({
+        title: "Select Color",
+        description: "Please select a color to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     for (let i = 0; i < quantity; i++) {
       addItem({
@@ -82,7 +114,9 @@ const ProductDetail = () => {
         name: product.name,
         price: product.price,
         image: productImages[0] || '/placeholder.svg',
-        category: product.category || 'Fashion'
+        category: product.category || 'Fashion',
+        size: selectedSize,
+        color: selectedColor
       });
     }
 
@@ -103,7 +137,6 @@ const ProductDetail = () => {
       return;
     }
 
-    // Add to cart and navigate to checkout (will implement checkout later)
     handleAddToCart();
     toast({
       title: "Order Booking",
@@ -259,6 +292,55 @@ const ProductDetail = () => {
             </div>
 
             <Separator />
+
+            {/* Variations: Size & Color */}
+            <div className="space-y-6">
+              {product.available_sizes && product.available_sizes.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-3 block">
+                    Select Size
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {product.available_sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`min-w-[3rem] h-10 px-4 rounded-md border text-sm font-medium transition-all
+                          ${selectedSize === size
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-input hover:border-primary hover:text-primary'
+                          }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {product.available_colors && product.available_colors.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-3 block">
+                    Select Color
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {product.available_colors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`h-10 px-4 rounded-md border text-sm font-medium transition-all capitalize
+                          ${selectedColor === color
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-input hover:border-primary hover:text-primary'
+                          }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Quantity Selector */}
             <div className="space-y-4">
