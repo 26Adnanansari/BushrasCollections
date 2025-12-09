@@ -24,6 +24,13 @@ interface Product {
   images?: string[];
   image_url?: string | null;
   created_at: string;
+  // Boutique fields
+  fabric_type?: string;
+  care_instructions?: string;
+  available_sizes?: string[];
+  available_colors?: string[];
+  occasion_type?: string;
+  embellishment?: string;
 }
 
 const ProductDetail = () => {
@@ -33,6 +40,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [isZoomed, setIsZoomed] = useState(false);
   const { addItem } = useCartStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -139,16 +148,23 @@ const ProductDetail = () => {
     );
   }
 
-  const productImages = Array.isArray((product as any).images) && (product as any).images.length > 0 
+  const productImages = Array.isArray((product as any).images) && (product as any).images.length > 0
     ? ((product as any).images as string[])
     : ((product as any).image_url ? [((product as any).image_url as string)] : ['/placeholder.svg']);
 
   const isNew = new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomPosition({ x, y });
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
@@ -161,28 +177,43 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
+          {/* Product Images with Zoom */}
           <div className="space-y-4">
-            <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-card">
-              <img 
-                src={productImages[selectedImage]} 
+            <div
+              className="aspect-[4/5] rounded-2xl overflow-hidden bg-card relative cursor-crosshair"
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={handleMouseMove}
+            >
+              <img
+                src={productImages[selectedImage]}
                 alt={product.name}
                 className="w-full h-full object-contain"
               />
+              {isZoomed && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: `url(${productImages[selectedImage]})`,
+                    backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                    backgroundSize: '200%',
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                />
+              )}
             </div>
-            
+
             {productImages.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
                 {productImages.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === index ? 'border-primary' : 'border-transparent'
-                    }`}
+                    className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-primary' : 'border-transparent'
+                      }`}
                   >
-                    <img 
-                      src={image} 
+                    <img
+                      src={image}
                       alt={`${product.name} ${index + 1}`}
                       className="w-full h-full object-contain"
                     />
@@ -202,14 +233,14 @@ const ProductDetail = () => {
                 {product.name}
               </h1>
               <p className="text-lg text-muted-foreground mb-4">{product.category}</p>
-              
+
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex text-yellow-400">
-                  {[1,2,3,4,5].map((star) => (
-                    <Star key={star} className="h-5 w-5 fill-current" />
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="h-5 w-5 fill-muted text-muted" />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">(4.8) • 23 reviews</span>
+                <span className="text-sm text-muted-foreground">No reviews yet</span>
               </div>
             </div>
 
@@ -219,7 +250,7 @@ const ProductDetail = () => {
               <div className="text-3xl font-bold text-primary mb-4">
                 PKR {product.price.toLocaleString()}
               </div>
-              
+
               {product.description && (
                 <p className="text-muted-foreground leading-relaxed mb-6">
                   {product.description}
@@ -263,8 +294,8 @@ const ProductDetail = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-4">
-                <Button 
-                  className="flex-1" 
+                <Button
+                  className="flex-1"
                   size="lg"
                   onClick={handleBookOrder}
                   disabled={product.stock === 0}
@@ -272,8 +303,8 @@ const ProductDetail = () => {
                   <MessageCircle className="h-5 w-5 mr-2" />
                   Book Order
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="lg"
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
@@ -318,7 +349,7 @@ const ProductDetail = () => {
               </Card>
             </div>
 
-            {/* Product Details */}
+            {/* Product Details Summary */}
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-4">Product Details</h3>
               <div className="space-y-2">
@@ -326,14 +357,24 @@ const ProductDetail = () => {
                   <span className="text-muted-foreground">Category:</span>
                   <span className="text-foreground">{product.category}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Material:</span>
-                  <span className="text-foreground">Premium Quality Fabric</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Care:</span>
-                  <span className="text-foreground">Dry Clean Only</span>
-                </div>
+                {product.fabric_type && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fabric:</span>
+                    <span className="text-foreground">{product.fabric_type}</span>
+                  </div>
+                )}
+                {product.care_instructions && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Care:</span>
+                    <span className="text-foreground">{product.care_instructions}</span>
+                  </div>
+                )}
+                {product.occasion_type && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Occasion:</span>
+                    <span className="text-foreground">{product.occasion_type}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -341,7 +382,7 @@ const ProductDetail = () => {
 
         {/* Product Details & Reviews Tabs */}
         <div className="mt-16">
-          <Tabs defaultValue="reviews" className="w-full">
+          <Tabs defaultValue="details" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
               <TabsTrigger value="details">Product Details</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -352,25 +393,47 @@ const ProductDetail = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      {product.description || "This exquisite piece features premium quality fabric and exceptional craftsmanship. Perfect for special occasions and everyday elegance."}
+                      {product.description || "This exquisite piece features premium quality fabric and exceptional craftsmanship."}
                     </p>
                   </div>
                   <Separator />
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">Specifications</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <span className="text-sm text-muted-foreground">Category</span>
                         <p className="font-medium text-foreground">{product.category}</p>
                       </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground">Material</span>
-                        <p className="font-medium text-foreground">Premium Fabric</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground">Care Instructions</span>
-                        <p className="font-medium text-foreground">Dry Clean Only</p>
-                      </div>
+                      {product.fabric_type && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Fabric</span>
+                          <p className="font-medium text-foreground">{product.fabric_type}</p>
+                        </div>
+                      )}
+                      {product.care_instructions && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Care Instructions</span>
+                          <p className="font-medium text-foreground">{product.care_instructions}</p>
+                        </div>
+                      )}
+                      {product.embellishment && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Embellishment</span>
+                          <p className="font-medium text-foreground">{product.embellishment}</p>
+                        </div>
+                      )}
+                      {product.available_sizes && product.available_sizes.length > 0 && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Available Sizes</span>
+                          <p className="font-medium text-foreground">{product.available_sizes.join(', ')}</p>
+                        </div>
+                      )}
+                      {product.available_colors && product.available_colors.length > 0 && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Available Colors</span>
+                          <p className="font-medium text-foreground">{product.available_colors.join(', ')}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

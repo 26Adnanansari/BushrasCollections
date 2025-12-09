@@ -131,16 +131,30 @@ const Products = () => {
 
       <div>
         <Label className="text-base font-semibold mb-4 block">Price Range</Label>
-        <Slider
-          value={priceRange}
-          onValueChange={setPriceRange}
-          max={maxPrice}
-          step={500}
-          className="mb-2"
-        />
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>PKR {priceRange[0].toLocaleString()}</span>
-          <span>PKR {priceRange[1].toLocaleString()}</span>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="space-y-1">
+            <Label htmlFor="min-price" className="text-xs text-muted-foreground">Min</Label>
+            <Input
+              id="min-price"
+              type="number"
+              min="0"
+              value={priceRange[0]}
+              onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+              className="h-8"
+            />
+          </div>
+          <span className="text-muted-foreground mt-6">-</span>
+          <div className="space-y-1">
+            <Label htmlFor="max-price" className="text-xs text-muted-foreground">Max</Label>
+            <Input
+              id="max-price"
+              type="number"
+              min="0"
+              value={priceRange[1]}
+              onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || maxPrice])}
+              className="h-8"
+            />
+          </div>
         </div>
       </div>
 
