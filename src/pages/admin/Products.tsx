@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, ArrowLeft, Upload, Download, Info, ChevronDown } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowLeft, Upload, Download, Info, ChevronDown, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
@@ -142,6 +142,7 @@ const AdminProducts = () => {
   }, [formData, productImages, isDialogOpen]);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('products')
@@ -150,11 +151,11 @@ const AdminProducts = () => {
 
       if (error) throw error;
       setProducts((data as any) || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch products",
+        title: "Error fetching products",
+        description: error.message || "Failed to load product list",
         variant: "destructive"
       });
     } finally {
@@ -517,6 +518,10 @@ const AdminProducts = () => {
             </div>
 
             <div className="flex gap-2">
+              <Button variant="outline" onClick={fetchProducts} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh List
+              </Button>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={() => {
