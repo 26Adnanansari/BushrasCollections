@@ -23,8 +23,8 @@ const Products = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [priceRange, setPriceRange] = useState([0, 50000]);
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const [maxPrice, setMaxPrice] = useState(1000000);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('newest');
   const navigate = useNavigate();
@@ -75,10 +75,10 @@ const Products = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      
+
       const productsData = data || [];
       setProducts(productsData);
-      
+
       // Calculate dynamic max price from products
       if (productsData.length > 0) {
         const prices = productsData.map(p => p.price);
@@ -154,11 +154,11 @@ const Products = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         <div className="mb-8">
           <h1 className="text-4xl font-serif font-bold text-foreground mb-6">Shop All Products</h1>
-          
+
           <div className="flex gap-4 mb-6">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -183,7 +183,7 @@ const Products = () => {
                 <SelectItem value="name-desc">Name: Z to A</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" className="lg:hidden">
