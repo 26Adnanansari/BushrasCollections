@@ -25,7 +25,7 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminUsers from "./pages/admin/Users";
 import AdminHeroSlider from "./pages/admin/HeroSlider";
 import AdminAnalytics from "./pages/admin/Analytics";
-import AdminTeam from "./pages/admin/TeamManagement";
+import AdminTeam from "./pages/admin/Team";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AdminPermissionManagement from "./pages/admin/PermissionManagement";
