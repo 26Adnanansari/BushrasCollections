@@ -61,8 +61,12 @@ END $$;
 -- PART 3: Create Slug Generation Functions
 -- ============================================
 
+-- Drop existing functions if they exist
+DROP FUNCTION IF EXISTS public.generate_slug(TEXT, UUID);
+DROP FUNCTION IF EXISTS public.set_product_slug();
+
 -- Function to generate slug from product name
-CREATE OR REPLACE FUNCTION public.generate_slug(product_name TEXT, product_id UUID)
+CREATE OR REPLACE FUNCTION public.generate_slug(name TEXT, id UUID)
 RETURNS TEXT AS $$
 DECLARE
   base_slug TEXT;
@@ -71,7 +75,7 @@ DECLARE
 BEGIN
   -- Create base slug from product name
   base_slug := lower(regexp_replace(
-    regexp_replace(product_name, '[^a-zA-Z0-9\s-]', '', 'g'),
+    regexp_replace(name, '[^a-zA-Z0-9\s-]', '', 'g'),
     '\s+', '-', 'g'
   ));
   
@@ -79,7 +83,7 @@ BEGIN
   base_slug := trim(both '-' from base_slug);
   
   -- Add product ID suffix for uniqueness
-  final_slug := base_slug || '-' || substring(product_id::text from 1 for 8);
+  final_slug := base_slug || '-' || substring(id::text from 1 for 8);
   
   RETURN final_slug;
 END;
