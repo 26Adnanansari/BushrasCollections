@@ -84,12 +84,17 @@ const OrderDetailsPage = () => {
 
     const fetchOrderDetails = async () => {
         try {
-            // Fetch order
-            const { data: orderData, error: orderError } = await supabase
+            // Check if orderId is an order_number (starts with BC-) or UUID
+            const isOrderNumber = orderId?.startsWith('BC-');
+
+            // Fetch order - query by order_number or id
+            const query = supabase
                 .from('orders')
-                .select('*')
-                .eq('id', orderId)
-                .single();
+                .select('*');
+
+            const { data: orderData, error: orderError } = isOrderNumber
+                ? await query.eq('order_number', orderId).single()
+                : await query.eq('id', orderId).single();
 
             if (orderError) throw orderError;
 

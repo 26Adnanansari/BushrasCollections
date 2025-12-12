@@ -215,7 +215,7 @@ const AdminOrders = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => navigate(`/admin/orders/${order.id}`)}
+                              onClick={() => navigate(`/admin/orders/${order.order_number || order.id}`)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>

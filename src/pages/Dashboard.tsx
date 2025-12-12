@@ -36,10 +36,10 @@ const Dashboard = () => {
 
       <div className="container mx-auto px-4 pt-24 pb-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-serif font-bold text-foreground mb-2">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white mb-2">
             Welcome back, {user?.profile?.name || 'there'}!
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-lg text-gray-600 dark:text-gray-300">
             Manage your orders, wishlist, and account settings
           </p>
         </div>

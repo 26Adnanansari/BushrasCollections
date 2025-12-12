@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Shield, User, Phone, Globe, Clock, MessageSquare, ShoppingBag, Heart, Eye } from "lucide-react";
+import { Shield, User, Phone, Globe, Clock, MessageSquare, ShoppingBag, Heart, Eye, Facebook, Instagram, Youtube, Twitter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserProfile {
@@ -22,6 +22,11 @@ interface UserProfile {
   last_seen_at?: string;
   source?: string;
   referrer?: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  tiktok_url?: string;
+  youtube_url?: string;
+  twitter_url?: string;
 }
 
 interface OrderSummary {
@@ -351,6 +356,50 @@ const AdminUsers = () => {
               </div>
 
               {/* Product Interest (Placeholders for now) */}
+              {/* Social Media Links */}
+              {(selectedUser.facebook_url || selectedUser.instagram_url || selectedUser.tiktok_url || selectedUser.youtube_url || selectedUser.twitter_url) && (
+                <div>
+                  <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Social Media
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedUser.facebook_url && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(selectedUser.facebook_url, '_blank')}>
+                        <Facebook className="h-3 w-3 mr-2" />
+                        Facebook
+                      </Button>
+                    )}
+                    {selectedUser.instagram_url && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(selectedUser.instagram_url, '_blank')}>
+                        <Instagram className="h-3 w-3 mr-2" />
+                        Instagram
+                      </Button>
+                    )}
+                    {selectedUser.tiktok_url && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(selectedUser.tiktok_url, '_blank')}>
+                        <svg className="h-3 w-3 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                        </svg>
+                        TikTok
+                      </Button>
+                    )}
+                    {selectedUser.youtube_url && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(selectedUser.youtube_url, '_blank')}>
+                        <Youtube className="h-3 w-3 mr-2" />
+                        YouTube
+                      </Button>
+                    )}
+                    {selectedUser.twitter_url && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(selectedUser.twitter_url, '_blank')}>
+                        <Twitter className="h-3 w-3 mr-2" />
+                        Twitter
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                   <Heart className="h-4 w-4" />
