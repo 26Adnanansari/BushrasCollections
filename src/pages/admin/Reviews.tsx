@@ -55,24 +55,42 @@ const AdminReviews = () => {
 
     const fetchReviews = async () => {
         try {
+            // Fetch reviews first
             let query = supabase
                 .from('reviews')
-                .select(`
-          *,
-          profiles!reviews_user_id_fkey (name, email),
-          products!reviews_product_id_fkey (name, image_url)
-        `)
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (activeTab !== "all") {
                 query = query.eq('status', activeTab);
             }
 
-            const { data, error } = await query;
+            const { data: reviewsData, error: reviewsError } = await query;
 
-            if (error) throw error;
+            if (reviewsError) throw reviewsError;
 
-            setReviews(data || []);
+            // Fetch profiles separately
+            const userIds = [...new Set(reviewsData?.map(r => r.user_id) || [])];
+            const { data: profilesData } = await supabase
+                .from('profiles')
+                .select('id, name, email')
+                .in('id', userIds);
+
+            // Fetch products separately
+            const productIds = [...new Set(reviewsData?.map(r => r.product_id) || [])];
+            const { data: productsData } = await supabase
+                .from('products')
+                .select('id, name, image_url')
+                .in('id', productIds);
+
+            // Merge data
+            const mergedReviews = reviewsData?.map(review => ({
+                ...review,
+                profiles: profilesData?.find(p => p.id === review.user_id),
+                products: productsData?.find(p => p.id === review.product_id)
+            })) || [];
+
+            setReviews(mergedReviews);
         } catch (error: any) {
             console.error('Error fetching reviews:', error);
             toast({
