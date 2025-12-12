@@ -176,6 +176,14 @@ ON public.visitor_sessions FOR SELECT
 USING (is_admin(auth.uid()));
 
 -- Orders policies
+CREATE POLICY "Users can view their own orders"
+ON public.orders FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own orders"
+ON public.orders FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Admins can view all orders"
 ON public.orders FOR SELECT
 USING (is_admin(auth.uid()));
