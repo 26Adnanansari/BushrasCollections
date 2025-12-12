@@ -59,8 +59,8 @@ const AdminReviews = () => {
                 .from('reviews')
                 .select(`
           *,
-          profiles:user_id (name, email),
-          products:product_id (name, image_url)
+          profiles!reviews_user_id_fkey (name, email),
+          products!reviews_product_id_fkey (name, image_url)
         `)
                 .order('created_at', { ascending: false });
 

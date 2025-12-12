@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, Users, Package, TrendingUp, Image } from "lucide-react";
+import { ShoppingBag, Users, Package, TrendingUp, Image, Star } from "lucide-react";
 import Navigation from "@/components/Navigation";
 
 interface DashboardStats {
@@ -196,6 +196,25 @@ const AdminDashboard = () => {
                   variant="outline"
                 >
                   View Orders
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Reviews Management</CardTitle>
+                <CardDescription>
+                  Moderate and manage product reviews
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/admin/reviews')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Manage Reviews
                 </Button>
               </CardContent>
             </Card>
