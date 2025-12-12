@@ -13,7 +13,6 @@ import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { paymentService, PaymentMethod } from "@/services/paymentService";
 import { supabase } from "@/integrations/supabase/client";
 
 // Validation schema for shipping information
@@ -57,9 +56,7 @@ const Checkout = () => {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
 
   const [shippingInfo, setShippingInfo] = useState({
     name: user?.profile?.name || '',
@@ -72,19 +69,30 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    loadPaymentMethods();
-  }, []);
-
-  const loadPaymentMethods = async () => {
-    setLoadingPaymentMethods(true);
-    const methods = await paymentService.getActivePaymentMethods();
-    setPaymentMethods(methods);
-    if (methods.length > 0) {
-      setSelectedPaymentMethod(methods[0].id);
+  // Hardcoded payment methods - COD and Bank Transfer only
+  const paymentMethods = [
+    {
+      id: 'cod',
+      name: 'Cash on Delivery',
+      type: 'cod',
+      description: 'Pay when you receive your order',
+      icon: Package
+    },
+    {
+      id: 'bank_transfer',
+      name: 'Bank Transfer',
+      type: 'bank_transfer',
+      description: 'Transfer to our bank account',
+      icon: Truck
     }
-    setLoadingPaymentMethods(false);
-  };
+  ];
+
+  useEffect(() => {
+    // Set default payment method to COD
+    if (!selectedPaymentMethod) {
+      setSelectedPaymentMethod('cod');
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -140,24 +148,27 @@ const Checkout = () => {
           total: getTotalPrice(),
           items: JSON.parse(JSON.stringify(items)),
           shipping_address: JSON.parse(JSON.stringify(shippingInfo)),
-          whatsapp_number: shippingInfo.phone, // Save phone as WhatsApp number
+          whatsapp_number: shippingInfo.phone,
           status: 'pending',
-          payment_method_id: selectedPaymentMethod,
-          payment_status: selectedMethod?.type === 'manual' ? 'pending_payment' :
-            selectedMethod?.type === 'offline' ? 'pending_verification' : 'pending'
+          payment_method: selectedPaymentMethod, // 'cod' or 'bank_transfer'
+          payment_status: selectedPaymentMethod === 'cod' ? 'pending' : 'pending_payment'
         }])
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      // Show success message with payment instructions
-      const instructions = selectedMethod?.instructions ||
-        'Your order has been placed successfully. We will contact you shortly.';
+      // Payment instructions based on method
+      let instructions = '';
+      if (selectedPaymentMethod === 'cod') {
+        instructions = 'Pay cash when you receive your order. Our team will contact you shortly.';
+      } else if (selectedPaymentMethod === 'bank_transfer') {
+        instructions = 'Please transfer the amount to our bank account. Details will be sent via WhatsApp.';
+      }
 
       toast({
         title: "Order Placed Successfully!",
-        description: `Order #${order.id.slice(0, 8)} - ${instructions}`,
+        description: instructions,
       });
 
       // Clear cart
@@ -297,41 +308,33 @@ const Checkout = () => {
                 <div className="pt-4 border-t">
                   <h3 className="font-semibold text-foreground mb-3">Payment Method</h3>
 
-                  {loadingPaymentMethods ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                  ) : paymentMethods.length === 0 ? (
-                    <div className="bg-accent/20 p-4 rounded-lg mb-4">
-                      <p className="text-sm text-muted-foreground">
-                        Please contact us to complete your order. We'll provide payment instructions.
-                      </p>
-                    </div>
-                  ) : (
-                    <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
-                      <div className="space-y-3">
-                        {paymentMethods.map((method) => (
+                  <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                    <div className="space-y-3">
+                      {paymentMethods.map((method) => {
+                        const Icon = method.icon;
+                        return (
                           <div key={method.id} className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-accent/20 transition-colors">
                             <RadioGroupItem value={method.id} id={method.id} className="mt-1" />
                             <div className="flex-1">
                               <Label htmlFor={method.id} className="cursor-pointer">
-                                <div className="font-semibold text-foreground">{method.name}</div>
-                                {method.instructions && (
-                                  <p className="text-sm text-muted-foreground mt-1">{method.instructions}</p>
-                                )}
+                                <div className="flex items-center gap-2">
+                                  <Icon className="h-5 w-5 text-primary" />
+                                  <span className="font-semibold text-foreground">{method.name}</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">{method.description}</p>
                               </Label>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  )}
+                        );
+                      })}
+                    </div>
+                  </RadioGroup>
 
                   <Button
                     className="w-full mt-4"
                     size="lg"
                     onClick={handlePlaceOrder}
-                    disabled={isSubmitting || paymentMethods.length === 0}
+                    disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader2 className="h-5 w-5 mr-2 animate-spin" />}
                     {isSubmitting ? 'Placing Order...' : 'Place Order'}
