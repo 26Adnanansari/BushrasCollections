@@ -1,10 +1,10 @@
--- Migration for Admin Enhancements: Team Management & User Details
-
 -- 1. Enhance profiles table
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ,
 ADD COLUMN IF NOT EXISTS source TEXT,
 ADD COLUMN IF NOT EXISTS referrer TEXT;
+
+-- NOTE: Run MIGRATION_UPDATE_ENUMS.sql FIRST to add 'manager', 'staff', 'support' roles.
 
 -- 2. Create recently_viewed table
 CREATE TABLE IF NOT EXISTS public.recently_viewed (
