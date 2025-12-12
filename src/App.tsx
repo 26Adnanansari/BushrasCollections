@@ -31,6 +31,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminPermissionManagement from "./pages/admin/PermissionManagement";
 import AdminOrderDetails from "./pages/admin/OrderDetails";
 import AdminPaymentMethods from "./pages/admin/PaymentMethods";
+import AdminReviews from "./pages/admin/Reviews";
 
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
@@ -70,6 +71,7 @@ const App = () => {
         <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
         <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />
         <Route path="/admin/payment-methods" element={<ProtectedRoute requireAdmin><AdminPaymentMethods /></ProtectedRoute>} />
+        <Route path="/admin/reviews" element={<ProtectedRoute requireAdmin><AdminReviews /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

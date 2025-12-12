@@ -13,6 +13,10 @@ import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ReviewSummary } from "@/components/reviews/ReviewSummary";
+import { ReviewsList } from "@/components/reviews/ReviewsList";
+import { ReviewForm } from "@/components/reviews/ReviewForm";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Product {
   id: string;
@@ -42,6 +46,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isZoomed, setIsZoomed] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   // Variation State
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -525,7 +530,48 @@ const ProductDetail = () => {
               </Card>
             </TabsContent>
             <TabsContent value="reviews" className="mt-8">
-              <div className="text-center py-8 text-muted-foreground">Reviews feature coming soon</div>
+              <Card>
+                <CardContent className="p-8">
+                  {/* Review Summary */}
+                  <ReviewSummary productId={product.id} />
+
+                  <Separator className="my-8" />
+
+                  {/* Write Review Button */}
+                  {user && (
+                    <div className="mb-8">
+                      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button>
+                            Write a Review
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Write a Review</DialogTitle>
+                            <DialogDescription>
+                              Share your experience with {product.name}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <ReviewForm
+                            productId={product.id}
+                            productName={product.name}
+                            onSuccess={() => {
+                              setReviewDialogOpen(false);
+                              // Refresh reviews list
+                              window.location.reload();
+                            }}
+                            onCancel={() => setReviewDialogOpen(false)}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
+
+                  {/* Reviews List */}
+                  <ReviewsList productId={product.id} />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
