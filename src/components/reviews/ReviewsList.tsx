@@ -12,6 +12,7 @@ interface Review {
     rating: number;
     title: string;
     comment: string;
+    status: string;
     created_at: string;
     is_verified_purchase: boolean;
     helpful_count: number;
@@ -35,6 +36,10 @@ export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) 
 
     const fetchReviews = async () => {
         try {
+            // Get current user
+            const { data: { user } } = await supabase.auth.getUser();
+
+            // Fetch approved reviews OR user's own reviews (any status)
             let query = supabase
                 .from('reviews')
                 .select(`
@@ -43,8 +48,15 @@ export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) 
             name
           )
         `)
-                .eq('product_id', productId)
-                .eq('status', 'approved');
+                .eq('product_id', productId);
+
+            // If user is logged in, show their own reviews regardless of status
+            // Otherwise, only show approved reviews
+            if (user) {
+                query = query.or(`status.eq.approved,user_id.eq.${user.id}`);
+            } else {
+                query = query.eq('status', 'approved');
+            }
 
             // Apply sorting
             if (sortBy === "recent") {
@@ -97,6 +109,16 @@ export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) 
                                         {review.is_verified_purchase && (
                                             <Badge variant="secondary" className="text-xs">
                                                 Verified Purchase
+                                            </Badge>
+                                        )}
+                                        {review.status === 'pending' && (
+                                            <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">
+                                                Pending Approval
+                                            </Badge>
+                                        )}
+                                        {review.status === 'rejected' && (
+                                            <Badge variant="destructive" className="text-xs">
+                                                Rejected
                                             </Badge>
                                         )}
                                     </div>
