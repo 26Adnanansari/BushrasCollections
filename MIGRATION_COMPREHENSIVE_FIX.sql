@@ -61,9 +61,12 @@ END $$;
 -- PART 3: Create Slug Generation Functions
 -- ============================================
 
--- Drop existing functions if they exist
-DROP FUNCTION IF EXISTS public.generate_slug(TEXT, UUID);
-DROP FUNCTION IF EXISTS public.set_product_slug();
+-- Drop trigger first (it depends on the function)
+DROP TRIGGER IF EXISTS products_set_slug ON public.products;
+
+-- Drop existing functions with CASCADE
+DROP FUNCTION IF EXISTS public.generate_slug(TEXT, UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.set_product_slug() CASCADE;
 
 -- Function to generate slug from product name
 CREATE OR REPLACE FUNCTION public.generate_slug(name TEXT, id UUID)
