@@ -41,7 +41,7 @@ interface Product {
   available_colors?: string[] | null;
   care_instructions?: string | null;
   occasion_type?: string | null;
-  embellishment?: string | null;
+  embellishment?: string[] | null;
   created_at: string;
 }
 
@@ -84,7 +84,7 @@ const AdminProducts = () => {
     available_colors: [] as string[],
     care_instructions: '',
     occasion_type: '',
-    embellishment: '',
+    embellishment: [],
   });
   const [productImages, setProductImages] = useState<string[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -125,7 +125,7 @@ const AdminProducts = () => {
           available_colors: draft.available_colors || [],
           care_instructions: draft.care_instructions || '',
           occasion_type: draft.occasion_type || '',
-          embellishment: draft.embellishment || '',
+          embellishment: draft.embellishment || [],
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -200,7 +200,7 @@ const AdminProducts = () => {
                 available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()) : [],
                 care_instructions: row.care_instructions,
                 occasion_type: row.occasion_type,
-                embellishment: row.embellishment
+                embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()) : []
               };
             });
 
@@ -253,7 +253,7 @@ const AdminProducts = () => {
         available_colors: formData.available_colors.length > 0 ? formData.available_colors : undefined,
         care_instructions: formData.care_instructions || undefined,
         occasion_type: formData.occasion_type || undefined,
-        embellishment: formData.embellishment || undefined,
+        embellishment: formData.embellishment.length > 0 ? formData.embellishment : undefined,
       });
 
       if (productImages.length === 0) {
@@ -315,7 +315,7 @@ const AdminProducts = () => {
         available_colors: [],
         care_instructions: '',
         occasion_type: '',
-        embellishment: '',
+        embellishment: [],
       });
       setProductImages([]);
       fetchProducts();
@@ -377,7 +377,7 @@ const AdminProducts = () => {
       available_colors: product.available_colors || [],
       care_instructions: product.care_instructions || '',
       occasion_type: product.occasion_type || '',
-      embellishment: product.embellishment || '',
+      embellishment: product.embellishment || [],
     });
     setIsDialogOpen(true);
   };
@@ -504,7 +504,7 @@ const AdminProducts = () => {
                       available_colors: [],
                       care_instructions: '',
                       occasion_type: '',
-                      embellishment: '',
+                      embellishment: [],
                     });
                     setProductImages([]);
                   }}>
@@ -747,22 +747,33 @@ const AdminProducts = () => {
                             </Select>
                           </div>
 
-                          {/* Embellishment */}
+                          {/* Embellishment - Multi-select checkboxes */}
                           <div>
-                            <Label htmlFor="embellishment">Embellishment</Label>
-                            <Select
-                              value={formData.embellishment}
-                              onValueChange={(value) => setFormData({ ...formData, embellishment: value })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select embellishment" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {EMBELLISHMENTS.map((emb) => (
-                                  <SelectItem key={emb} value={emb}>{emb}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Label>Embellishment</Label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {EMBELLISHMENTS.map((emb) => (
+                                <div key={emb} className="flex items-center">
+                                  <Checkbox
+                                    id={`emb-${emb}`}
+                                    checked={formData.embellishment.includes(emb)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setFormData({
+                                          ...formData,
+                                          embellishment: [...formData.embellishment, emb]
+                                        });
+                                      } else {
+                                        setFormData({
+                                          ...formData,
+                                          embellishment: formData.embellishment.filter(e => e !== emb)
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <Label htmlFor={`emb-${emb}`} className="ml-1 cursor-pointer">{emb}</Label>
+                                </div>
+                              ))}
+                            </div>
                           </div>
 
                           {/* Care Instructions */}

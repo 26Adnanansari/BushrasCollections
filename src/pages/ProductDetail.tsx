@@ -30,7 +30,7 @@ interface Product {
   available_sizes?: string[];
   available_colors?: string[];
   occasion_type?: string;
-  embellishment?: string;
+  embellishment?: string[];
 }
 
 const ProductDetail = () => {
@@ -501,10 +501,10 @@ const ProductDetail = () => {
                           <p className="font-medium text-foreground">{product.care_instructions}</p>
                         </div>
                       )}
-                      {product.embellishment && (
+                      {product.embellishment && product.embellishment.length > 0 && (
                         <div>
                           <span className="text-sm text-muted-foreground">Embellishment</span>
-                          <p className="font-medium text-foreground">{product.embellishment}</p>
+                          <p className="font-medium text-foreground">{product.embellishment.join(', ')}</p>
                         </div>
                       )}
                       {product.available_sizes && product.available_sizes.length > 0 && (

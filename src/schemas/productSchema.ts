@@ -62,9 +62,7 @@ export const productSchema = z.object({
     .max(100, 'Occasion type must be less than 100 characters')
     .optional(),
   embellishment: z
-    .string()
-    .trim()
-    .max(100, 'Embellishment must be less than 100 characters')
+    .array(z.string())
     .optional(),
 });
 

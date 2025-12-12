@@ -22,7 +22,7 @@ const shippingSchema = z.object({
     .trim()
     .min(2, "Name must be at least 2 characters")
     .max(100, "Name must be less than 100 characters")
-    .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, apostrophes, and hyphens"),
   phone: z.string()
     .trim()
     .regex(/^(\+92|0)?[0-9]{10,11}$/, "Invalid phone number. Use format: 03001234567 or +923001234567")
@@ -36,7 +36,7 @@ const shippingSchema = z.object({
     .trim()
     .min(2, "City name must be at least 2 characters")
     .max(100, "City name must be less than 100 characters")
-    .regex(/^[a-zA-Z\s]+$/, "City can only contain letters and spaces"),
+    .regex(/^[a-zA-Z\s,.-]+$/, "City can only contain letters, spaces, commas, periods, and hyphens"),
   postalCode: z.string()
     .trim()
     .max(10, "Postal code must be less than 10 characters")
