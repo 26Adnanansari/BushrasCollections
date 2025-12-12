@@ -1,6 +1,27 @@
 -- Reviews and Ratings System Migration
 -- This creates the reviews table with moderation capabilities
 
+-- Helper function to check if user is admin
+CREATE OR REPLACE FUNCTION public.is_admin(_user_id UUID DEFAULT NULL)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_roles TEXT[];
+BEGIN
+  -- If no user_id provided, use current user
+  IF _user_id IS NULL THEN
+    _user_id := auth.uid();
+  END IF;
+
+  -- Get user roles from profiles table
+  SELECT roles INTO user_roles
+  FROM public.profiles
+  WHERE id = _user_id;
+
+  -- Check if 'admin' or 'super_admin' is in roles array
+  RETURN user_roles && ARRAY['admin', 'super_admin']::TEXT[];
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Create reviews table
 CREATE TABLE IF NOT EXISTS public.reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -78,8 +99,8 @@ USING (auth.uid() = user_id);
 CREATE POLICY "Admins can manage all reviews"
 ON public.reviews
 FOR ALL
-USING (is_admin())
-WITH CHECK (is_admin());
+USING (is_admin(auth.uid()))
+WITH CHECK (is_admin(auth.uid()));
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_reviews_updated_at()
