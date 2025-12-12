@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   image: string | string[] | null;
@@ -17,7 +18,7 @@ interface ProductCardProps {
   totalReviews?: number;
 }
 
-const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 0, totalReviews = 0 }: ProductCardProps) => {
+const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRating = 0, totalReviews = 0 }: ProductCardProps) => {
   const { addItem } = useCartStore();
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
@@ -38,7 +39,7 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
       image: firstImage,
       category: category || 'Fashion',
     });
-    
+
     toast({
       title: "Added to cart",
       description: `${name} has been added to your cart.`,
@@ -47,7 +48,7 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (images.length <= 1) return;
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const imageWidth = rect.width / images.length;
@@ -56,8 +57,8 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
   };
 
   return (
-    <Link to={`/product/${id}`} className="block">
-      <div 
+    <Link to={`/product/${slug || id}`} className="block">
+      <div
         className="group relative bg-card rounded-lg overflow-hidden shadow-product hover:shadow-elegant transition-all duration-500"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
@@ -66,7 +67,7 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
         }}
       >
         {/* Product Image */}
-        <div 
+        <div
           className="relative aspect-[4/5] overflow-hidden rounded-lg"
           onMouseMove={handleMouseMove}
         >
@@ -78,7 +79,7 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
               isHovered ? "scale-105" : "scale-100"
             )}
           />
-          
+
           {/* Image indicators for multiple images */}
           {images.length > 1 && isHovered && (
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
@@ -93,21 +94,21 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
               ))}
             </div>
           )}
-        
-        {/* Overlay on Hover */}
-        <div className={cn(
-          "absolute inset-0 bg-primary/20 transition-opacity duration-300",
-          isHovered ? "opacity-100" : "opacity-0"
-        )} />
 
-        {/* Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {isNew && (
-            <span className="bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-full">
-              New
-            </span>
-          )}
-        </div>
+          {/* Overlay on Hover */}
+          <div className={cn(
+            "absolute inset-0 bg-primary/20 transition-opacity duration-300",
+            isHovered ? "opacity-100" : "opacity-0"
+          )} />
+
+          {/* Badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {isNew && (
+              <span className="bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-full">
+                New
+              </span>
+            )}
+          </div>
 
           {/* Wishlist Button */}
           <Button
@@ -131,7 +132,7 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
             "absolute bottom-4 left-4 right-4 flex gap-2 transition-all duration-300",
             isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            <Button 
+            <Button
               className="flex-1 bg-gradient-hero hover:shadow-elegant transition-all duration-300 group"
               onClick={handleAddToCart}
             >
@@ -158,8 +159,8 @@ const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 
               <div className="flex items-center gap-1">
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <span 
-                      key={star} 
+                    <span
+                      key={star}
                       className={cn(
                         "text-sm",
                         star <= Math.round(averageRating) ? "text-primary" : "text-muted-foreground"

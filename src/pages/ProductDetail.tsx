@@ -61,11 +61,21 @@ const ProductDetail = () => {
       if (!slug) return;
 
       try {
-        const { data, error } = await supabase
+        // Try to fetch by slug first, then fallback to id (UUID)
+        let query = supabase
           .from('products')
-          .select('*')
-          .eq('id', slug)
-          .maybeSingle();
+          .select('*');
+
+        // Check if slug looks like a UUID (for backward compatibility)
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+        if (isUUID) {
+          query = query.eq('id', slug);
+        } else {
+          query = query.eq('slug', slug);
+        }
+
+        const { data, error } = await query.maybeSingle();
 
         if (error) {
           console.error('Error fetching product:', error);
@@ -506,10 +516,14 @@ const ProductDetail = () => {
                           <p className="font-medium text-foreground">{product.care_instructions}</p>
                         </div>
                       )}
-                      {product.embellishment && product.embellishment.length > 0 && (
+                      {product.embellishment && (
                         <div>
                           <span className="text-sm text-muted-foreground">Embellishment</span>
-                          <p className="font-medium text-foreground">{product.embellishment.join(', ')}</p>
+                          <p className="font-medium text-foreground">
+                            {Array.isArray(product.embellishment)
+                              ? product.embellishment.join(', ')
+                              : product.embellishment}
+                          </p>
                         </div>
                       )}
                       {product.available_sizes && product.available_sizes.length > 0 && (

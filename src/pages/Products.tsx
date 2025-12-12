@@ -40,7 +40,7 @@ const Products = () => {
     try {
       let query = supabase
         .from('products')
-        .select('*');
+        .select('*, slug');
 
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
@@ -263,6 +263,7 @@ const Products = () => {
                     <ProductCard
                       key={product.id}
                       id={product.id}
+                      slug={product.slug}
                       name={product.name}
                       price={product.price}
                       image={Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : ['/placeholder.svg'])}
