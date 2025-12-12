@@ -52,42 +52,147 @@ const TeamManagement = () => {
 
   const fetchStaff = async () => {
     try {
-      // Staff table doesn't exist - show empty state
-      setStaff([]);
-      toast({
-        title: "Feature Unavailable",
-        description: "Staff management is not yet set up in the database",
-        variant: "default",
-      });
+      const { data, error } = await supabase
+        .from('staff')
+        .select(`
+          *,
+          profiles:user_id (
+            name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setStaff(data || []);
     } catch (error: any) {
-      console.error('Error:', error);
+      console.error('Error fetching staff:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch staff members",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddStaff = async () => {
-    toast({
-      title: "Feature Unavailable",
-      description: "Staff management requires database setup",
-      variant: "default",
-    });
+    if (!newStaff.email) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a user email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First, find the user by email
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', newStaff.email)
+        .single();
+
+      if (userError || !userData) {
+        toast({
+          title: "User Not Found",
+          description: "No user found with this email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add staff member
+      const { error } = await supabase
+        .from('staff')
+        .insert([{
+          user_id: userData.id,
+          department: newStaff.department,
+          is_active: true
+        }]);
+
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          toast({
+            title: "Already Exists",
+            description: "This user is already a staff member",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Staff member added successfully",
+      });
+
+      setNewStaff({ email: '', department: 'sales' });
+      setDialogOpen(false);
+      fetchStaff();
+    } catch (error: any) {
+      console.error('Error adding staff:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add staff member",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleToggleActive = async (staffId: string, currentStatus: boolean) => {
-    toast({
-      title: "Feature Unavailable",
-      description: "Staff management requires database setup",
-      variant: "default",
-    });
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .update({ is_active: !currentStatus })
+        .eq('id', staffId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Staff member ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+      fetchStaff();
+    } catch (error: any) {
+      console.error('Error updating staff status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update staff status",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveStaff = async (staffId: string) => {
-    toast({
-      title: "Feature Unavailable",
-      description: "Staff management requires database setup",
-      variant: "default",
-    });
+    if (!confirm('Are you sure you want to remove this staff member?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .delete()
+        .eq('id', staffId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Staff member removed successfully",
+      });
+      fetchStaff();
+    } catch (error: any) {
+      console.error('Error removing staff:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove staff member",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user || !user.roles?.includes('admin')) {

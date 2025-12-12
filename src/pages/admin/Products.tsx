@@ -750,6 +750,8 @@ const AdminProducts = () => {
                           {/* Embellishment - Multi-select checkboxes */}
                           <div>
                             <Label>Embellishment</Label>
+
+                            {/* Quick select checkboxes */}
                             <div className="flex flex-wrap gap-2 mt-2">
                               {EMBELLISHMENTS.map((emb) => (
                                 <div key={emb} className="flex items-center">
@@ -774,6 +776,73 @@ const AdminProducts = () => {
                                 </div>
                               ))}
                             </div>
+
+                            {/* Custom embellishment input */}
+                            <div className="mt-3">
+                              <Label className="text-sm text-muted-foreground">Add Custom Embellishment</Label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  placeholder="Enter custom embellishment..."
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const value = e.currentTarget.value.trim();
+                                      if (value && !formData.embellishment.includes(value)) {
+                                        setFormData({
+                                          ...formData,
+                                          embellishment: [...formData.embellishment, value]
+                                        });
+                                        e.currentTarget.value = '';
+                                      }
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                                    const value = input?.value.trim();
+                                    if (value && !formData.embellishment.includes(value)) {
+                                      setFormData({
+                                        ...formData,
+                                        embellishment: [...formData.embellishment, value]
+                                      });
+                                      if (input) input.value = '';
+                                    }
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Selected embellishments display */}
+                            {formData.embellishment.length > 0 && (
+                              <div className="mt-3">
+                                <Label className="text-sm text-muted-foreground">Selected:</Label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {formData.embellishment.map((emb) => (
+                                    <Badge key={emb} variant="secondary" className="gap-1">
+                                      {emb}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setFormData({
+                                            ...formData,
+                                            embellishment: formData.embellishment.filter(e => e !== emb)
+                                          });
+                                        }}
+                                        className="ml-1 hover:text-destructive"
+                                      >
+                                        ×
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Care Instructions */}
