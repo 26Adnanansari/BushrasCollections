@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Heart, ShoppingCart, ArrowLeft, Truck, Shield, RefreshCw, MessageCircle } from "lucide-react";
+import { Star, Heart, ShoppingCart, ArrowLeft, Truck, Shield, RefreshCw, MessageCircle, Share2 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,6 +157,26 @@ const ProductDetail = () => {
       title: "Order Booking",
       description: "Product added to cart. Proceed to checkout to complete your order.",
     });
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: `Check out ${product.name} on Bushra's Collection!`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Product link copied to clipboard",
+      });
+    }
   };
 
   if (loading) {
@@ -414,6 +434,9 @@ const ProductDetail = () => {
                 </Button>
                 <Button variant="outline" size="lg">
                   <Heart className="h-5 w-5" />
+                </Button>
+                <Button variant="outline" size="lg" onClick={handleShare}>
+                  <Share2 className="h-5 w-5" />
                 </Button>
               </div>
 

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useAuthStore } from "@/store/auth";
+import { VerificationModal } from "@/components/VerificationModal";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -41,6 +42,7 @@ const Auth = () => {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [signUpEmail, setSignUpEmail] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -160,33 +162,10 @@ const Auth = () => {
       const validatedData = signUpSchema.parse(signUpForm);
       setIsSigningUp(true);
 
-      const { data, error } = await authService.signUp(
-        validatedData.email,
-        validatedData.password,
-        validatedData.name,
-        validatedData.phone
-      );
 
-      if (error) {
-        const msg = error.message || "Failed to create account";
-        setError(msg);
-        return;
-      }
-
-      if (data.user) {
-        // Store email for success dialog
-        setSignUpEmail(validatedData.email);
-        setShowSuccessDialog(true);
-
-        // Clear form
-        setSignUpForm({
-          name: "",
-          phone: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-      }
+      // Open verification modal instead of signing up immediately
+      setShowVerificationModal(true);
+      setIsSigningUp(false);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         const fieldErrors: any = {};
@@ -198,6 +177,40 @@ const Auth = () => {
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
+    } finally {
+      setIsSigningUp(false);
+    }
+  };
+
+  const handleVerifiedSignUp = async () => {
+    try {
+      setIsSigningUp(true);
+      const { data, error } = await authService.signUp(
+        signUpForm.email,
+        signUpForm.password,
+        signUpForm.name,
+        signUpForm.phone
+      );
+
+      if (error) {
+        const msg = error.message || "Failed to create account";
+        setError(msg);
+        return;
+      }
+
+      if (data.user) {
+        setSignUpEmail(signUpForm.email);
+        setShowSuccessDialog(true);
+        setSignUpForm({
+          name: "",
+          phone: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (err: any) {
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsSigningUp(false);
     }
@@ -610,6 +623,13 @@ const Auth = () => {
             </Card>
           </div>
         )}
+        {/* Verification Modal */}
+        <VerificationModal
+          open={showVerificationModal}
+          onOpenChange={setShowVerificationModal}
+          phone={signUpForm.phone}
+          onVerified={handleVerifiedSignUp}
+        />
       </div>
     </div>
   );

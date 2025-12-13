@@ -8,6 +8,8 @@ export interface CartItem {
   image: string;
   quantity: number;
   category: string;
+  size?: string;
+  color?: string;
   addedAt?: number;
 }
 
@@ -36,12 +38,18 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   addItem: (item) => {
     set((state) => {
-      const existingItem = state.items.find((i) => i.id === item.id);
+      const existingItem = state.items.find((i) =>
+        i.id === item.id &&
+        i.size === item.size &&
+        i.color === item.color
+      );
 
       let newItems: CartItem[];
       if (existingItem) {
         newItems = state.items.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          (i.id === item.id && i.size === item.size && i.color === item.color)
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
         );
       } else {
         newItems = [

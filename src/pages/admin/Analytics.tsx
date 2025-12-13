@@ -99,17 +99,20 @@ const Analytics = () => {
       }
 
       // Calculate stats
+      // Calculate stats
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
       const totalOrders = ordersData?.length || 0;
       const totalCustomers = profilesData?.length || 0;
       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-      setStats({
-        totalRevenue,
-        totalOrders,
-        totalCustomers,
-        avgOrderValue
-      });
+      // Calculate marketing stats from visitor sessions
+      const totalVisitors = visitorsData?.length || 0;
+      const marketingStats = {
+        organic: visitorsData?.filter(v => v.referrer === 'direct' || !v.referrer).length || 0,
+        social: visitorsData?.filter(v => v.referrer?.includes('facebook') || v.referrer?.includes('instagram') || v.referrer?.includes('tiktok')).length || 0,
+        other: 0
+      };
+      marketingStats.other = totalVisitors - (marketingStats.organic + marketingStats.social);
 
       setCustomers(profilesData || []);
       setOrders(ordersData || []);
@@ -526,48 +529,39 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               {/* Customer Sources */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">40%</div>
-                    <p className="text-xs text-muted-foreground">Organic</p>
+                    <div className="text-xl font-bold">
+                      {visitorStats.total > 0 ? Math.round((visitorStats.total - (visitorStats.mobile + visitorStats.desktop)) / visitorStats.total * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">Direct / Organic</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">25%</div>
-                    <p className="text-xs text-muted-foreground">Facebook</p>
+                    <div className="text-xl font-bold">
+                      {visitorStats.total > 0 ? Math.round(visitorStats.mobile / visitorStats.total * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">Mobile Traffic</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">20%</div>
-                    <p className="text-xs text-muted-foreground">Instagram</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-xl font-bold">10%</div>
-                    <p className="text-xs text-muted-foreground">WhatsApp</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-xl font-bold">5%</div>
-                    <p className="text-xs text-muted-foreground">Referrals</p>
+                    <div className="text-xl font-bold">
+                      {visitorStats.total > 0 ? Math.round(visitorStats.desktop / visitorStats.total * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">Desktop Traffic</p>
                   </CardContent>
                 </Card>
               </div>
 
               <div className="border rounded-lg p-8 text-center text-muted-foreground">
                 <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="mb-2">Marketing analytics will appear here</p>
+                <p className="mb-2">Real-time Marketing Data</p>
                 <p className="text-sm">
-                  Campaign performance, customer lifetime value, retention rates
+                  Tracking {visitorStats.total} total visitor sessions.
                 </p>
-                <Button className="mt-4">
-                  Create Campaign
-                </Button>
               </div>
             </CardContent>
           </Card>

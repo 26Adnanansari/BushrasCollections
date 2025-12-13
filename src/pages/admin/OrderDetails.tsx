@@ -111,7 +111,7 @@ const OrderDetailsPage = () => {
             const { data: paymentsData, error: paymentsError } = await supabase
                 .from('order_payments')
                 .select('*')
-                .eq('order_id', orderId)
+                .eq('order_id', orderData.id)
                 .order('payment_date', { ascending: false });
 
             if (paymentsError) throw paymentsError;

@@ -17,9 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import CartDrawer from "./CartDrawer";
+import { SearchOverlay } from "./SearchOverlay";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user } = useAuthStore();
   const { getTotalItems } = useCartStore();
   const navigate = useNavigate();
@@ -87,7 +89,7 @@ const Navigation = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hover:bg-accent">
+            <Button variant="ghost" size="icon" className="hover:bg-accent" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
 
@@ -158,6 +160,8 @@ const Navigation = () => {
           </div>
         </div>
 
+        <SearchOverlay open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+
         {/* Mobile Menu */}
         <div
           className={cn(
@@ -188,7 +192,7 @@ const Navigation = () => {
               )
             ))}
             <div className="flex flex-col space-y-4 pt-4 border-t border-border">
-              <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
+              <Button variant="ghost" size="icon" className="hover:bg-accent w-full" onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
                 <Search className="h-5 w-5" />
               </Button>
 

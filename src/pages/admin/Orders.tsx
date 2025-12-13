@@ -181,6 +181,7 @@ const AdminOrders = () => {
                       <TableHead>Order #</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Contact</TableHead>
+                      <TableHead className="hidden md:table-cell">Address</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
@@ -198,7 +199,12 @@ const AdminOrders = () => {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            {order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                            {order.whatsapp_number || order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div className="text-sm">
+                            {order.shipping_address?.city || '-'}
                           </div>
                         </TableCell>
                         <TableCell>PKR {order.total.toLocaleString()}</TableCell>
