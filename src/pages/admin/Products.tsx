@@ -175,9 +175,20 @@ const AdminProducts = () => {
           const productsToUpload = results.data
             .filter((row: any) => row.name && row.price) // Basic validation
             .map((row: any) => {
-              // Handle multiple images from CSV (comma separated in image_url or images column)
+              // Handle multiple images from CSV (comma separated in image_url/images OR specific columns)
               let images: string[] = [];
-              if (row.images) {
+
+              // 1. Check for explicit image columns (image1, image2, etc.)
+              const explicitImages = [
+                row.image1, row.image2, row.image3, row.image4, row.image5
+              ].filter(url => url && typeof url === 'string' && url.trim().length > 0)
+                .map(url => url.trim());
+
+              if (explicitImages.length > 0) {
+                images = explicitImages;
+              }
+              // 2. Fallback to comma-separated 'images' or 'image_url' column
+              else if (row.images) {
                 images = row.images.split(',').map((url: string) => url.trim());
               } else if (row.image_url) {
                 images = row.image_url.split(',').map((url: string) => url.trim());
@@ -436,11 +447,24 @@ const AdminProducts = () => {
 
 
   const downloadSampleCsv = () => {
-    const headers = ['name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity', 'image_url', 'is_active', 'sku', 'fabric_type', 'available_sizes', 'available_colors', 'occasion_type', 'care_instructions', 'embellishment'];
+    // Updated headers to include separate image columns
+    const headers = [
+      'name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity',
+      'image1', 'image2', 'image3', 'image4', 'image5', 'image_url',
+      'is_active', 'sku', 'fabric_type', 'available_sizes', 'available_colors', 'occasion_type', 'care_instructions', 'embellishment'
+    ];
 
     const sampleData = [
-      ['Summer Dress', 'Beautiful floral summer dress', '2999', '3499', 'Fashion Brand', 'Formal Dress', '10', 'https://example.com/image.jpg', 'true', 'SKU-FO-12345', 'Cotton', 'S,M,L', 'Red,Blue', 'Party', 'Dry clean only', 'Embroidery'],
-      ['Casual Shirt', 'Comfortable cotton casual shirt', '1499', '1799', 'Style Co', 'Casual Dress', '15', 'https://example.com/shirt.jpg', 'true', '', 'Silk', 'M,L,XL', 'White,Black', 'Casual', 'Hand wash', 'Plain'],
+      [
+        'Summer Dress', 'Beautiful floral summer dress', '2999', '3499', 'Fashion Brand', 'Formal Dress', '10',
+        'https://example.com/front.jpg', 'https://example.com/back.jpg', '', '', '', '',
+        'true', 'SKU-FO-12345', 'Cotton', 'S,M,L', 'Red,Blue', 'Party', 'Dry clean only', 'Embroidery'
+      ],
+      [
+        'Casual Shirt', 'Comfortable cotton casual shirt', '1499', '1799', 'Style Co', 'Casual Dress', '15',
+        'https://example.com/shirt.jpg', '', '', '', '', '',
+        'true', '', 'Silk', 'M,L,XL', 'White,Black', 'Casual', 'Hand wash', 'Plain'
+      ],
     ];
 
     const csv = [headers, ...sampleData].map(row => row.join(',')).join('\n');
