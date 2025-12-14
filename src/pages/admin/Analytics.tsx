@@ -592,40 +592,53 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               {/* Order Status Breakdown */}
+              {/* Order Status Breakdown */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">25</div>
+                    <div className="text-xl font-bold">
+                      {orders.filter(o => o.status === 'pending').length}
+                    </div>
                     <p className="text-xs text-muted-foreground">Pending</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">15</div>
+                    <div className="text-xl font-bold">
+                      {orders.filter(o => o.status === 'confirmed').length}
+                    </div>
                     <p className="text-xs text-muted-foreground">Confirmed</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">30</div>
+                    <div className="text-xl font-bold">
+                      {orders.filter(o => o.status === 'processing').length}
+                    </div>
                     <p className="text-xs text-muted-foreground">Processing</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">20</div>
+                    <div className="text-xl font-bold">
+                      {orders.filter(o => o.status === 'shipped').length}
+                    </div>
                     <p className="text-xs text-muted-foreground">Shipped</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">55</div>
+                    <div className="text-xl font-bold">
+                      {orders.filter(o => o.status === 'delivered').length}
+                    </div>
                     <p className="text-xs text-muted-foreground">Delivered</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-xl font-bold">5</div>
+                    <div className="text-xl font-bold">
+                      {orders.filter(o => o.status === 'cancelled').length}
+                    </div>
                     <p className="text-xs text-muted-foreground">Cancelled</p>
                   </CardContent>
                 </Card>

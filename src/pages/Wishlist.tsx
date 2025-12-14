@@ -8,6 +8,7 @@ import { Heart, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlistStore } from "@/store/wishlist";
 
 const Wishlist = () => {
   const { items, isLoading, initialize, removeItem } = useWishlistStore();
