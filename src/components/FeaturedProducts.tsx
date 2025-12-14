@@ -20,7 +20,7 @@ const FeaturedProducts = () => {
       try {
         const { data: productsData, error } = await supabase
           .from('products')
-          .select('id, name, price, image_url, category, created_at, is_featured')
+          .select('id, name, price, image_url, category, created_at, is_featured, slug')
           .eq('is_featured', true)
           .order('created_at', { ascending: false })
           .limit(6);
@@ -110,6 +110,7 @@ const FeaturedProducts = () => {
                   isNew={product.created_at && new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
                   averageRating={product.averageRating}
                   totalReviews={product.totalReviews}
+                  slug={product.slug}
                 />
               </CarouselItem>
             ))}

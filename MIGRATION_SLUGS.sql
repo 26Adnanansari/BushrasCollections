@@ -4,7 +4,7 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
 -- Function to generate slug from name
 CREATE OR REPLACE FUNCTION generate_slug(name TEXT) RETURNS TEXT AS $$
 BEGIN
-    RETURN lower(
+    RETURN 'bushras-collection-' || lower(
         regexp_replace(
             regexp_replace(
                 trim(name), 
@@ -19,7 +19,7 @@ $$ LANGUAGE plpgsql;
 -- Populate existing products with slugs
 UPDATE public.products 
 SET slug = generate_slug(name) || '-' || substring(id::text from 1 for 8) -- Append partial UUID to ensure uniqueness
-WHERE slug IS NULL OR slug = '';
+WHERE slug IS NULL OR slug = '' OR slug NOT LIKE 'bushras-collection-%';
 
 -- Create Trigger to auto-generate slug on insert if missing
 CREATE OR REPLACE FUNCTION public.auto_generate_slug() RETURNS TRIGGER AS $$

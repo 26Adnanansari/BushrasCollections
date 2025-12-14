@@ -12,7 +12,7 @@ const LatestProducts = () => {
       try {
         const { data: productsData, error } = await supabase
           .from('products')
-          .select('id, name, price, image_url, category, created_at')
+          .select('id, name, price, image_url, category, created_at, slug')
           .order('created_at', { ascending: false })
           .limit(9);
 
@@ -101,6 +101,7 @@ const LatestProducts = () => {
               isNew={true}
               averageRating={product.averageRating}
               totalReviews={product.totalReviews}
+              slug={product.slug}
             />
           ))}
         </div>
