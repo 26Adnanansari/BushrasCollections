@@ -18,7 +18,7 @@ const FeaturedProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: productsData, error } = await supabase
           .from('products')
           .select('id, name, price, image_url, category, created_at, is_featured')
           .eq('is_featured', true)
@@ -30,7 +30,28 @@ const FeaturedProducts = () => {
           return;
         }
 
-        setProducts(data || []);
+        if (productsData && productsData.length > 0) {
+          const productIds = productsData.map(p => p.id);
+          const { data: reviewsData } = await supabase
+            .from('reviews')
+            .select('product_id, rating')
+            .in('product_id', productIds);
+
+          const productsWithStats = productsData.map(product => {
+            const productReviews = reviewsData?.filter(r => r.product_id === product.id) || [];
+            const totalReviews = productReviews.length;
+            const averageRating = totalReviews > 0
+              ? productReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+              : 0;
+
+            return { ...product, averageRating, totalReviews };
+          });
+
+          setProducts(productsWithStats);
+        } else {
+          setProducts([]);
+        }
+
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -87,6 +108,8 @@ const FeaturedProducts = () => {
                   image={product.image_url || '/placeholder.svg'}
                   category={product.category || 'Fashion'}
                   isNew={product.created_at && new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                  averageRating={product.averageRating}
+                  totalReviews={product.totalReviews}
                 />
               </CarouselItem>
             ))}

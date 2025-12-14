@@ -87,17 +87,36 @@ export const ReviewForm = ({
                     description: "Your review has been updated successfully"
                 });
             } else {
+                // Verify purchase
+                let isVerified = false;
+                const userId = (await supabase.auth.getUser()).data.user?.id;
+
+                if (userId) {
+                    const { data: orders } = await supabase
+                        .from('orders')
+                        .select('*, order_items(product_id)')
+                        .eq('user_id', userId)
+                        .eq('status', 'delivered'); // Only delivered orders count as verified
+
+                    if (orders && orders.length > 0) {
+                        // Check if any delivered order contains this product
+                        isVerified = orders.some(order =>
+                            order.order_items?.some((item: any) => item.product_id === productId)
+                        );
+                    }
+                }
+
                 // Create new review
                 const { error } = await supabase
                     .from('reviews')
                     .insert([{
                         product_id: productId,
-                        user_id: (await supabase.auth.getUser()).data.user?.id,
+                        user_id: userId,
                         rating,
                         title,
                         comment,
                         status: 'pending',
-                        is_verified_purchase: true // You can add logic to verify purchase
+                        is_verified_purchase: isVerified
                     }]);
 
                 if (error) {

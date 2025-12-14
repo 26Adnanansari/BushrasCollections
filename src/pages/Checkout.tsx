@@ -69,23 +69,42 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Hardcoded payment methods - COD and Bank Transfer only
+  // Hardcoded payment methods - COD, Bank Transfer, JazzCash, EasyPaisa
   const paymentMethods = [
     {
       id: 'cod',
       name: 'Cash on Delivery',
       type: 'cod',
       description: 'Pay when you receive your order',
-      icon: Package
+      icon: Package,
+      disabled: false
     },
     {
       id: 'bank_transfer',
       name: 'Bank Transfer',
       type: 'bank_transfer',
       description: 'Transfer to our bank account',
-      icon: Truck
+      icon: Truck,
+      disabled: false
+    },
+    {
+      id: 'jazzcash',
+      name: 'JazzCash',
+      type: 'digital_wallet',
+      description: import.meta.env.VITE_JAZZCASH_KEY ? 'Pay securely with JazzCash' : 'Coming Soon',
+      icon: Truck,
+      disabled: !import.meta.env.VITE_JAZZCASH_KEY
+    },
+    {
+      id: 'easypaisa',
+      name: 'EasyPaisa',
+      type: 'digital_wallet',
+      description: import.meta.env.VITE_EASYPAISA_KEY ? 'Pay securely with EasyPaisa' : 'Coming Soon',
+      icon: Truck,
+      disabled: !import.meta.env.VITE_EASYPAISA_KEY
     }
   ];
+
 
   useEffect(() => {
     // Set default payment method to COD

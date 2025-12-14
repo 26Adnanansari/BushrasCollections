@@ -11,7 +11,10 @@ import {
   Download,
   Filter,
   Search,
-  Loader2
+  Loader2,
+  Globe,
+  MapPin,
+  Megaphone
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Analytics = () => {
   const navigate = useNavigate();
@@ -55,11 +59,20 @@ const Analytics = () => {
     vip: 0,
     inactive: 0
   });
-  const [visitorStats, setVisitorStats] = useState({
-    total: 0,
-    returning: 0,
+  const [sessionStats, setSessionStats] = useState({
+    totalSessions: 0,
+    uniqueVisitors: 0,
     mobile: 0,
     desktop: 0
+  });
+  const [marketingStats, setMarketingStats] = useState({
+    organic: 0,
+    social: 0,
+    campaigns: [] as any[]
+  });
+  const [geoStats, setGeoStats] = useState({
+    topCities: [] as any[],
+    topCountries: [] as any[]
   });
 
   useEffect(() => {
@@ -84,35 +97,72 @@ const Analytics = () => {
 
       if (ordersError) throw ordersError;
 
-      // Fetch visitor stats
-      const { data: visitorsData, error: visitorsError } = await supabase
+      // Fetch visitor sessions (New Table)
+      const { data: sessionsData, error: sessionsError } = await supabase
         .from('visitor_sessions')
         .select('*');
 
-      if (!visitorsError && visitorsData) {
-        setVisitorStats({
-          total: visitorsData.length,
-          returning: visitorsData.filter(v => v.visit_count > 1).length,
-          mobile: visitorsData.filter(v => v.device_type === 'mobile').length,
-          desktop: visitorsData.filter(v => v.device_type === 'desktop').length
+      if (!sessionsError && sessionsData) {
+        // Session Intelligence
+        const totalSessions = sessionsData.length;
+        const uniqueVisitors = new Set(sessionsData.map(s => s.visitor_id)).size;
+
+        setSessionStats({
+          totalSessions,
+          uniqueVisitors,
+          mobile: sessionsData.filter(s => s.device_type === 'mobile').length,
+          desktop: sessionsData.filter(s => s.device_type === 'desktop').length
+        });
+
+        // Marketing Intelligence (UTM)
+        const campaigns = sessionsData
+          .filter(s => s.utm_campaign)
+          .reduce((acc: any, s) => {
+            const key = `${s.utm_source} / ${s.utm_campaign}`;
+            if (!acc[key]) acc[key] = { source: s.utm_source, campaign: s.utm_campaign, count: 0 };
+            acc[key].count++;
+            return acc;
+          }, {});
+
+        setMarketingStats({
+          organic: sessionsData.filter(s => !s.utm_source || s.utm_source === 'direct').length,
+          social: sessionsData.filter(s => s.utm_source?.includes('facebook') || s.utm_source?.includes('instagram')).length,
+          campaigns: Object.values(campaigns).sort((a: any, b: any) => b.count - a.count)
+        });
+
+        // Geographic Intelligence
+        const cities = sessionsData.reduce((acc: any, s) => {
+          if (s.city) {
+            acc[s.city] = (acc[s.city] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        const countries = sessionsData.reduce((acc: any, s) => {
+          if (s.country) {
+            acc[s.country] = (acc[s.country] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        setGeoStats({
+          topCities: Object.entries(cities).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count),
+          topCountries: Object.entries(countries).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count)
         });
       }
 
-      // Calculate stats
-      // Calculate stats
+      // Calculate Sales Stats
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
       const totalOrders = ordersData?.length || 0;
       const totalCustomers = profilesData?.length || 0;
       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-      // Calculate marketing stats from visitor sessions
-      const totalVisitors = visitorsData?.length || 0;
-      const marketingStats = {
-        organic: visitorsData?.filter(v => v.referrer === 'direct' || !v.referrer).length || 0,
-        social: visitorsData?.filter(v => v.referrer?.includes('facebook') || v.referrer?.includes('instagram') || v.referrer?.includes('tiktok')).length || 0,
-        other: 0
-      };
-      marketingStats.other = totalVisitors - (marketingStats.organic + marketingStats.social);
+      setStats({
+        totalRevenue,
+        totalOrders,
+        totalCustomers,
+        avgOrderValue
+      });
 
       setCustomers(profilesData || []);
       setOrders(ordersData || []);
@@ -154,13 +204,18 @@ const Analytics = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-serif font-bold text-foreground mb-2">
-          Analytics Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Comprehensive view of your business performance
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-serif font-bold text-foreground mb-2">
+            Analytics Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Comprehensive view of your business performance
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => window.open('/admin/analytics-help', '_blank')}>
+          <Users className="mr-2 h-4 w-4" /> User Guide
+        </Button>
       </div>
 
       {/* Date Range Filter */}
@@ -208,13 +263,13 @@ const Analytics = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              <div className="text-2xl font-bold">{sessionStats.totalSessions}</div>
               <p className="text-xs text-muted-foreground">
-                All time orders
+                {sessionStats.uniqueVisitors} Unique Visitors
               </p>
             </CardContent>
           </Card>
@@ -248,14 +303,158 @@ const Analytics = () => {
       )}
 
       {/* Detailed Data Tabs */}
-      <Tabs defaultValue="customers" className="space-y-4">
+      <Tabs defaultValue="marketing" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="marketing">Marketing (UTM)</TabsTrigger>
+          <TabsTrigger value="geography">Geography</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="visitors">Visitors</TabsTrigger>
-          <TabsTrigger value="marketing">Marketing</TabsTrigger>
         </TabsList>
+
+        {/* Marketing Tab */}
+        <TabsContent value="marketing" className="space-y-4">
+          <Alert className="mb-4 bg-primary/10 border-primary/20">
+            <Megaphone className="h-4 w-4" />
+            <AlertTitle>Smart Session Tracking Active</AlertTitle>
+            <AlertDescription>
+              Sessions are now tracked based on 30-minute inactivity timeouts and UTM campaign changes.
+            </AlertDescription>
+          </Alert>
+          <Card>
+            <CardHeader>
+              <CardTitle>Campaign Performance</CardTitle>
+              <CardDescription>
+                Track which marketing campaigns are driving traffic
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Customer Sources */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">
+                      {sessionStats.totalSessions > 0 ? Math.round((marketingStats.organic / sessionStats.totalSessions) * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">Direct / Organic</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">
+                      {sessionStats.totalSessions > 0 ? Math.round((sessionStats.mobile / sessionStats.totalSessions) * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">Mobile Sessions</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-xl font-bold">
+                      {marketingStats.campaigns.length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Active Campaigns</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Campaign</TableHead>
+                      <TableHead className="text-right">Sessions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {marketingStats.campaigns.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                          No campaign data yet. Use ?utm_source=facebook to track.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      marketingStats.campaigns.map((c, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium">{c.source}</TableCell>
+                          <TableCell>{c.campaign}</TableCell>
+                          <TableCell className="text-right">{c.count}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Geography Tab */}
+        <TabsContent value="geography" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> Top Cities
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>City</TableHead>
+                      <TableHead className="text-right">Sessions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {geoStats.topCities.slice(0, 5).map((city, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{city.name}</TableCell>
+                        <TableCell className="text-right">{city.count}</TableCell>
+                      </TableRow>
+                    ))}
+                    {geoStats.topCities.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground">No city data available</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" /> Top Countries
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Country</TableHead>
+                      <TableHead className="text-right">Sessions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {geoStats.topCountries.slice(0, 5).map((country, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{country.name}</TableCell>
+                        <TableCell className="text-right">{country.count}</TableCell>
+                      </TableRow>
+                    ))}
+                    {geoStats.topCountries.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground">No country data available</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* Customers Tab */}
         <TabsContent value="customers" className="space-y-4">
@@ -465,103 +664,6 @@ const Analytics = () => {
                 <Button className="mt-4" onClick={() => navigate("/admin/products")}>
                   Manage Products
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Visitors Tab */}
-        <TabsContent value="visitors" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Visitor Analytics</CardTitle>
-              <CardDescription>
-                Track website traffic and user behavior
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <Card className="bg-blue-50 dark:bg-blue-950">
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{visitorStats.total}</div>
-                    <p className="text-sm text-muted-foreground">Total Visitors</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-50 dark:bg-green-950">
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{visitorStats.returning}</div>
-                    <p className="text-sm text-muted-foreground">Returning</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-purple-50 dark:bg-purple-950">
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{visitorStats.mobile}</div>
-                    <p className="text-sm text-muted-foreground">Mobile Users</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-orange-50 dark:bg-orange-950">
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{visitorStats.desktop}</div>
-                    <p className="text-sm text-muted-foreground">Desktop Users</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="border rounded-lg p-8 text-center text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="mb-2">Real-time visitor tracking is active</p>
-                <p className="text-sm">
-                  Data is synced from client cookies to the database
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Marketing Tab */}
-        <TabsContent value="marketing" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Marketing Insights</CardTitle>
-              <CardDescription>
-                Customer acquisition and campaign performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Customer Sources */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-xl font-bold">
-                      {visitorStats.total > 0 ? Math.round((visitorStats.total - (visitorStats.mobile + visitorStats.desktop)) / visitorStats.total * 100) : 0}%
-                    </div>
-                    <p className="text-xs text-muted-foreground">Direct / Organic</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-xl font-bold">
-                      {visitorStats.total > 0 ? Math.round(visitorStats.mobile / visitorStats.total * 100) : 0}%
-                    </div>
-                    <p className="text-xs text-muted-foreground">Mobile Traffic</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-xl font-bold">
-                      {visitorStats.total > 0 ? Math.round(visitorStats.desktop / visitorStats.total * 100) : 0}%
-                    </div>
-                    <p className="text-xs text-muted-foreground">Desktop Traffic</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="border rounded-lg p-8 text-center text-muted-foreground">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="mb-2">Real-time Marketing Data</p>
-                <p className="text-sm">
-                  Tracking {visitorStats.total} total visitor sessions.
-                </p>
               </div>
             </CardContent>
           </Card>

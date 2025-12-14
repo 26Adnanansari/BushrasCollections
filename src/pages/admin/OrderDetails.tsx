@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Phone, Mail, MapPin, Package, CreditCard, Truck, MessageSquare } from "lucide-react";
+import { ArrowLeft, Printer, Package, CreditCard, User, MessageSquare, Phone, Mail, MapPin, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import PaymentHistory from "@/components/PaymentHistory";
@@ -39,6 +39,9 @@ interface OrderDetails {
         phone?: string;
         whatsapp_number?: string;
     };
+    order_items?: {
+        product_id: string;
+    }[];
 }
 
 interface Payment {
@@ -90,7 +93,7 @@ const OrderDetailsPage = () => {
             // Fetch order - query by order_number or id
             const query = supabase
                 .from('orders')
-                .select('*');
+                .select('*, order_items(product_id)');
 
             const { data: orderData, error: orderError } = isOrderNumber
                 ? await query.eq('order_number', orderId).single()
@@ -261,14 +264,45 @@ const OrderDetailsPage = () => {
                 <div className="container mx-auto px-4 max-w-6xl">
                     {/* Header */}
                     <div className="mb-8">
-                        <Button
-                            variant="ghost"
-                            onClick={() => navigate('/admin/orders')}
-                            className="mb-4"
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Orders
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => navigate('/admin/orders')}>
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back to Orders
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                onClick={() => {
+                                    if (!order) return;
+                                    const phone = order.whatsapp_number || order.profiles?.phone;
+                                    if (!phone) {
+                                        toast({
+                                            title: "No Phone Number",
+                                            description: "Customer does not have a phone number linked.",
+                                            variant: "destructive"
+                                        });
+                                        return;
+                                    }
+
+                                    // Domain for the link (using window.location.origin for robustness)
+                                    // We link to the first product if multiple, or a generic shop link?
+                                    // Better: Link to the specific product they bought (order_items[0]).
+
+                                    const firstItem = order.order_items?.[0];
+                                    const productLink = firstItem
+                                        ? `${window.location.origin}/product/${firstItem.product_id}`
+                                        : window.location.origin;
+
+                                    const message = `Assalam-o-Alaikum ${order.profiles?.name || 'Customer'}! 🌟 Thank you for your purchase from Bushra's Collection. We would love to hear your feedback! Please rate your experience here: ${productLink}`;
+                                    const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+
+                                    window.open(url, '_blank');
+                                }}
+                            >
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Request Review
+                            </Button>
+                        </div>
 
                         <div className="flex items-center justify-between">
                             <div>

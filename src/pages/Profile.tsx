@@ -15,6 +15,8 @@ import { Loader2, Upload, Mail, Phone, MapPin, Shield, Camera, CheckCircle, Aler
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { AvatarSelectionModal } from "@/components/AvatarSelectionModal";
+import { VerificationModal } from "@/components/VerificationModal";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 interface NotificationPreferences {
   order_status_notifications: boolean;
@@ -28,12 +30,12 @@ const Profile = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,7 +43,7 @@ const Profile = () => {
   const [address, setAddress] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileHealth, setProfileHealth] = useState(0);
-  
+
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     order_status_notifications: true,
     promotion_notifications: true,
@@ -49,6 +51,13 @@ const Profile = () => {
     whatsapp_enabled: false,
     email_enabled: true,
   });
+
+  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
 
   useEffect(() => {
     if (!user) {
@@ -61,7 +70,7 @@ const Profile = () => {
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -89,7 +98,7 @@ const Profile = () => {
       if (prefsError) {
         console.log("Notification preferences not yet available:", prefsError);
       }
-      
+
       if (prefs) {
         setNotificationPrefs(prefs as any);
       }
@@ -120,6 +129,97 @@ const Profile = () => {
       }
     } catch (err) {
       console.log("Health score calculation not yet available");
+    }
+  };
+
+  const handleStartPhoneVerification = () => {
+    setIsVerificationOpen(true);
+  };
+
+  const handleSendVerificationCode = async () => {
+    // 1. Trigger Supabase 'updateUser' with the new phone number.
+    // This sends an OTP to that phone if using a real provider.
+    const { error } = await supabase.auth.updateUser({
+      phone: phone
+    });
+
+    if (error) throw error;
+  };
+
+  const handleVerifyOTP = async (token: string) => {
+    // 2. Verify the OTP token. 
+    // Type 'phone_change' is standard when verifying a new phone on an existing user.
+    const { error } = await supabase.auth.verifyOtp({
+      phone,
+      token,
+      type: 'phone_change'
+    });
+
+    if (error) throw error;
+
+    // 3. Update the profile to mark as verified (optional, as Supabase Auth user object now has phone_confirmed_at)
+    // But we prefer keeping our 'profiles' table in sync.
+    const { error: dbError } = await supabase
+      .from("profiles")
+      .update({ phone_verified: true, phone: phone } as any)
+      .eq("id", user!.id);
+
+    if (dbError) console.error("Error updating profile verified status:", dbError);
+
+    setPhoneVerified(true);
+  };
+
+  const handleVerificationSuccess = () => {
+    toast({
+      title: "Success",
+      description: "Phone number verified successfully",
+    });
+    // Modal closes automatically via component logic
+    setIsVerificationOpen(false);
+  };
+
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully",
+      });
+      setIsPasswordOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -253,7 +353,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <main className="container mx-auto px-4 py-12 mt-16">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header */}
@@ -314,8 +414,8 @@ const Profile = () => {
                 </Avatar>
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setShowAvatarModal(true)}
                     >
                       <Camera className="h-4 w-4 mr-2" />
@@ -397,13 +497,13 @@ const Profile = () => {
                     />
                   </div>
                   {phone && !phoneVerified && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      disabled
-                      className="w-full"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleStartPhoneVerification}
+                      className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
                     >
-                      Verify Phone Number (Coming Soon)
+                      Verify Phone Number
                     </Button>
                   )}
                 </div>
@@ -422,14 +522,49 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/reset-password")}
-                  className="w-fit"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Change Password
-                </Button>
+                <Dialog open={isPasswordOpen} onOpenChange={setIsPasswordOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-fit">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Change Password
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogDescription>
+                        Enter your new password below.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsPasswordOpen(false)}>Cancel</Button>
+                      <Button onClick={handlePasswordUpdate} disabled={passwordLoading}>
+                        {passwordLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                        Update Password
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
@@ -498,7 +633,7 @@ const Profile = () => {
               {/* Delivery Methods */}
               <div className="space-y-4">
                 <Label className="text-base">Delivery Methods</Label>
-                
+
                 <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
                   <div className="flex items-center gap-3">
                     <Phone className="h-5 w-5 text-green-600" />
@@ -580,6 +715,15 @@ const Profile = () => {
         }}
         onClose={() => setShowAvatarModal(false)}
         currentAvatar={avatarUrl}
+      />
+
+      <VerificationModal
+        open={isVerificationOpen}
+        onOpenChange={setIsVerificationOpen}
+        phone={phone}
+        onSendCode={handleSendVerificationCode}
+        onVerifyCode={handleVerifyOTP}
+        onVerified={handleVerificationSuccess}
       />
     </div>
   );

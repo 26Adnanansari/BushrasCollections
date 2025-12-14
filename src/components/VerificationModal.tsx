@@ -11,9 +11,18 @@ interface VerificationModalProps {
     onOpenChange: (open: boolean) => void;
     phone: string;
     onVerified: () => void;
+    onSendCode?: () => Promise<void>;
+    onVerifyCode?: (code: string) => Promise<void>;
 }
 
-export function VerificationModal({ open, onOpenChange, phone, onVerified }: VerificationModalProps) {
+export function VerificationModal({
+    open,
+    onOpenChange,
+    phone,
+    onVerified,
+    onSendCode,
+    onVerifyCode
+}: VerificationModalProps) {
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState<'send' | 'verify' | 'success'>('send');
@@ -28,37 +37,63 @@ export function VerificationModal({ open, onOpenChange, phone, onVerified }: Ver
 
     const handleSendCode = async () => {
         setLoading(true);
-        // Simulate API call to send SMS
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setLoading(false);
-        setStep('verify');
-        toast({
-            title: "Code Sent",
-            description: `Verification code sent to ${phone}`,
-        });
+        try {
+            if (onSendCode) {
+                await onSendCode();
+            } else {
+                // Default mock behavior
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+
+            setStep('verify');
+            toast({
+                title: "Code Sent",
+                description: `Verification code sent to ${phone}`,
+            });
+        } catch (error: any) {
+            toast({
+                title: "Error sending code",
+                description: error.message || "Failed to send verification code",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleVerify = async () => {
-        if (code.length < 4) {
+        if (code.length < 6) {
             toast({
                 title: "Invalid Code",
-                description: "Please enter a valid verification code",
+                description: "Please enter a valid 6-digit verification code",
                 variant: "destructive"
             });
             return;
         }
 
         setLoading(true);
-        // Simulate verification
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setLoading(false);
+        try {
+            if (onVerifyCode) {
+                await onVerifyCode(code);
+            } else {
+                // Default mock behavior
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
 
-        // Mock check (accept any 4+ digit code for demo/dev)
-        setStep('success');
-        setTimeout(() => {
-            onVerified();
-            onOpenChange(false);
-        }, 1500);
+            setStep('success');
+            setTimeout(() => {
+                onVerified();
+                onOpenChange(false);
+            }, 1500);
+        } catch (error: any) {
+            toast({
+                title: "Verification Failed",
+                description: error.message || "Invalid code. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

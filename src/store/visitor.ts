@@ -1,86 +1,135 @@
 import { create } from 'zustand';
-import { create } from 'zustand';
 import { getJsonCookie, setJsonCookie } from '@/utils/cookies';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VisitorData {
-    id: string;
-    visitCount: number;
-    firstVisit: number;
-    lastVisit: number;
+    visitorId: string;
+    sessions: SessionData[];
+}
+
+interface SessionData {
+    sessionId: string;
+    lastActivity: number;
+    utmSource?: string;
+    utmCampaign?: string;
 }
 
 interface VisitorState {
-    isReturning: boolean;
-    visitCount: number;
-    lastVisit: Date | null;
-    initialize: () => void;
+    visitorId: string | null;
+    initialize: () => Promise<void>;
+    logPageView: () => void;
 }
 
-const VISITOR_COOKIE = 'visitor_tracking';
+const VISITOR_COOKIE = 'visitor_v2';
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
-export const useVisitorStore = create<VisitorState>((set) => ({
-    isReturning: false,
-    visitCount: 0,
-    lastVisit: null,
+export const useVisitorStore = create<VisitorState>((set, get) => ({
+    visitorId: null,
 
-    initialize: () => {
+    initialize: async () => {
+        let cookieData = getJsonCookie<VisitorData>(VISITOR_COOKIE);
         const now = Date.now();
-        let data = getJsonCookie<VisitorData>(VISITOR_COOKIE);
+        let visitorId = cookieData?.visitorId;
 
-        if (data) {
-            // Returning visitor
-            data = {
-                ...data,
-                visitCount: data.visitCount + 1,
-                lastVisit: now
-            };
-            set({
-                isReturning: true,
-                visitCount: data.visitCount,
-                lastVisit: new Date(data.lastVisit)
-            });
-        } else {
-            // New visitor
-            data = {
-                id: crypto.randomUUID(),
-                visitCount: 1,
-                firstVisit: now,
-                lastVisit: now
-            };
-            set({
-                isReturning: false,
-                visitCount: 1,
-                lastVisit: new Date(now)
-            });
+        // 1. Ensure Visitor ID exists
+        if (!visitorId) {
+            visitorId = crypto.randomUUID();
+            cookieData = { visitorId, sessions: [] };
         }
 
-        // Save cookie (expires in 90 days)
-        setJsonCookie(VISITOR_COOKIE, data, { expires: 90 });
+        // 2. Determine if we need a NEW Session
+        // Check 1: Time passed since last activity (30 mins)
+        // Check 2: New UTM parameters in URL
+        const lastSession = cookieData.sessions[cookieData.sessions.length - 1];
 
-        // Sync with Supabase (fire and forget)
-        syncWithSupabase(data);
+        const searchParams = new URLSearchParams(window.location.search);
+        const utmSource = searchParams.get('utm_source');
+        const utmMedium = searchParams.get('utm_medium');
+        const utmCampaign = searchParams.get('utm_campaign');
+
+        let shouldStartNewSession = false;
+
+        // Check Timeout
+        if (!lastSession || (now - lastSession.lastActivity > SESSION_TIMEOUT)) {
+            shouldStartNewSession = true;
+        }
+
+        // Check Campaign Change (if UTMs are present and different)
+        if (utmSource && lastSession && utmSource !== lastSession.utmSource) {
+            shouldStartNewSession = true;
+        }
+
+        if (shouldStartNewSession) {
+            // Start New Session
+            const newSessionId = crypto.randomUUID();
+
+            // Fetch Geo Data (Non-blocking)
+            fetchGeoData().then(geo => {
+                const sessionPayload = {
+                    session_id: newSessionId,
+                    visitor_id: visitorId,
+                    started_at: new Date().toISOString(),
+                    last_activity: new Date().toISOString(),
+                    utm_source: utmSource || 'direct',
+                    utm_medium: utmMedium || (document.referrer ? 'referral' : 'none'),
+                    utm_campaign: utmCampaign || null,
+                    referrer: document.referrer || null,
+                    page_views: 1,
+                    device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+                    user_agent: navigator.userAgent,
+                    ...geo
+                };
+
+                // Sync to DB
+                supabase.from('visitor_sessions').insert(sessionPayload).then(({ error }) => {
+                    if (error) console.error("Session Sync Error", error);
+                });
+            });
+
+            // Update Cookie
+            const newSessionInfo: SessionData = {
+                sessionId: newSessionId,
+                lastActivity: now,
+                utmSource: utmSource || undefined
+            };
+
+            // Keep only last 5 sessions in cookie to keep it small
+            const updatedSessions = [...(cookieData.sessions || []), newSessionInfo].slice(-5);
+
+            setJsonCookie(VISITOR_COOKIE, { ...cookieData, sessions: updatedSessions }, { expires: 365 });
+        } else {
+            // Continue Existing Session
+            if (lastSession) {
+                lastSession.lastActivity = now;
+                // Update DB Activity (Pulse)
+                supabase.from('visitor_sessions')
+                    .update({ last_activity: new Date().toISOString() })
+                    .eq('session_id', lastSession.sessionId)
+                    .then(() => { });
+
+                setJsonCookie(VISITOR_COOKIE, cookieData, { expires: 365 });
+            }
+        }
+    },
+
+    logPageView: () => {
+        // Can be used to increment page_views in DB
     }
 }));
 
-const syncWithSupabase = async (data: VisitorData) => {
-    try {
-        const { error } = await supabase
-            .from('visitor_sessions')
-            .upsert({
-                visitor_id: data.id,
-                visit_count: data.visitCount,
-                first_visit: new Date(data.firstVisit).toISOString(),
-                last_visit: new Date(data.lastVisit).toISOString(),
-                user_agent: navigator.userAgent,
-                device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-                referrer: document.referrer || null
-            }, {
-                onConflict: 'visitor_id'
-            });
 
-        if (error) console.error('Error syncing visitor data:', error);
-    } catch (err) {
-        console.error('Failed to sync visitor data:', err);
+async function fetchGeoData() {
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        return {
+            city: data.city,
+            country: data.country_name,
+            country_code: data.country_code,
+            ip_address: data.ip
+        };
+    } catch (e) {
+        console.warn("Geo fetch failed", e);
+        return {};
     }
-};
+}

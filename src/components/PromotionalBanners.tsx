@@ -66,7 +66,7 @@ const PromotionalBanners = () => {
 
   return (
     <section className="relative w-full overflow-hidden bg-background">
-      <div className="w-full max-w-[1500px] mx-auto relative h-[300px] md:h-[400px]">
+      <div className="w-full max-w-[1500px] mx-auto relative aspect-[5/1] min-h-[250px] md:min-h-0">
         {/* Banner Content */}
         <div className="absolute inset-0">
           <img
@@ -129,8 +129,8 @@ const PromotionalBanners = () => {
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={`h-2 rounded-full transition-all ${index === currentIndex
-                    ? 'bg-white w-8'
-                    : 'bg-white/50 w-2'
+                  ? 'bg-white w-8'
+                  : 'bg-white/50 w-2'
                   }`}
               />
             ))}

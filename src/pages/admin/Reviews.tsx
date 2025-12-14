@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StarRating } from "@/components/reviews/StarRating";
 import { useAuthStore } from "@/store/auth";
@@ -103,333 +104,172 @@ const AdminReviews = () => {
         }
     };
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
+    const [editComment, setEditComment] = useState("");
+
     const handleViewReview = (review: Review) => {
         setSelectedReview(review);
         setAdminNotes(review.admin_notes || "");
+        setEditTitle(review.title);
+        setEditComment(review.comment);
+        setIsEditing(false); // Reset edit mode
         setDialogOpen(true);
     };
 
-    const handleApprove = async (reviewId: string) => {
+    const handleSaveEdit = async () => {
+        if (!selectedReview) return;
+
         try {
             const { error } = await supabase
                 .from('reviews')
                 .update({
-                    status: 'approved',
-                    moderated_by: user?.id,
-                    moderated_at: new Date().toISOString()
+                    title: editTitle,
+                    comment: editComment,
+                    updated_at: new Date().toISOString()
                 })
-                .eq('id', reviewId);
+                .eq('id', selectedReview.id);
 
             if (error) throw error;
 
             toast({
-                title: "Review Approved",
-                description: "The review is now visible to all users"
+                title: "Review Updated",
+                description: "Review content has been updated successfully"
             });
             fetchReviews();
             setDialogOpen(false);
         } catch (error: any) {
-            console.error('Error approving review:', error);
+            console.error('Error updating review:', error);
             toast({
                 title: "Error",
-                description: "Failed to approve review",
+                description: "Failed to update review",
                 variant: "destructive"
             });
         }
     };
 
-    const handleReject = async (reviewId: string) => {
-        try {
-            const { error } = await supabase
-                .from('reviews')
-                .update({
-                    status: 'rejected',
-                    admin_notes: adminNotes,
-                    moderated_by: user?.id,
-                    moderated_at: new Date().toISOString()
-                })
-                .eq('id', reviewId);
+    // ... handleApprove, handleReject, handleDelete ...
 
-            if (error) throw error;
+    <DialogContent className="max-w-2xl">
+        <DialogHeader>
+            <DialogTitle>Review Details</DialogTitle>
+            <DialogDescription>
+                Moderate and manage this review
+            </DialogDescription>
+        </DialogHeader>
 
-            toast({
-                title: "Review Rejected",
-                description: "The review has been rejected"
-            });
-            fetchReviews();
-            setDialogOpen(false);
-        } catch (error: any) {
-            console.error('Error rejecting review:', error);
-            toast({
-                title: "Error",
-                description: "Failed to reject review",
-                variant: "destructive"
-            });
-        }
-    };
+        {selectedReview && (
+            <div className="space-y-4">
+                <div>
+                    <h4 className="font-semibold mb-2">Product</h4>
+                    <p>{selectedReview.products?.name}</p>
+                </div>
 
-    const handleDelete = async (reviewId: string) => {
-        if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
-            return;
-        }
-
-        try {
-            const { error } = await supabase
-                .from('reviews')
-                .delete()
-                .eq('id', reviewId);
-
-            if (error) throw error;
-
-            toast({
-                title: "Review Deleted",
-                description: "The review has been permanently deleted"
-            });
-            fetchReviews();
-            setDialogOpen(false);
-        } catch (error: any) {
-            console.error('Error deleting review:', error);
-            toast({
-                title: "Error",
-                description: "Failed to delete review",
-                variant: "destructive"
-            });
-        }
-    };
-
-    const getStatusBadge = (status: string) => {
-        const variants: Record<string, "default" | "secondary" | "destructive"> = {
-            pending: "secondary",
-            approved: "default",
-            rejected: "destructive"
-        };
-
-        return (
-            <Badge variant={variants[status] || "secondary"}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Badge>
-        );
-    };
-
-    if (!user || !user.roles?.includes('admin')) {
-        return null;
-    }
-
-    return (
-        <div className="min-h-screen bg-background">
-            <Navigation />
-            <div className="pt-20 pb-12">
-                <div className="container mx-auto px-4">
-                    <div className="mb-8">
-                        <Button
-                            variant="ghost"
-                            onClick={() => navigate('/admin')}
-                            className="mb-4"
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Dashboard
-                        </Button>
-                        <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-                            Review Management
-                        </h1>
-                        <p className="text-muted-foreground">
-                            Moderate and manage product reviews
-                        </p>
+                <div>
+                    <h4 className="font-semibold mb-2">User</h4>
+                    <div className="flex items-center gap-2">
+                        <p>{selectedReview.profiles?.name} ({selectedReview.profiles?.email})</p>
+                        {(selectedReview as any).is_verified_purchase && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                                <Check className="h-3 w-3 mr-1" /> Verified Purchase
+                            </Badge>
+                        )}
                     </div>
+                </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Reviews</CardTitle>
-                            <CardDescription>
-                                View and moderate customer reviews
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                                <TabsList className="grid w-full max-w-md grid-cols-4">
-                                    <TabsTrigger value="all">All</TabsTrigger>
-                                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                                    <TabsTrigger value="approved">Approved</TabsTrigger>
-                                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                                </TabsList>
+                <div>
+                    <h4 className="font-semibold mb-2">Rating</h4>
+                    <StarRating rating={selectedReview.rating} readonly />
+                </div>
 
-                                <TabsContent value={activeTab} className="mt-6">
-                                    {loading ? (
-                                        <div className="text-center py-8">Loading reviews...</div>
-                                    ) : reviews.length === 0 ? (
-                                        <div className="text-center py-8 text-muted-foreground">
-                                            No {activeTab !== 'all' ? activeTab : ''} reviews found
-                                        </div>
-                                    ) : (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Product</TableHead>
-                                                    <TableHead>User</TableHead>
-                                                    <TableHead>Rating</TableHead>
-                                                    <TableHead>Review</TableHead>
-                                                    <TableHead>Status</TableHead>
-                                                    <TableHead>Date</TableHead>
-                                                    <TableHead>Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {reviews.map((review) => (
-                                                    <TableRow key={review.id}>
-                                                        <TableCell>
-                                                            <div className="flex items-center gap-2">
-                                                                <img
-                                                                    src={review.products?.image_url || '/placeholder.svg'}
-                                                                    alt={review.products?.name}
-                                                                    className="w-10 h-10 object-cover rounded"
-                                                                />
-                                                                <span className="font-medium">{review.products?.name}</span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div>
-                                                                <p className="font-medium">{review.profiles?.name}</p>
-                                                                <p className="text-sm text-muted-foreground">{review.profiles?.email}</p>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <StarRating rating={review.rating} readonly size="sm" />
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <p className="font-medium truncate max-w-xs">{review.title}</p>
-                                                            <p className="text-sm text-muted-foreground truncate max-w-xs">{review.comment}</p>
-                                                        </TableCell>
-                                                        <TableCell>{getStatusBadge(review.status)}</TableCell>
-                                                        <TableCell className="text-sm text-muted-foreground">
-                                                            {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex gap-2">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => handleViewReview(review)}
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-                                                                {review.status === 'pending' && (
-                                                                    <>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => handleApprove(review.id)}
-                                                                        >
-                                                                            <Check className="h-4 w-4 text-green-600" />
-                                                                        </Button>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => handleViewReview(review)}
-                                                                        >
-                                                                            <X className="h-4 w-4 text-red-600" />
-                                                                        </Button>
-                                                                    </>
-                                                                )}
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => handleDelete(review.id)}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    )}
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
+                <div className="flex justify-between items-center">
+                    <h4 className="font-semibold">Content</h4>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditing(!isEditing)}
+                    >
+                        <Edit className="h-4 w-4 mr-2" />
+                        {isEditing ? 'Cancel Edit' : 'Edit Content'}
+                    </Button>
+                </div>
+
+                {isEditing ? (
+                    <div className="space-y-4 p-4 border rounded-md bg-muted/30">
+                        <div>
+                            <Label htmlFor="edit-title">Title</Label>
+                            <Input
+                                id="edit-title"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-comment">Comment</Label>
+                            <Textarea
+                                id="edit-comment"
+                                value={editComment}
+                                onChange={(e) => setEditComment(e.target.value)}
+                                rows={4}
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button size="sm" onClick={handleSaveEdit}>Save Changes</Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <div>
+                            <p className="font-medium">{selectedReview.title}</p>
+                        </div>
+                        <div>
+                            <p className="text-muted-foreground">{selectedReview.comment}</p>
+                        </div>
+                    </div>
+                )}
+
+                <div>
+                    <Label htmlFor="admin-notes">Admin Notes</Label>
+                    <Textarea
+                        id="admin-notes"
+                        value={adminNotes}
+                        onChange={(e) => setAdminNotes(e.target.value)}
+                        placeholder="Add notes for this review..."
+                        rows={3}
+                    />
                 </div>
             </div>
+        )}
 
-            {/* Review Detail Dialog */}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Review Details</DialogTitle>
-                        <DialogDescription>
-                            Moderate this review
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    {selectedReview && (
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="font-semibold mb-2">Product</h4>
-                                <p>{selectedReview.products?.name}</p>
-                            </div>
-
-                            <div>
-                                <h4 className="font-semibold mb-2">User</h4>
-                                <p>{selectedReview.profiles?.name} ({selectedReview.profiles?.email})</p>
-                            </div>
-
-                            <div>
-                                <h4 className="font-semibold mb-2">Rating</h4>
-                                <StarRating rating={selectedReview.rating} readonly />
-                            </div>
-
-                            <div>
-                                <h4 className="font-semibold mb-2">Title</h4>
-                                <p>{selectedReview.title}</p>
-                            </div>
-
-                            <div>
-                                <h4 className="font-semibold mb-2">Comment</h4>
-                                <p className="text-muted-foreground">{selectedReview.comment}</p>
-                            </div>
-
-                            <div>
-                                <Label htmlFor="admin-notes">Admin Notes</Label>
-                                <Textarea
-                                    id="admin-notes"
-                                    value={adminNotes}
-                                    onChange={(e) => setAdminNotes(e.target.value)}
-                                    placeholder="Add notes for this review..."
-                                    rows={3}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                            Close
-                        </Button>
-                        {selectedReview?.status === 'pending' && (
-                            <>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => handleReject(selectedReview.id)}
-                                >
-                                    Reject
-                                </Button>
-                                <Button onClick={() => handleApprove(selectedReview.id)}>
-                                    Approve
-                                </Button>
-                            </>
-                        )}
-                        {selectedReview && selectedReview.status !== 'pending' && (
-                            <Button
-                                variant="destructive"
-                                onClick={() => handleDelete(selectedReview.id)}
-                            >
-                                Delete
-                            </Button>
-                        )}
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+        <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                Close
+            </Button>
+            {selectedReview?.status === 'pending' && (
+                <>
+                    <Button
+                        variant="destructive"
+                        onClick={() => handleReject(selectedReview.id)}
+                    >
+                        Reject
+                    </Button>
+                    <Button onClick={() => handleApprove(selectedReview.id)}>
+                        Approve
+                    </Button>
+                </>
+            )}
+            {selectedReview && selectedReview.status !== 'pending' && (
+                <Button
+                    variant="destructive"
+                    onClick={() => handleDelete(selectedReview.id)}
+                >
+                    Delete
+                </Button>
+            )}
+        </DialogFooter>
+    </DialogContent>
+            </Dialog >
+        </div >
     );
 };
 

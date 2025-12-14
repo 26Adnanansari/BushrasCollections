@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Promotions from "./pages/admin/Promotions";
@@ -32,15 +32,21 @@ import AdminPermissionManagement from "./pages/admin/PermissionManagement";
 import AdminOrderDetails from "./pages/admin/OrderDetails";
 import AdminPaymentMethods from "./pages/admin/PaymentMethods";
 import AdminReviews from "./pages/admin/Reviews";
+import AnalyticsHelp from "./pages/admin/AnalyticsHelp";
 
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
   const initializeVisitor = useVisitorStore((state) => state.initialize);
+  const location = useLocation();
 
   useEffect(() => {
     initializeAuth();
+  }, [initializeAuth]);
+
+  // Pulse session on every route change (handles timeouts and campaigns)
+  useEffect(() => {
     initializeVisitor();
-  }, [initializeAuth, initializeVisitor]);
+  }, [initializeVisitor, location.pathname, location.search]);
 
   return (
     <TooltipProvider>
@@ -67,6 +73,7 @@ const App = () => {
         <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/hero-slider" element={<ProtectedRoute requireAdmin><AdminHeroSlider /></ProtectedRoute>} />
         <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AdminAnalytics /></ProtectedRoute>} />
+        <Route path="/admin/analytics-help" element={<ProtectedRoute requireAdmin><AnalyticsHelp /></ProtectedRoute>} />
         <Route path="/admin/team" element={<ProtectedRoute requireAdmin><AdminTeam /></ProtectedRoute>} />
         <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
         <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />

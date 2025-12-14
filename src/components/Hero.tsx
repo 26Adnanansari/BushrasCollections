@@ -66,7 +66,7 @@ const Hero = () => {
   if (slides.length === 0) {
     return (
       <section id="home" className="relative min-h-screen overflow-hidden">
-        <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-screen flex flex-col md:flex-row items-center gap-8 md:gap-12">
+        <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-auto md:h-screen flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-12 md:py-0">
           {/* Text Content - Left Side */}
           <div className="w-full md:w-1/2 pt-20 md:pt-0">
             <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
@@ -74,7 +74,7 @@ const Hero = () => {
               <span className="block text-primary">Fashion</span>
               Collection
             </h1>
-            
+
             <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
               Discover timeless elegance with our curated collection of traditional and contemporary designs
             </p>
@@ -127,20 +127,20 @@ const Hero = () => {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id}>
-              <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-screen flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-auto md:h-screen flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-12 md:py-0">
                 {/* Text Content - Left Side */}
                 <div className="w-full md:w-1/2 pt-20 md:pt-0 animate-fade-in">
                   <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
                     {slide.title || "Elegant Fashion Collection"}
                   </h1>
-                  
+
                   <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
                     {slide.subtitle || "Discover timeless elegance"}
                   </p>
 
                   {slide.cta_text && (
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
                       onClick={() => slide.cta_link && (window.location.href = slide.cta_link)}
                     >
@@ -177,9 +177,8 @@ const Hero = () => {
           {slides.map((_, index) => (
             <button
               key={index}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                current === index ? "w-8 bg-primary" : "w-2 bg-white/50"
-              }`}
+              className={`h-2 rounded-full transition-all duration-300 ${current === index ? "w-8 bg-primary" : "w-2 bg-white/50"
+                }`}
               onClick={() => api?.scrollTo(index)}
               aria-label={`Go to slide ${index + 1}`}
             />

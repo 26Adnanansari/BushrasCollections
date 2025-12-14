@@ -229,6 +229,31 @@ const ProductDetail = () => {
     setZoomPosition({ x, y });
   };
 
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} | Bushra's Collection`;
+
+      // Helper to update meta tag
+      const updateMeta = (name: string, content: string) => {
+        let element = document.querySelector(`meta[property="${name}"]`) || document.querySelector(`meta[name="${name}"]`);
+        if (!element) {
+          element = document.createElement('meta');
+          element.setAttribute('property', name);
+          document.head.appendChild(element);
+        }
+        element.setAttribute('content', content);
+      };
+
+      updateMeta('og:title', product.name);
+      updateMeta('og:description', product.description || `Buy ${product.name} at the best price.`);
+      updateMeta('og:image', productImages[0]);
+      updateMeta('twitter:card', 'summary_large_image');
+      updateMeta('twitter:title', product.name);
+      updateMeta('twitter:description', product.description || `Buy ${product.name} at the best price.`);
+      updateMeta('twitter:image', productImages[0]);
+    }
+  }, [product, productImages]);
+
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
