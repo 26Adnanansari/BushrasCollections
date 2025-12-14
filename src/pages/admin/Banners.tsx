@@ -174,7 +174,10 @@ const AdminBanners = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold px-3">Promotional Banners</h1>
-            <p className="text-muted-foreground px-3">Manage promotional banners displayed on the site</p>
+            <p className="text-muted-foreground px-3 mb-4">Manage promotional banners displayed on the site</p>
+            <div className="bg-blue-50 text-blue-800 p-4 rounded-md mx-3 mb-4 border border-blue-200">
+              <p className="text-sm font-medium">Recommended Size: 1500x300px (5:1 Aspect Ratio) for best full-width display.</p>
+            </div>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => {
             setDialogOpen(open);

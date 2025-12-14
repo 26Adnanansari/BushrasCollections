@@ -67,7 +67,7 @@ const App = () => {
         <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/hero-slider" element={<ProtectedRoute requireAdmin><AdminHeroSlider /></ProtectedRoute>} />
         <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AdminAnalytics /></ProtectedRoute>} />
-        <Route path="/admin/team" element={<ProtectedRoute requireSuperAdmin><AdminTeam /></ProtectedRoute>} />
+        <Route path="/admin/team" element={<ProtectedRoute requireAdmin><AdminTeam /></ProtectedRoute>} />
         <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
         <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />
         <Route path="/admin/payment-methods" element={<ProtectedRoute requireAdmin><AdminPaymentMethods /></ProtectedRoute>} />

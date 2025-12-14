@@ -65,78 +65,77 @@ const PromotionalBanners = () => {
   };
 
   return (
-    <section className="relative bg-accent/20 py-12 overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="relative">
-          {/* Banner Content */}
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="flex-1 space-y-4">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
-                {currentBanner.title}
-              </h2>
-              {currentBanner.description && (
-                <p className="text-lg text-muted-foreground max-w-2xl">
-                  {currentBanner.description}
-                </p>
-              )}
-              {currentBanner.cta_text && (
-                <Button 
-                  size="lg" 
-                  onClick={handleCTAClick}
-                  className="mt-4"
-                >
-                  {currentBanner.cta_text}
-                </Button>
-              )}
-            </div>
-            <div className="flex-1">
-              <img
-                src={currentBanner.image_url}
-                alt={currentBanner.title}
-                className="w-full h-[300px] object-cover rounded-lg shadow-lg"
-              />
-            </div>
-          </div>
+    <section className="relative w-full overflow-hidden bg-background">
+      <div className="w-full max-w-[1500px] mx-auto relative h-[300px] md:h-[400px]">
+        {/* Banner Content */}
+        <div className="absolute inset-0">
+          <img
+            src={currentBanner.image_url}
+            alt={currentBanner.title}
+            className="w-full h-full object-cover"
+          />
+          {/* Overlay gradient for text readability */}
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
 
-          {/* Navigation Arrows */}
-          {banners.length > 1 && (
-            <>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 rounded-full shadow-lg"
-                onClick={handlePrevious}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 rounded-full shadow-lg"
-                onClick={handleNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </>
+        {/* Text Content */}
+        <div className="relative h-full container mx-auto px-4 flex flex-col justify-center items-center text-center text-white z-10">
+          <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4 drop-shadow-md">
+            {currentBanner.title}
+          </h2>
+          {currentBanner.description && (
+            <p className="text-lg md:text-xl max-w-2xl mb-6 drop-shadow-sm">
+              {currentBanner.description}
+            </p>
           )}
-
-          {/* Dots Indicator */}
-          {banners.length > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              {banners.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentIndex
-                      ? 'bg-primary w-8'
-                      : 'bg-muted-foreground/30'
-                  }`}
-                />
-              ))}
-            </div>
+          {currentBanner.cta_text && (
+            <Button
+              size="lg"
+              onClick={handleCTAClick}
+              className="bg-white text-black hover:bg-white/90 border-none px-8"
+            >
+              {currentBanner.cta_text}
+            </Button>
           )}
         </div>
+
+        {/* Navigation Arrows */}
+        {banners.length > 1 && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border-white/20 bg-black/20 text-white hover:bg-black/40 hover:text-white border-0"
+              onClick={handlePrevious}
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border-white/20 bg-black/20 text-white hover:bg-black/40 hover:text-white border-0"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-6 w-6" />
+            </Button>
+          </>
+        )}
+
+        {/* Dots Indicator */}
+        {banners.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {banners.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`h-2 rounded-full transition-all ${index === currentIndex
+                    ? 'bg-white w-8'
+                    : 'bg-white/50 w-2'
+                  }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
