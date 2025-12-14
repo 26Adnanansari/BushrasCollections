@@ -35,20 +35,44 @@ const OrderTracking = () => {
       // Check if orderId is an order_number (starts with BC-) or UUID
       const isOrderNumber = orderId.startsWith('BC-');
 
-      const query = supabase
+      let query = supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          shipping_address,
+          order_items (
+            id,
+            product_id,
+            quantity,
+            price,
+            product:products (
+              name,
+              image_url
+            )
+          )
+        `)
         .eq('user_id', user.id);
 
-      // Query by order_number or id
-      const { data: orderData, error: orderError } = isOrderNumber
-        ? await query.eq('order_number', orderId).single()
-        : await query.eq('id', orderId).single();
+      if (isOrderNumber) {
+        query = query.eq('order_number', orderId);
+      } else {
+        query = query.eq('id', orderId);
+      }
 
-      if (orderError) throw orderError;
+      const { data, error } = await query.single();
 
-      setOrder(orderData);
-      setOrderItems((orderData?.items as any[]) || []);
+      if (error) throw error;
+
+      // Transform order_items to match the UI expectation
+      const formattedItems = data.order_items.map((item: any) => ({
+        name: item.product?.name || 'Unknown Product',
+        image: item.product?.image_url || '/placeholder.svg',
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      setOrder(data);
+      setOrderItems(formattedItems);
     } catch (error) {
       console.error('Error fetching order:', error);
       toast({

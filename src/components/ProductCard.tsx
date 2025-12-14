@@ -3,6 +3,8 @@ import { Heart, ShoppingBag, Eye } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useWishlistStore } from "@/store/wishlist";
+import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,11 +21,14 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRating = 0, totalReviews = 0 }: ProductCardProps) => {
-  const { addItem } = useCartStore();
+  const { addItem: addToCart } = useCartStore();
+  const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
+  const { user } = useAuthStore();
   const { toast } = useToast();
-  const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const isLiked = isInWishlist(id);
 
   const images: string[] = Array.isArray(image) && image.length > 0 ? image : image ? [image as string] : ['/placeholder.svg'];
   const displayImage: string = images[currentImageIndex] || images[0] || '/placeholder.svg';
@@ -32,7 +37,7 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
     e.preventDefault();
     e.stopPropagation();
     const firstImage: string = images[0] || '/placeholder.svg';
-    addItem({
+    addToCart({
       id,
       name,
       price,
@@ -44,6 +49,34 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
       title: "Added to cart",
       description: `${name} has been added to your cart.`,
     });
+  };
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast({
+        title: "Please login",
+        description: "You need to be logged in to add items to your wishlist",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isLiked) {
+      await removeFromWishlist(id);
+      toast({
+        title: "Removed from wishlist",
+        description: "Item removed from your wishlist"
+      });
+    } else {
+      await addToWishlist(id);
+      toast({
+        title: "Added to wishlist",
+        description: "Item added to your wishlist"
+      });
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -116,13 +149,9 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
             size="icon"
             className={cn(
               "absolute top-4 right-4 bg-background/80 hover:bg-background transition-all duration-300",
-              isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+              isHovered || isLiked ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             )}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsLiked(!isLiked);
-            }}
+            onClick={handleWishlistClick}
           >
             <Heart className={cn("h-4 w-4", isLiked ? "fill-primary text-primary" : "text-foreground")} />
           </Button>

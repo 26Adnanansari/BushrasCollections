@@ -150,126 +150,207 @@ const AdminReviews = () => {
 
     // ... handleApprove, handleReject, handleDelete ...
 
-    <DialogContent className="max-w-2xl">
-        <DialogHeader>
-            <DialogTitle>Review Details</DialogTitle>
-            <DialogDescription>
-                Moderate and manage this review
-            </DialogDescription>
-        </DialogHeader>
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-6">Manage Reviews</h1>
 
-        {selectedReview && (
-            <div className="space-y-4">
-                <div>
-                    <h4 className="font-semibold mb-2">Product</h4>
-                    <p>{selectedReview.products?.name}</p>
-                </div>
-
-                <div>
-                    <h4 className="font-semibold mb-2">User</h4>
-                    <div className="flex items-center gap-2">
-                        <p>{selectedReview.profiles?.name} ({selectedReview.profiles?.email})</p>
-                        {(selectedReview as any).is_verified_purchase && (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                                <Check className="h-3 w-3 mr-1" /> Verified Purchase
-                            </Badge>
-                        )}
-                    </div>
-                </div>
-
-                <div>
-                    <h4 className="font-semibold mb-2">Rating</h4>
-                    <StarRating rating={selectedReview.rating} readonly />
-                </div>
-
-                <div className="flex justify-between items-center">
-                    <h4 className="font-semibold">Content</h4>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsEditing(!isEditing)}
-                    >
-                        <Edit className="h-4 w-4 mr-2" />
-                        {isEditing ? 'Cancel Edit' : 'Edit Content'}
-                    </Button>
-                </div>
-
-                {isEditing ? (
-                    <div className="space-y-4 p-4 border rounded-md bg-muted/30">
-                        <div>
-                            <Label htmlFor="edit-title">Title</Label>
-                            <Input
-                                id="edit-title"
-                                value={editTitle}
-                                onChange={(e) => setEditTitle(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-comment">Comment</Label>
-                            <Textarea
-                                id="edit-comment"
-                                value={editComment}
-                                onChange={(e) => setEditComment(e.target.value)}
-                                rows={4}
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <Button size="sm" onClick={handleSaveEdit}>Save Changes</Button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="space-y-2">
-                        <div>
-                            <p className="font-medium">{selectedReview.title}</p>
-                        </div>
-                        <div>
-                            <p className="text-muted-foreground">{selectedReview.comment}</p>
-                        </div>
-                    </div>
-                )}
-
-                <div>
-                    <Label htmlFor="admin-notes">Admin Notes</Label>
-                    <Textarea
-                        id="admin-notes"
-                        value={adminNotes}
-                        onChange={(e) => setAdminNotes(e.target.value)}
-                        placeholder="Add notes for this review..."
-                        rows={3}
-                    />
-                </div>
+            <div className="mb-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="pending" className="flex items-center gap-2">
+                            Pending
+                            {reviews.filter(r => r.status === 'pending').length > 0 && (
+                                <Badge variant="secondary" className="px-1.5 py-0.5 h-auto text-xs">
+                                    {reviews.filter(r => r.status === 'pending').length}
+                                </Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="approved">Approved</TabsTrigger>
+                        <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
-        )}
 
-        <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Close
-            </Button>
-            {selectedReview?.status === 'pending' && (
-                <>
-                    <Button
-                        variant="destructive"
-                        onClick={() => handleReject(selectedReview.id)}
-                    >
-                        Reject
-                    </Button>
-                    <Button onClick={() => handleApprove(selectedReview.id)}>
-                        Approve
-                    </Button>
-                </>
+            {loading ? (
+                <div>Loading reviews...</div>
+            ) : reviews.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                    No reviews found.
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    {reviews.map((review) => (
+                        <Card key={review.id} className="overflow-hidden">
+                            <div className="p-6 flex flex-col md:flex-row gap-6">
+                                {/* Product Image */}
+                                <div className="w-full md:w-32 h-32 flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                                    <img
+                                        src={review.products?.image_url || '/placeholder.svg'}
+                                        alt={review.products?.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="font-semibold text-lg">{review.title}</h3>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <span>{review.profiles?.name || 'Unknown User'}</span>
+                                                <span>•</span>
+                                                <span>{review.created_at ? formatDistanceToNow(new Date(review.created_at), { addSuffix: true }) : 'Recently'}</span>
+                                            </div>
+                                        </div>
+                                        <Badge variant={
+                                            review.status === 'approved' ? 'default' :
+                                                review.status === 'rejected' ? 'destructive' : 'secondary'
+                                        }>
+                                            {review.status}
+                                        </Badge>
+                                    </div>
+
+                                    <StarRating rating={review.rating} readonly />
+
+                                    <p className="text-gray-700 dark:text-gray-300 line-clamp-2">
+                                        {review.comment}
+                                    </p>
+
+                                    <div className="pt-2 flex gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => handleViewReview(review)}>
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            View Details
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
             )}
-            {selectedReview && selectedReview.status !== 'pending' && (
-                <Button
-                    variant="destructive"
-                    onClick={() => handleDelete(selectedReview.id)}
-                >
-                    Delete
-                </Button>
-            )}
-        </DialogFooter>
-    </DialogContent>
-            </Dialog >
-        </div >
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Review Details</DialogTitle>
+                        <DialogDescription>
+                            Moderate and manage this review
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedReview && (
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="font-semibold mb-2">Product</h4>
+                                <p>{selectedReview.products?.name}</p>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold mb-2">User</h4>
+                                <div className="flex items-center gap-2">
+                                    <p>{selectedReview.profiles?.name} ({selectedReview.profiles?.email})</p>
+                                    {(selectedReview as any).is_verified_purchase && (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                                            <Check className="h-3 w-3 mr-1" /> Verified Purchase
+                                        </Badge>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold mb-2">Rating</h4>
+                                <StarRating rating={selectedReview.rating} readonly />
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                                <h4 className="font-semibold">Content</h4>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsEditing(!isEditing)}
+                                >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    {isEditing ? 'Cancel Edit' : 'Edit Content'}
+                                </Button>
+                            </div>
+
+                            {isEditing ? (
+                                <div className="space-y-4 p-4 border rounded-md bg-muted/30">
+                                    <div>
+                                        <Label htmlFor="edit-title">Title</Label>
+                                        <Input
+                                            id="edit-title"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="edit-comment">Comment</Label>
+                                        <Textarea
+                                            id="edit-comment"
+                                            value={editComment}
+                                            onChange={(e) => setEditComment(e.target.value)}
+                                            rows={4}
+                                        />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button size="sm" onClick={handleSaveEdit}>Save Changes</Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="font-medium">{selectedReview.title}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground">{selectedReview.comment}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <Label htmlFor="admin-notes">Admin Notes</Label>
+                                <Textarea
+                                    id="admin-notes"
+                                    value={adminNotes}
+                                    onChange={(e) => setAdminNotes(e.target.value)}
+                                    placeholder="Add notes for this review..."
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                            Close
+                        </Button>
+                        {selectedReview?.status === 'pending' && (
+                            <>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => handleReject(selectedReview.id)}
+                                >
+                                    Reject
+                                </Button>
+                                <Button onClick={() => handleApprove(selectedReview.id)}>
+                                    Approve
+                                </Button>
+                            </>
+                        )}
+                        {selectedReview && selectedReview.status !== 'pending' && (
+                            <Button
+                                variant="destructive"
+                                onClick={() => handleDelete(selectedReview.id)}
+                            >
+                                Delete
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 };
 

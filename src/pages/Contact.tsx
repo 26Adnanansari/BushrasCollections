@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Instagram, Facebook } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -41,15 +42,19 @@ const Contact = () => {
     try {
       // Validate form data
       const validatedData = contactSchema.parse(formData);
-      
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      // Submit to Supabase
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert([validatedData]);
+
+      if (error) throw error;
+
       toast({
         title: "Message sent successfully!",
         description: "We'll get back to you within 24 hours.",
       });
-      
+
       // Reset form
       setFormData({
         name: "",
@@ -80,7 +85,7 @@ const Contact = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-elegant">
         <div className="container mx-auto px-4">
@@ -137,7 +142,7 @@ const Contact = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="phone">Phone Number *</Label>
@@ -164,7 +169,7 @@ const Contact = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="message">Message *</Label>
                       <Textarea
@@ -178,10 +183,10 @@ const Contact = () => {
                         maxLength={1000}
                       />
                     </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+
+                    <Button
+                      type="submit"
+                      className="w-full"
                       size="lg"
                       disabled={isSubmitting}
                     >
@@ -204,7 +209,7 @@ const Contact = () => {
               <Card className="shadow-elegant">
                 <CardContent className="p-8">
                   <h3 className="text-2xl font-serif font-bold text-foreground mb-6">Get in Touch</h3>
-                  
+
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -218,7 +223,7 @@ const Contact = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                         <Phone className="h-6 w-6 text-primary" />
@@ -229,7 +234,7 @@ const Contact = () => {
                         <p className="text-sm text-muted-foreground">Available 10 AM - 8 PM</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                         <Mail className="h-6 w-6 text-primary" />
@@ -240,7 +245,7 @@ const Contact = () => {
                         <p className="text-sm text-muted-foreground">We reply within 24 hours</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                         <Clock className="h-6 w-6 text-primary" />
@@ -261,10 +266,10 @@ const Contact = () => {
               <Card className="shadow-elegant">
                 <CardContent className="p-8">
                   <h3 className="text-2xl font-serif font-bold text-foreground mb-6">Follow Us</h3>
-                  
+
                   <div className="space-y-4">
-                    <a 
-                      href="#" 
+                    <a
+                      href="#"
                       className="flex items-center gap-4 p-4 bg-gradient-subtle rounded-lg hover:shadow-elegant transition-all duration-300 group"
                     >
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -275,9 +280,9 @@ const Contact = () => {
                         <div className="text-sm text-muted-foreground">@bushra.collection</div>
                       </div>
                     </a>
-                    
-                    <a 
-                      href="#" 
+
+                    <a
+                      href="#"
                       className="flex items-center gap-4 p-4 bg-gradient-subtle rounded-lg hover:shadow-elegant transition-all duration-300 group"
                     >
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">

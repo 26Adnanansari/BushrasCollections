@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Promotions from "./pages/admin/Promotions";
 import { useAuthStore } from "@/store/auth";
 import { useVisitorStore } from "@/store/visitor";
+import { useWishlistStore } from "@/store/wishlist";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -37,6 +38,7 @@ import AnalyticsHelp from "./pages/admin/AnalyticsHelp";
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
   const initializeVisitor = useVisitorStore((state) => state.initialize);
+  const initializeWishlist = useWishlistStore((state) => state.initialize);
   const location = useLocation();
 
   useEffect(() => {
@@ -47,6 +49,11 @@ const App = () => {
   useEffect(() => {
     initializeVisitor();
   }, [initializeVisitor, location.pathname, location.search]);
+
+  // Init wishlist whenever auth status changes (implicitly handled by store but good to trigger)
+  useEffect(() => {
+    initializeWishlist();
+  }, [initializeWishlist]);
 
   return (
     <TooltipProvider>

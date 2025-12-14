@@ -4,6 +4,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useAuthStore } from "@/store/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Package, ShoppingCart, Heart, User } from "lucide-react";
 
@@ -11,16 +12,47 @@ const Dashboard = () => {
   const { user, initialized, loading } = useAuthStore();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    ordersCount: 0,
+    wishlistCount: 0
+  });
 
   useEffect(() => {
     if (initialized && !loading) {
       if (!user) {
         navigate("/auth");
       } else {
-        setIsLoading(false);
+        fetchDashboardStats();
       }
     }
   }, [initialized, loading, user, navigate]);
+
+  const fetchDashboardStats = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch Orders Count
+      const { count: ordersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Fetch Wishlist Count
+      const { count: wishlistCount } = await supabase
+        .from('wishlist')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setStats({
+        ordersCount: ordersCount || 0,
+        wishlistCount: wishlistCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -36,10 +68,10 @@ const Dashboard = () => {
 
       <div className="container mx-auto px-4 pt-24 pb-12">
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-2">
             Welcome back, {user?.profile?.name || 'there'}!
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-lg text-muted-foreground">
             Manage your orders, wishlist, and account settings
           </p>
         </div>
@@ -51,6 +83,7 @@ const Dashboard = () => {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+              <div className="text-2xl font-bold">{stats.ordersCount}</div>
               <p className="text-xs text-muted-foreground">View and track your orders</p>
             </CardContent>
           </Card>
@@ -61,7 +94,8 @@ const Dashboard = () => {
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">Browse our collection</p>
+              <div className="text-2xl font-bold">New</div>
+              <p className="text-xs text-muted-foreground">Browse our fresh collection</p>
             </CardContent>
           </Card>
 
@@ -71,6 +105,7 @@ const Dashboard = () => {
               <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+              <div className="text-2xl font-bold">{stats.wishlistCount}</div>
               <p className="text-xs text-muted-foreground">View saved items</p>
             </CardContent>
           </Card>
@@ -81,6 +116,7 @@ const Dashboard = () => {
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+              <div className="text-2xl font-bold">Edit</div>
               <p className="text-xs text-muted-foreground">Update your information</p>
             </CardContent>
           </Card>

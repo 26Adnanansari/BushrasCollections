@@ -10,8 +10,8 @@ import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const Wishlist = () => {
-  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, isLoading, initialize, removeItem } = useWishlistStore();
+  const [products, setProducts] = useState<any[]>([]);
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,18 +21,30 @@ const Wishlist = () => {
       navigate('/auth');
       return;
     }
-    fetchWishlist();
+    initialize();
   }, [user]);
 
-  const fetchWishlist = async () => {
-    if (!user) return;
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (items.length === 0) {
+        setProducts([]);
+        return;
+      }
 
-    // Wishlist table doesn't exist yet - return empty for now
-    setWishlistItems([]);
-    setLoading(false);
-  };
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', items);
 
-  if (loading) {
+      if (data) {
+        setProducts(data);
+      }
+    };
+
+    fetchProductDetails();
+  }, [items]);
+
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-background">
         <Navigation />
@@ -57,7 +69,7 @@ const Wishlist = () => {
   return (
     <main className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         <div className="mb-8">
           <h1 className="text-4xl font-serif font-bold text-foreground mb-2 flex items-center gap-3">
@@ -65,11 +77,11 @@ const Wishlist = () => {
             My Wishlist
           </h1>
           <p className="text-muted-foreground">
-            {wishlistItems.length} {wishlistItems.length === 1 ? 'item' : 'items'} saved for later
+            {products.length} {products.length === 1 ? 'item' : 'items'} saved for later
           </p>
         </div>
 
-        {wishlistItems.length === 0 ? (
+        {products.length === 0 ? (
           <div className="text-center py-20">
             <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-2xl font-semibold text-foreground mb-2">Your wishlist is empty</h3>
@@ -81,7 +93,7 @@ const Wishlist = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {wishlistItems.map(product => (
+            {products.map(product => (
               <ProductCard
                 key={product.id}
                 id={product.id}
@@ -89,7 +101,9 @@ const Wishlist = () => {
                 price={product.price}
                 image={Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : ['/placeholder.svg'])}
                 category={product.category}
-                isNew={new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                isNew={product.created_at && new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                averageRating={0} // Fetching ratings for wishlist might be overkill for now, keeping simple
+                totalReviews={0}
               />
             ))}
           </div>
