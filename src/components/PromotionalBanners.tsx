@@ -66,7 +66,7 @@ const PromotionalBanners = () => {
 
   return (
     <section className="relative w-full overflow-hidden bg-background">
-      <div className="w-full max-w-[1500px] mx-auto relative aspect-[5/1] min-h-[250px] md:min-h-0">
+      <div className="w-full max-w-[1500px] mx-auto relative aspect-[2/1] md:aspect-[5/1] h-auto">
         {/* Banner Content */}
         <div className="absolute inset-0">
           <img

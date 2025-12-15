@@ -78,7 +78,7 @@ const FeaturedProducts = () => {
   }
 
   return (
-    <section id="collection" className="py-20 bg-gradient-elegant">
+    <section id="collection" className="py-10 md:py-20 bg-gradient-elegant">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">

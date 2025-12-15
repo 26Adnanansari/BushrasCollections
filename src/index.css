@@ -46,7 +46,7 @@ All colors MUST be HSL.
     --gradient-elegant: linear-gradient(180deg, hsl(40 35% 92%), hsl(45 25% 97%));
     --shadow-elegant: 0 10px 40px -15px hsl(15 65% 45% / 0.3);
     --shadow-product: 0 8px 32px -8px hsl(25 15% 15% / 0.15);
-    
+
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
@@ -103,9 +103,20 @@ All colors MUST be HSL.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   @media (max-width: 768px) {
     html {
       font-size: 14px;
+    }
+
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    section {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
     }
   }
 }

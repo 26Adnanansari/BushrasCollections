@@ -3,7 +3,7 @@ import { Instagram, Facebook, MapPin, Phone } from "lucide-react";
 
 const AboutSection = () => {
   return (
-    <section id="about" className="py-20 bg-background">
+    <section id="about" className="py-10 md:py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
@@ -12,12 +12,12 @@ const AboutSection = () => {
               About Bushra's Collection
             </h2>
             <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              We are passionate about bringing you the finest in traditional and contemporary fashion. 
-              Our carefully curated collection represents the perfect blend of timeless elegance and 
+              We are passionate about bringing you the finest in traditional and contemporary fashion.
+              Our carefully curated collection represents the perfect blend of timeless elegance and
               modern sophistication.
             </p>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              From exquisite traditional pieces to stunning contemporary designs, each item in our 
+              From exquisite traditional pieces to stunning contemporary designs, each item in our
               collection is selected with the utmost attention to quality, craftsmanship, and style.
             </p>
 
@@ -32,7 +32,7 @@ const AboutSection = () => {
                   <p className="text-sm text-muted-foreground">Call or WhatsApp</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                   <MapPin className="h-5 w-5 text-primary" />
@@ -76,7 +76,7 @@ const AboutSection = () => {
                   <div className="text-muted-foreground">Years Experience</div>
                 </div>
               </div>
-              
+
               <div className="mt-8 p-6 bg-background/50 rounded-xl border border-border">
                 <blockquote className="text-center">
                   <p className="text-foreground font-medium mb-4">
