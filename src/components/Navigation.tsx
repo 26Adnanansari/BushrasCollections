@@ -181,7 +181,7 @@ const Navigation = () => {
                 <a
                   key={link.name}
                   href={link.href}
-                  className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2"
+                  className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2 text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
@@ -190,7 +190,7 @@ const Navigation = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2"
+                  className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2 text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}

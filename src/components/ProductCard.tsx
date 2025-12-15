@@ -180,7 +180,7 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
           <h3 className="font-serif text-base md:text-lg font-semibold text-foreground mb-2 md:mb-3 group-hover:text-primary transition-colors duration-300 line-clamp-1">
             {name}
           </h3>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
             <span className="text-lg md:text-2xl font-bold text-primary">
               Rs. {price.toLocaleString()}
             </span>

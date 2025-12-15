@@ -52,6 +52,9 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
 
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+
   const { addItem } = useCartStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -61,12 +64,12 @@ const ProductDetail = () => {
       if (!slug) return;
 
       try {
-        // Try to fetch by slug first, then fallback to id (UUID)
+        // Fetch product with reviews
         let query = supabase
           .from('products')
-          .select('*');
+          .select('*, reviews(rating)');
 
-        // Check if slug looks like a UUID (for backward compatibility)
+        // Check if slug looks like a UUID
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
         if (isUUID) {
@@ -82,7 +85,18 @@ const ProductDetail = () => {
           return;
         }
 
-        setProduct(data as any);
+        if (data) {
+          setProduct(data as any);
+
+          // Calculate ratings
+          const ratings = (data as any).reviews?.map((r: any) => r.rating) || [];
+          const avg = ratings.length > 0
+            ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
+            : 0;
+
+          setAverageRating(avg);
+          setTotalReviews(ratings.length);
+        }
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -312,10 +326,16 @@ const ProductDetail = () => {
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex text-yellow-400">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="h-4 w-4 md:h-5 md:w-5 fill-muted text-muted" />
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 md:h-5 md:w-5 ${star <= Math.round(averageRating) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"
+                        }`}
+                    />
                   ))}
                 </div>
-                <span className="text-xs md:text-sm text-muted-foreground">No reviews yet</span>
+                <span className="text-xs md:text-sm text-muted-foreground">
+                  {totalReviews > 0 ? `${totalReviews} Review${totalReviews > 1 ? 's' : ''}` : "No reviews yet"}
+                </span>
               </div>
             </div>
 
