@@ -113,7 +113,7 @@ const Hero = () => {
     <section id="home" className="relative min-h-screen overflow-hidden">
       <Carousel
         setApi={setApi}
-        className="w-full h-screen"
+        className="w-full min-h-screen md:h-screen"
         plugins={[
           Autoplay({
             delay: 5000,
@@ -129,12 +129,12 @@ const Hero = () => {
             <CarouselItem key={slide.id}>
               <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-auto md:h-screen flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-12 md:py-0">
                 {/* Text Content - Left Side */}
-                <div className="w-full md:w-1/2 pt-20 md:pt-0 animate-fade-in">
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
+                <div className="w-full md:w-1/2 pt-12 md:pt-0 animate-fade-in relative z-10">
+                  <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
                     {slide.title || "Elegant Fashion Collection"}
                   </h1>
 
-                  <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
+                  <p className="text-base md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
                     {slide.subtitle || "Discover timeless elegance"}
                   </p>
 
@@ -169,8 +169,8 @@ const Hero = () => {
         </CarouselContent>
 
         {/* Navigation Arrows */}
-        <CarouselPrevious className="left-4 h-12 w-12 border-2 border-white/20 bg-background/20 backdrop-blur-sm hover:bg-background/40" />
-        <CarouselNext className="right-4 h-12 w-12 border-2 border-white/20 bg-background/20 backdrop-blur-sm hover:bg-background/40" />
+        <CarouselPrevious className="hidden md:flex left-4 h-12 w-12 border-2 border-white/20 bg-background/20 backdrop-blur-sm hover:bg-background/40" />
+        <CarouselNext className="hidden md:flex right-4 h-12 w-12 border-2 border-white/20 bg-background/20 backdrop-blur-sm hover:bg-background/40" />
 
         {/* Dots Indicator */}
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">

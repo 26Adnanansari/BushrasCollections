@@ -304,30 +304,30 @@ const ProductDetail = () => {
               {isNew && (
                 <Badge variant="secondary" className="mb-2">New Arrival</Badge>
               )}
-              <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
+              <h1 className="text-2xl md:text-4xl font-serif font-bold text-foreground mb-2">
                 {product.name}
               </h1>
-              <p className="text-lg text-muted-foreground mb-4">{product.category}</p>
+              <p className="text-base md:text-lg text-muted-foreground mb-4">{product.category}</p>
 
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex text-yellow-400">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="h-5 w-5 fill-muted text-muted" />
+                    <Star key={star} className="h-4 w-4 md:h-5 md:w-5 fill-muted text-muted" />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">No reviews yet</span>
+                <span className="text-xs md:text-sm text-muted-foreground">No reviews yet</span>
               </div>
             </div>
 
             <Separator />
 
             <div>
-              <div className="text-3xl font-bold text-primary mb-4">
+              <div className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 PKR {product.price.toLocaleString()}
               </div>
 
               {product.description && (
-                <p className="text-muted-foreground leading-relaxed mb-6">
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-6">
                   {product.description}
                 </p>
               )}
@@ -417,9 +417,9 @@ const ProductDetail = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <Button
-                  className="flex-1"
+                  className="flex-1 min-w-[140px]"
                   size="lg"
                   onClick={handleBookOrder}
                   disabled={product.stock === 0}
@@ -430,16 +430,17 @@ const ProductDetail = () => {
                 <Button
                   variant="outline"
                   size="lg"
+                  className="flex-1 min-w-[140px]"
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </Button>
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" className="w-12 px-0">
                   <Heart className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleShare}>
+                <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleShare}>
                   <Share2 className="h-5 w-5" />
                 </Button>
               </div>

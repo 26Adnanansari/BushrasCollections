@@ -147,8 +147,14 @@ const Navigation = () => {
             </CartDrawer>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          {/* Mobile Menu & Cart */}
+          <div className="md:hidden flex items-center gap-2">
+            <CartDrawer>
+              <Button variant="ghost" size="icon" className="hover:bg-accent">
+                <ShoppingBag className="h-5 w-5" />
+              </Button>
+            </CartDrawer>
+
             <Button
               variant="ghost"
               size="icon"

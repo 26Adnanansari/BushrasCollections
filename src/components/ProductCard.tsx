@@ -175,13 +175,13 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
         </div>
 
         {/* Product Info */}
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">{category || 'Fashion'}</p>
-          <h3 className="font-serif text-lg font-semibold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
+        <div className="p-4 md:p-6">
+          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">{category || 'Fashion'}</p>
+          <h3 className="font-serif text-base md:text-lg font-semibold text-foreground mb-2 md:mb-3 group-hover:text-primary transition-colors duration-300 line-clamp-1">
             {name}
           </h3>
           <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-primary">
+            <span className="text-lg md:text-2xl font-bold text-primary">
               Rs. {price.toLocaleString()}
             </span>
             {totalReviews > 0 ? (

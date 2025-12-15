@@ -40,7 +40,7 @@ const Products = () => {
     try {
       let query = supabase
         .from('products')
-        .select('*, slug');
+        .select('*, slug, reviews(rating)');
 
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
@@ -76,12 +76,24 @@ const Products = () => {
 
       if (error) throw error;
 
-      const productsData = data || [];
+      const productsData = (data || []).map((product: any) => {
+        const ratings = product.reviews?.map((r: any) => r.rating) || [];
+        const averageRating = ratings.length > 0
+          ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
+          : 0;
+
+        return {
+          ...product,
+          averageRating,
+          totalReviews: ratings.length
+        };
+      });
+
       setProducts(productsData);
 
       // Calculate dynamic max price from products
       if (productsData.length > 0) {
-        const prices = productsData.map(p => p.price);
+        const prices = productsData.map((p: any) => p.price);
         const calculatedMax = Math.max(...prices);
         setMaxPrice(Math.ceil(calculatedMax / 1000) * 1000);
       }
@@ -269,6 +281,8 @@ const Products = () => {
                       image={Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : ['/placeholder.svg'])}
                       category={product.category}
                       isNew={new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                      averageRating={product.averageRating}
+                      totalReviews={product.totalReviews}
                     />
                   ))}
                 </div>

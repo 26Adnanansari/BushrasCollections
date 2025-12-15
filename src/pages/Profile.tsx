@@ -94,7 +94,7 @@ const Profile = () => {
       const { data: prefs, error: prefsError } = await supabase
         .from("profiles" as any)
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("id", user!.id)
         .maybeSingle();
 
       if (prefsError) {
@@ -306,7 +306,7 @@ const Profile = () => {
         const { error: prefsError } = await supabase
           .from("profiles" as any)
           .upsert({
-            user_id: user!.id,
+            id: user!.id,
             ...notificationPrefs,
           });
 
