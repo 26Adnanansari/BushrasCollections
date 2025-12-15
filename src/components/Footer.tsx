@@ -16,7 +16,7 @@ const Footer = () => {
     if (!email.trim()) return;
 
     setIsSubmitting(true);
-    
+
     // Show success message (newsletter table not configured)
     toast({
       title: "Thank you!",
@@ -52,9 +52,9 @@ const Footer = () => {
           </form>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
           {/* About */}
-          <div>
+          <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <h3 className="text-xl font-serif font-bold text-foreground mb-4">
               Bushra's Collection
             </h3>
@@ -62,8 +62,8 @@ const Footer = () => {
               Your destination for elegant traditional and contemporary fashion in Pakistan.
             </p>
             <div className="flex gap-3">
-              <a 
-                href="https://www.instagram.com/bushra.collection" 
+              <a
+                href="https://www.instagram.com/bushra.collection"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors"
@@ -71,8 +71,8 @@ const Footer = () => {
               >
                 <Instagram className="h-5 w-5 text-primary" />
               </a>
-              <a 
-                href="https://www.facebook.com/bushra.com.pk/" 
+              <a
+                href="https://www.facebook.com/bushra.com.pk/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors"
@@ -84,26 +84,26 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="col-span-1">
             <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/products" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/products" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   All Products
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link to="/wishlist" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/wishlist" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Wishlist
                 </Link>
               </li>
@@ -111,26 +111,26 @@ const Footer = () => {
           </div>
 
           {/* Customer Service */}
-          <div>
+          <div className="col-span-1">
             <h4 className="font-semibold text-foreground mb-4">Customer Service</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/orders" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/orders" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Track Order
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Shipping Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Returns & Exchanges
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Size Guide
                 </a>
               </li>
@@ -138,7 +138,7 @@ const Footer = () => {
           </div>
 
           {/* Contact Info */}
-          <div>
+          <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <h4 className="font-semibold text-foreground mb-4">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
