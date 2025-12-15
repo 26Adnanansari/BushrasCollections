@@ -171,106 +171,108 @@ const AdminUsers = () => {
               {loading ? (
                 <div className="text-center py-8">Loading users...</div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Roles</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((userProfile) => (
-                      <TableRow
-                        key={userProfile.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleUserClick(userProfile)}
-                      >
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{userProfile.name || 'N/A'}</div>
-                            <div className="text-sm text-muted-foreground">{userProfile.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            {userProfile.phone && (
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <Phone className="h-3 w-3 mr-1" />
-                                {userProfile.phone}
-                              </div>
-                            )}
-                            {userProfile.whatsapp_number && (
-                              <div className="flex items-center text-sm text-green-600">
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                {userProfile.whatsapp_number}
-                              </div>
-                            )}
-                            {!userProfile.phone && !userProfile.whatsapp_number && (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {isOnline(userProfile.last_seen_at) ? (
-                            <Badge className="bg-green-500 hover:bg-green-600">Online</Badge>
-                          ) : (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {userProfile.last_seen_at ? new Date(userProfile.last_seen_at).toLocaleDateString() : 'Never'}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center text-sm">
-                            <Globe className="h-3 w-3 mr-1 text-muted-foreground" />
-                            {userProfile.source || 'Direct'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {userProfile.roles.length > 0 ? (
-                              userProfile.roles.map(role => (
-                                <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
-                                  {role}
-                                </Badge>
-                              ))
-                            ) : (
-                              <Badge variant="outline">user</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant={userProfile.roles.includes('admin') ? 'destructive' : 'outline'}
-                            size="sm"
-                            onClick={(e) => toggleAdminRole(
-                              userProfile.id,
-                              userProfile.roles.includes('admin'),
-                              e
-                            )}
-                            disabled={userProfile.id === user.id}
-                          >
-                            {userProfile.roles.includes('admin') ? (
-                              <>
-                                <User className="h-4 w-4 mr-2" />
-                                Remove Admin
-                              </>
-                            ) : (
-                              <>
-                                <Shield className="h-4 w-4 mr-2" />
-                                Make Admin
-                              </>
-                            )}
-                          </Button>
-                        </TableCell>
+                <div className="relative w-full overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Roles</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((userProfile) => (
+                        <TableRow
+                          key={userProfile.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleUserClick(userProfile)}
+                        >
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{userProfile.name || 'N/A'}</div>
+                              <div className="text-sm text-muted-foreground">{userProfile.email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              {userProfile.phone && (
+                                <div className="flex items-center text-sm text-muted-foreground">
+                                  <Phone className="h-3 w-3 mr-1" />
+                                  {userProfile.phone}
+                                </div>
+                              )}
+                              {userProfile.whatsapp_number && (
+                                <div className="flex items-center text-sm text-green-600">
+                                  <MessageSquare className="h-3 w-3 mr-1" />
+                                  {userProfile.whatsapp_number}
+                                </div>
+                              )}
+                              {!userProfile.phone && !userProfile.whatsapp_number && (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {isOnline(userProfile.last_seen_at) ? (
+                              <Badge className="bg-green-500 hover:bg-green-600">Online</Badge>
+                            ) : (
+                              <div className="flex items-center text-sm text-muted-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {userProfile.last_seen_at ? new Date(userProfile.last_seen_at).toLocaleDateString() : 'Never'}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center text-sm">
+                              <Globe className="h-3 w-3 mr-1 text-muted-foreground" />
+                              {userProfile.source || 'Direct'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {userProfile.roles.length > 0 ? (
+                                userProfile.roles.map(role => (
+                                  <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
+                                    {role}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <Badge variant="outline">user</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant={userProfile.roles.includes('admin') ? 'destructive' : 'outline'}
+                              size="sm"
+                              onClick={(e) => toggleAdminRole(
+                                userProfile.id,
+                                userProfile.roles.includes('admin'),
+                                e
+                              )}
+                              disabled={userProfile.id === user.id}
+                            >
+                              {userProfile.roles.includes('admin') ? (
+                                <>
+                                  <User className="h-4 w-4 mr-2" />
+                                  Remove Admin
+                                </>
+                              ) : (
+                                <>
+                                  <Shield className="h-4 w-4 mr-2" />
+                                  Make Admin
+                                </>
+                              )}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

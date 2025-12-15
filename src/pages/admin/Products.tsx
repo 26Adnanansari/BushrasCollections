@@ -486,12 +486,12 @@ const AdminProducts = () => {
       <Navigation />
       <div className="pt-20 pb-12">
         <div className="container mx-auto px-4">
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <Button
                 variant="ghost"
                 onClick={() => navigate('/admin')}
-                className="mb-4"
+                className="mb-4 pl-0 hover:bg-transparent"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
@@ -504,10 +504,10 @@ const AdminProducts = () => {
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={fetchProducts} disabled={loading}>
+            <div className="flex gap-2 w-full md:w-auto">
+              <Button variant="outline" onClick={fetchProducts} disabled={loading} className="flex-1 md:flex-none">
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh List
+                Refresh
               </Button>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
@@ -531,7 +531,7 @@ const AdminProducts = () => {
                       embellishment: [],
                     });
                     setProductImages([]);
-                  }}>
+                  }} className="flex-1 md:flex-none">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Product
                   </Button>
@@ -933,65 +933,67 @@ const AdminProducts = () => {
                   {loading ? (
                     <div className="text-center py-8">Loading products...</div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Image</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Stock</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {products.map((product) => (
-                          <TableRow key={product.id}>
-                            <TableCell>
-                              <img
-                                src={product.image_url || '/placeholder.svg'}
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium">{product.name}</TableCell>
-                            <TableCell>{product.category}</TableCell>
-                            <TableCell>PKR {product.price}</TableCell>
-                            <TableCell>{product.stock_quantity}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                <Badge
-                                  variant={product.is_active ? "default" : "secondary"}
-                                  className="cursor-pointer"
-                                  onClick={() => toggleActive(product)}
-                                >
-                                  {product.is_active ? "Active" : "Inactive"}
-                                </Badge>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(product)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDelete(product.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
+                    <div className="relative w-full overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Image</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Stock</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {products.map((product) => (
+                            <TableRow key={product.id}>
+                              <TableCell>
+                                <img
+                                  src={product.image_url || '/placeholder.svg'}
+                                  alt={product.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              </TableCell>
+                              <TableCell className="font-medium">{product.name}</TableCell>
+                              <TableCell>{product.category}</TableCell>
+                              <TableCell>PKR {product.price}</TableCell>
+                              <TableCell>{product.stock_quantity}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Badge
+                                    variant={product.is_active ? "default" : "secondary"}
+                                    className="cursor-pointer"
+                                    onClick={() => toggleActive(product)}
+                                  >
+                                    {product.is_active ? "Active" : "Inactive"}
+                                  </Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEdit(product)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDelete(product.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   )}
                 </TabsContent>
 

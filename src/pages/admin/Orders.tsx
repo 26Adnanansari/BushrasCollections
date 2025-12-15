@@ -147,7 +147,7 @@ const AdminOrders = () => {
             <Button
               variant="ghost"
               onClick={() => navigate('/admin')}
-              className="mb-4"
+              className="mb-4 pl-0 hover:bg-transparent"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
@@ -175,86 +175,88 @@ const AdminOrders = () => {
                   No orders found
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order #</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead className="hidden md:table-cell">Address</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">
-                          {order.order_number || `#${order.id.slice(-8)}`}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {order.whatsapp_number || order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="text-sm">
-                            {order.shipping_address?.city || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>PKR {order.total.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusBadgeVariant(order.status)}>
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/admin/orders/${order.order_number || order.id}`)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {order.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                onClick={() => updateOrderStatus(order.id, 'processing')}
-                              >
-                                Process
-                              </Button>
-                            )}
-                            {order.status === 'processing' && (
-                              <Button
-                                size="sm"
-                                onClick={() => updateOrderStatus(order.id, 'shipped')}
-                              >
-                                Ship
-                              </Button>
-                            )}
-                            {order.status === 'shipped' && (
-                              <Button
-                                size="sm"
-                                onClick={() => updateOrderStatus(order.id, 'delivered')}
-                              >
-                                Delivered
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+                <div className="relative w-full overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order #</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead className="hidden md:table-cell">Address</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-medium">
+                            {order.order_number || `#${order.id.slice(-8)}`}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {order.whatsapp_number || order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="text-sm">
+                              {order.shipping_address?.city || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>PKR {order.total.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(order.status)}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/admin/orders/${order.order_number || order.id}`)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {order.status === 'pending' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateOrderStatus(order.id, 'processing')}
+                                >
+                                  Process
+                                </Button>
+                              )}
+                              {order.status === 'processing' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateOrderStatus(order.id, 'shipped')}
+                                >
+                                  Ship
+                                </Button>
+                              )}
+                              {order.status === 'shipped' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateOrderStatus(order.id, 'delivered')}
+                                >
+                                  Delivered
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
