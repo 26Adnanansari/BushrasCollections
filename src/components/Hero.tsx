@@ -110,10 +110,10 @@ const Hero = () => {
   }
 
   return (
-    <section id="home" className="relative min-h-screen overflow-hidden">
+    <section id="home" className="relative w-full overflow-hidden">
       <Carousel
         setApi={setApi}
-        className="w-full min-h-screen md:h-screen"
+        className="w-full"
         plugins={[
           Autoplay({
             delay: 5000,
@@ -127,9 +127,9 @@ const Hero = () => {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id}>
-              <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-auto md:h-screen flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-12 md:py-0">
+              <div className="container mx-auto px-6 lg:px-12 xl:px-16 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-8 md:py-0">
                 {/* Text Content - Left Side */}
-                <div className="w-full md:w-1/2 pt-12 md:pt-0 animate-fade-in relative z-10">
+                <div className="w-full md:w-1/2 pt-4 md:pt-0 animate-fade-in relative z-10 text-center md:text-left">
                   <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
                     {slide.title || "Elegant Fashion Collection"}
                   </h1>
@@ -151,11 +151,11 @@ const Hero = () => {
                 </div>
 
                 {/* Media - Right Side */}
-                <div className="w-full md:w-1/2 h-[60vh] md:h-[85vh] relative">
+                <div className="w-full md:w-1/2 relative h-auto aspect-[4/5] md:h-[85vh] md:aspect-auto">
                   <img
                     src={(slide as any).image_url || (slide as any).image || (slide as any).media_url || heroImage}
                     alt={slide.title || "Hero slide"}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain md:object-contain mx-auto"
                     loading={index === 0 ? "eager" : "lazy"}
                   />
                   <div
