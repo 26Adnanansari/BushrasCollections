@@ -335,12 +335,12 @@ const OrderDetailsPage = () => {
                                         <Label className="text-muted-foreground">Name</Label>
                                         <p className="text-lg font-medium">{order.profiles.name || 'Unknown'}</p>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <Label className="text-muted-foreground">Email</Label>
                                             <div className="flex items-center gap-2">
                                                 <Mail className="h-4 w-4 text-muted-foreground" />
-                                                <p>{order.profiles.email || '-'}</p>
+                                                <p className="break-all">{order.profiles.email || '-'}</p>
                                             </div>
                                         </div>
                                         <div>

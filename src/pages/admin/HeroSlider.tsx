@@ -433,22 +433,24 @@ const HeroSlider = () => {
           ) : (
             slides.map((slide) => (
               <Card key={slide.id} className="p-4">
-                <div className="flex items-center gap-4">
-                  <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                  <div className="flex items-center gap-4 w-full md:w-auto flex-1">
+                    <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0" />
 
-                  <div className="w-32 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
-                    <img src={slide.image_url} alt={slide.title || ''} className="w-full h-full object-cover" />
+                    <div className="w-20 h-14 md:w-32 md:h-20 bg-muted rounded overflow-hidden flex-shrink-0">
+                      <img src={slide.image_url} alt={slide.title || ''} className="w-full h-full object-cover" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{slide.title || "Untitled"}</p>
+                      <p className="text-sm text-muted-foreground truncate">{slide.subtitle || "No subtitle"}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Order: {slide.order_index}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex-1">
-                    <p className="font-semibold">{slide.title || "Untitled"}</p>
-                    <p className="text-sm text-muted-foreground">{slide.subtitle || "No subtitle"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Order: {slide.order_index}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between w-full md:w-auto gap-4 pl-9 md:pl-0">
                     <div className="flex items-center gap-2">
                       <Label htmlFor={`active-${slide.id}`} className="text-sm">Active</Label>
                       <Switch
@@ -462,6 +464,7 @@ const HeroSlider = () => {
                       variant="destructive"
                       size="icon"
                       onClick={() => deleteSlide(slide.id, slide.image_url)}
+                      className="flex-shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
