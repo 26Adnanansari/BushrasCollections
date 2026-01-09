@@ -9,10 +9,10 @@ interface ProtectedRouteProps {
   requireSuperAdmin?: boolean;
 }
 
-export const ProtectedRoute = ({ 
-  children, 
+export const ProtectedRoute = ({
+  children,
   requireAdmin = false,
-  requireSuperAdmin = false 
+  requireSuperAdmin = false
 }: ProtectedRouteProps) => {
   const { user, initialized, loading } = useAuthStore();
   const location = useLocation();
@@ -33,14 +33,15 @@ export const ProtectedRoute = ({
 
   // Check role requirements
   const roles = user.roles || [];
-  const isAdmin = roles.includes('admin') || roles.includes('super_admin');
   const isSuperAdmin = roles.includes('super_admin');
+  const isAdmin = roles.includes('admin') || isSuperAdmin;
+  const isStaff = roles.includes('staff') || isAdmin;
 
   if (requireSuperAdmin && !isSuperAdmin) {
     return <Navigate to="/" replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && !isAdmin && !isStaff) {
     return <Navigate to="/" replace />;
   }
 

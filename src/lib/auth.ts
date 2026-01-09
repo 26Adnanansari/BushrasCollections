@@ -8,13 +8,13 @@ export interface AuthUser extends User {
     address?: any;
     avatar_url?: string;
   };
-  roles?: Array<'admin' | 'moderator' | 'user' | 'super_admin'>;
+  roles?: Array<'admin' | 'moderator' | 'user' | 'super_admin' | 'staff'>;
 }
 
 export const authService = {
   async signUp(email: string, password: string, name: string, phone: string) {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -26,7 +26,7 @@ export const authService = {
         }
       }
     });
-    
+
     return { data, error };
   },
 
@@ -35,7 +35,7 @@ export const authService = {
       email,
       password
     });
-    
+
     return { data, error };
   },
 
@@ -46,7 +46,7 @@ export const authService = {
 
   async getCurrentUser(): Promise<AuthUser | null> {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) return null;
 
     // Get user profile
@@ -78,7 +78,7 @@ export const authService = {
     avatar_url: string;
   }>) {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) throw new Error('Not authenticated');
 
     const { data, error } = await supabase

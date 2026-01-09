@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, RefreshCw, ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 
@@ -169,94 +169,159 @@ const AdminOrders = () => {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="text-center py-8">Loading orders...</div>
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">Loading orders...</p>
+                </div>
               ) : orders.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No orders found
+                <div className="text-center py-12 bg-accent/30 rounded-lg border-2 border-dashed">
+                  <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-20" />
+                  <p className="text-muted-foreground">No orders found</p>
                 </div>
               ) : (
-                <div className="relative w-full overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Order #</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead className="hidden md:table-cell">Address</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-medium">
-                            {order.order_number || `#${order.id.slice(-8)}`}
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {order.whatsapp_number || order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                <>
+                  {/* Mobile View: Cards */}
+                  <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {orders.map((order) => (
+                      <Card key={order.id} className="overflow-hidden border-l-4 border-l-primary/50">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-xs font-mono text-muted-foreground">
+                                {order.order_number || `#${order.id.slice(-8)}`}
+                              </p>
+                              <h3 className="font-bold text-lg">{order.profiles?.name || 'Unknown'}</h3>
                             </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            <div className="text-sm">
-                              {order.shipping_address?.city || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>PKR {order.total.toLocaleString()}</TableCell>
-                          <TableCell>
                             <Badge variant={getStatusBadgeVariant(order.status)}>
                               {order.status}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="text-muted-foreground">Contact:</div>
+                            <div className="font-medium truncate">
+                              {order.whatsapp_number || order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                            </div>
+                            <div className="text-muted-foreground">Amount:</div>
+                            <div className="font-bold text-primary">PKR {order.total.toLocaleString()}</div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </span>
+                            <div className="flex gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => navigate(`/admin/orders/${order.order_number || order.id}`)}
+                                className="h-8"
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-4 w-4 mr-1.5" />
+                                View
                               </Button>
-                              {order.status === 'pending' && (
+                              {order.status !== 'delivered' && order.status !== 'cancelled' && (
                                 <Button
                                   size="sm"
-                                  onClick={() => updateOrderStatus(order.id, 'processing')}
+                                  onClick={() => {
+                                    const nextStatus =
+                                      order.status === 'pending' ? 'processing' :
+                                        order.status === 'processing' ? 'shipped' : 'delivered';
+                                    updateOrderStatus(order.id, nextStatus as any);
+                                  }}
+                                  className="h-8"
                                 >
-                                  Process
-                                </Button>
-                              )}
-                              {order.status === 'processing' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => updateOrderStatus(order.id, 'shipped')}
-                                >
-                                  Ship
-                                </Button>
-                              )}
-                              {order.status === 'shipped' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => updateOrderStatus(order.id, 'delivered')}
-                                >
-                                  Delivered
+                                  {order.status === 'pending' ? 'Process' :
+                                    order.status === 'processing' ? 'Ship' : 'Deliver'}
                                 </Button>
                               )}
                             </div>
-                          </TableCell>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Desktop View: Table */}
+                  <div className="hidden md:block relative w-full overflow-auto border rounded-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="font-bold">Order #</TableHead>
+                          <TableHead className="font-bold">Customer</TableHead>
+                          <TableHead className="font-bold">Contact</TableHead>
+                          <TableHead className="font-bold">Total</TableHead>
+                          <TableHead className="font-bold">Status</TableHead>
+                          <TableHead className="font-bold">Date</TableHead>
+                          <TableHead className="font-bold text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id} className="hover:bg-accent/5 transition-colors">
+                            <TableCell className="font-mono text-xs">
+                              {order.order_number || `#${order.id.slice(-8)}`}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {order.profiles?.name || 'Unknown'}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {order.whatsapp_number || order.profiles?.phone || order.profiles?.whatsapp_number || '-'}
+                            </TableCell>
+                            <TableCell className="font-bold">PKR {order.total.toLocaleString()}</TableCell>
+                            <TableCell>
+                              <Badge variant={getStatusBadgeVariant(order.status)} className="capitalize">
+                                {order.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/admin/orders/${order.order_number || order.id}`)}
+                                  className="h-8 w-8"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {order.status === 'pending' && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => updateOrderStatus(order.id, 'processing')}
+                                    className="h-8"
+                                  >
+                                    Process
+                                  </Button>
+                                )}
+                                {order.status === 'processing' && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => updateOrderStatus(order.id, 'shipped')}
+                                    className="h-8"
+                                  >
+                                    Ship
+                                  </Button>
+                                )}
+                                {order.status === 'shipped' && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => updateOrderStatus(order.id, 'delivered')}
+                                    className="h-8"
+                                  >
+                                    Deliver
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

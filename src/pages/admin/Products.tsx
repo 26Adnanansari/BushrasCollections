@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import Papa from "papaparse";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ const AdminProducts = () => {
   const [uploading, setUploading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
+  const [customFabric, setCustomFabric] = useState("");
 
   const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: editingProduct ? `product_${editingProduct.id}` : 'product_new',
@@ -141,10 +143,15 @@ const AdminProducts = () => {
 
   useEffect(() => {
     if (isDialogOpen) {
-      const timer = setTimeout(() => saveDraft({ ...formData, productImages }), 2000);
+      const timer = setTimeout(() => {
+        saveDraft({ ...formData, productImages });
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [formData, productImages, isDialogOpen]);
+
+  // Handle CSV trigger
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -552,7 +559,7 @@ const AdminProducts = () => {
                     </DialogDescription>
                   </DialogHeader>
 
-                  <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
+                  <DraftIndicator lastSaved={lastSaved ? lastSaved.toISOString() : null} onClear={clearDraft} />
 
                   <form onSubmit={handleSubmit} className="mt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -715,21 +722,59 @@ const AdminProducts = () => {
                         </CollapsibleTrigger>
                         <CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 animate-in slide-in-from-top-2">
                           {/* Fabric Type */}
-                          <div>
-                            <Label htmlFor="fabric_type" className="text-sm font-medium mb-1.5 block">Fabric Type</Label>
-                            <Select
-                              value={formData.fabric_type}
-                              onValueChange={(value) => setFormData({ ...formData, fabric_type: value })}
-                            >
-                              <SelectTrigger className="h-11">
-                                <SelectValue placeholder="Select fabric" />
-                              </SelectTrigger>
-                              <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
-                                {FABRIC_TYPES.map((fabric) => (
-                                  <SelectItem key={fabric} value={fabric}>{fabric}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="fabric_type" className="text-sm font-medium mb-1.5 block">Fabric Type</Label>
+                              <Select
+                                value={formData.fabric_type || ''}
+                                onValueChange={(value) => setFormData({ ...formData, fabric_type: value })}
+                              >
+                                <SelectTrigger className="h-11">
+                                  <SelectValue placeholder="Select fabric" />
+                                </SelectTrigger>
+                                <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
+                                  {FABRIC_TYPES.map((fabric) => (
+                                    <SelectItem key={fabric} value={fabric}>{fabric}</SelectItem>
+                                  ))}
+                                  <SelectItem value="Custom">Custom / Add New...</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {formData.fabric_type === 'Custom' && (
+                              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder="Type new fabric name..."
+                                    value={customFabric}
+                                    onChange={(e) => setCustomFabric(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        if (customFabric.trim()) {
+                                          setFormData({ ...formData, fabric_type: customFabric.trim() });
+                                          setCustomFabric("");
+                                        }
+                                      }
+                                    }}
+                                    className="h-11 flex-1"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => {
+                                      if (customFabric.trim()) {
+                                        setFormData({ ...formData, fabric_type: customFabric.trim() });
+                                        setCustomFabric("");
+                                      }
+                                    }}
+                                    className="h-11 px-4"
+                                  >
+                                    Apply
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Occasion Type */}
@@ -1102,27 +1147,25 @@ const AdminProducts = () => {
                       </div>
                     )}
 
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="csv-file">Select CSV File</Label>
-                        <Input
-                          id="csv-file"
-                          type="file"
-                          accept=".csv"
-                          onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                          disabled={uploading}
-                        />
-                      </div>
-
-                      <Button
-                        onClick={handleCsvUpload}
-                        disabled={!csvFile || uploading}
-                        className="w-full"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploading ? 'Uploading...' : 'Upload CSV'}
-                      </Button>
+                    <div className="hidden">
+                      <Input
+                        id="csv-file"
+                        type="file"
+                        accept=".csv"
+                        ref={fileInputRef}
+                        onChange={handleCsvUpload}
+                        disabled={uploading}
+                      />
                     </div>
+
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="w-full"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? 'Processing CSV...' : 'Select & Upload CSV'}
+                    </Button>
                   </div>
                 </TabsContent>
               </Tabs>

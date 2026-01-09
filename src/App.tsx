@@ -34,6 +34,11 @@ import AdminOrderDetails from "./pages/admin/OrderDetails";
 import AdminPaymentMethods from "./pages/admin/PaymentMethods";
 import AdminReviews from "./pages/admin/Reviews";
 import AnalyticsHelp from "./pages/admin/AnalyticsHelp";
+import ClientDairyPost from "./pages/ClientDairyPost";
+import ClientDairy from "./pages/ClientDairy";
+import AdminClientDairy from "./pages/admin/ClientDairy";
+import ShippingSettings from "./pages/admin/ShippingSettings";
+import OfferManagement from "./pages/admin/OfferManagement";
 
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
@@ -59,6 +64,7 @@ const App = () => {
     <TooltipProvider>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/client-dairy" element={<ClientDairy />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -71,6 +77,7 @@ const App = () => {
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+        <Route path="/client-dairy/post/:orderId" element={<ProtectedRoute><ClientDairyPost /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute requireAdmin><AdminProducts /></ProtectedRoute>} />
@@ -83,10 +90,13 @@ const App = () => {
         <Route path="/admin/analytics-help" element={<ProtectedRoute requireAdmin><AnalyticsHelp /></ProtectedRoute>} />
         <Route path="/admin/team" element={<ProtectedRoute requireAdmin><AdminTeam /></ProtectedRoute>} />
         <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
+        <Route path="/admin/client-dairy" element={<ProtectedRoute requireAdmin><AdminClientDairy /></ProtectedRoute>} />
         <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />
         <Route path="/admin/payment-methods" element={<ProtectedRoute requireAdmin><AdminPaymentMethods /></ProtectedRoute>} />
         <Route path="/admin/reviews" element={<ProtectedRoute requireAdmin><AdminReviews /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/admin/shipping" element={<ProtectedRoute requireAdmin><ShippingSettings /></ProtectedRoute>} />
+        <Route path="/admin/offers" element={<ProtectedRoute requireAdmin><OfferManagement /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>

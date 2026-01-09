@@ -160,6 +160,20 @@ const OrderTracking = () => {
                     {order.status}
                   </Badge>
                 </div>
+                {order.status === 'delivered' && (
+                  <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-primary">Happy with your purchase?</h4>
+                      <p className="text-sm text-muted-foreground">Share your moment in our Client Dairy!</p>
+                    </div>
+                    <Button
+                      onClick={() => navigate(`/client-dairy/post/${order.order_number || order.id}`)}
+                      className="w-full sm:w-auto"
+                    >
+                      Post a Moment
+                    </Button>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

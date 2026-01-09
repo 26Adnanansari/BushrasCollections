@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Menu, X, User, Search, LogOut, UserCircle2 } from "lucide-react";
+import { ShoppingBag, Menu, X, User, Search, LogOut, UserCircle2, Camera, Truck, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
@@ -39,12 +39,21 @@ const Navigation = () => {
     }
   };
 
+  // DEBUG: Track why the page replaces/reloads
+  useEffect(() => {
+    console.log("[DEBUG] Navigation mounted/path changed:", location.pathname);
+    return () => console.log("[DEBUG] Navigation unmounting from:", location.pathname);
+  }, [location.pathname]);
+
   const isAdmin = user?.roles?.includes('admin') || false;
   const isSuperAdmin = (user?.roles as any)?.includes('super_admin') || false;
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const shouldHideCart = isAdmin && isAdminRoute;
 
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
+    { name: "Client Dairy", href: "/client-dairy" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
     ...(user ? [{ name: "Profile", href: "/profile" }, { name: "Wishlist", href: "/wishlist" }, { name: "Orders", href: "/orders" }] : []),
@@ -121,10 +130,24 @@ const Navigation = () => {
                     My Orders
                   </DropdownMenuItem>
                   {(isAdmin || isSuperAdmin) && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      <User className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        <User className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/client-dairy')}>
+                        <Camera className="mr-2 h-4 w-4" />
+                        Dairy Moderation
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/shipping')}>
+                        <Truck className="mr-2 h-4 w-4" />
+                        Shipping Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/offers')}>
+                        <Ticket className="mr-2 h-4 w-4" />
+                        Offer Management
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
@@ -140,20 +163,24 @@ const Navigation = () => {
               </Button>
             )}
 
-            <CartDrawer>
-              <Button variant="ghost" size="icon" className="hover:bg-accent">
-                <ShoppingBag className="h-5 w-5" />
-              </Button>
-            </CartDrawer>
+            {!shouldHideCart && (
+              <CartDrawer>
+                <Button variant="ghost" size="icon" className="hover:bg-accent">
+                  <ShoppingBag className="h-5 w-5" />
+                </Button>
+              </CartDrawer>
+            )}
           </div>
 
           {/* Mobile Menu & Cart */}
           <div className="md:hidden flex items-center gap-2">
-            <CartDrawer>
-              <Button variant="ghost" size="icon" className="hover:bg-accent">
-                <ShoppingBag className="h-5 w-5" />
-              </Button>
-            </CartDrawer>
+            {!shouldHideCart && (
+              <CartDrawer>
+                <Button variant="ghost" size="icon" className="hover:bg-accent">
+                  <ShoppingBag className="h-5 w-5" />
+                </Button>
+              </CartDrawer>
+            )}
 
             <Button
               variant="ghost"
@@ -228,11 +255,13 @@ const Navigation = () => {
                 </Button>
               )}
 
-              <CartDrawer>
-                <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
-                  <ShoppingBag className="h-5 w-5" />
-                </Button>
-              </CartDrawer>
+              {!shouldHideCart && (
+                <CartDrawer>
+                  <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
+                    <ShoppingBag className="h-5 w-5" />
+                  </Button>
+                </CartDrawer>
+              )}
             </div>
           </div>
         </div>
