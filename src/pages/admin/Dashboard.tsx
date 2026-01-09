@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, Users, Package, TrendingUp, Image, Star } from "lucide-react";
+import { ShoppingBag, Users, Package, TrendingUp, Image, Star, Camera, Truck, Ticket } from "lucide-react";
 import Navigation from "@/components/Navigation";
 
 interface DashboardStats {
@@ -142,16 +142,9 @@ const AdminDashboard = () => {
                 <Button
                   onClick={() => navigate('/admin/hero-slider')}
                   className="w-full"
+                  variant="outline"
                 >
                   Manage Slider
-                </Button>
-                <Button
-                  onClick={() => navigate('/admin/hero-slider')}
-                  className="w-full"
-                  variant="destructive"
-                  size="sm"
-                >
-                  Delete All Slides
                 </Button>
               </CardContent>
             </Card>
@@ -170,14 +163,6 @@ const AdminDashboard = () => {
                   variant="outline"
                 >
                   Manage Products
-                </Button>
-                <Button
-                  onClick={() => navigate('/admin/products')}
-                  className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  variant="ghost"
-                  size="sm"
-                >
-                  Delete All Products
                 </Button>
               </CardContent>
             </Card>
@@ -305,6 +290,63 @@ const AdminDashboard = () => {
                   variant="outline"
                 >
                   Manage Banners
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Dairy Moderation</CardTitle>
+                <CardDescription>
+                  Manage community moments and moderation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/admin/client-dairy')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Manage Dairy
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Settings</CardTitle>
+                <CardDescription>
+                  Configure delivery methods and charges
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/admin/shipping')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Truck className="h-4 w-4 mr-2" />
+                  Manage Shipping
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Offer Management</CardTitle>
+                <CardDescription>
+                  Create and manage discount coupons
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/admin/offers')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Manage Offers
                 </Button>
               </CardContent>
             </Card>
