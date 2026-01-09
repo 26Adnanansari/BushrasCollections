@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Trash2, GripVertical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Upload, Trash2, GripVertical, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth";
 import { useFormDraft } from "@/hooks/useFormDraft";
@@ -325,7 +326,7 @@ const HeroSlider = () => {
         <Card className="p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Add New Slides</h2>
-            <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
+            <DraftIndicator lastSaved={lastSaved ? lastSaved.toISOString() : null} onClear={clearDraft} />
           </div>
 
           <div className="space-y-6">
@@ -345,42 +346,46 @@ const HeroSlider = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <Label>Title</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium">Slide Title</Label>
                     <Input
                       value={slide.title}
                       onChange={(e) => updateSlideForm(index, 'title', e.target.value)}
-                      placeholder="Elegant Fashion"
+                      placeholder="e.g., Summer Collection 2024"
+                      className="h-11"
                     />
                   </div>
-                  <div>
-                    <Label>Subtitle</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium">Subtitle / Description</Label>
                     <Input
                       value={slide.subtitle}
                       onChange={(e) => updateSlideForm(index, 'subtitle', e.target.value)}
-                      placeholder="Discover timeless elegance..."
+                      placeholder="e.g., Up to 50% off on all items"
+                      className="h-11"
                     />
                   </div>
-                  <div>
-                    <Label>CTA Button Text</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium">CTA Button Text</Label>
                     <Input
                       value={slide.cta_text}
                       onChange={(e) => updateSlideForm(index, 'cta_text', e.target.value)}
-                      placeholder="Shop Collection"
+                      placeholder="e.g., Shop Now"
+                      className="h-11"
                     />
                   </div>
-                  <div>
-                    <Label>CTA Link</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium">CTA Link</Label>
                     <Input
                       value={slide.cta_link}
                       onChange={(e) => updateSlideForm(index, 'cta_link', e.target.value)}
-                      placeholder="/products"
+                      placeholder="e.g., /products/summer-collection"
+                      className="h-11"
                     />
                   </div>
                 </div>
 
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                <div className="border-2 border-dashed border-border rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors">
                   <Input
                     type="file"
                     accept="image/*"
@@ -389,13 +394,21 @@ const HeroSlider = () => {
                     className="hidden"
                     id={`hero-upload-${index}`}
                   />
-                  <Label htmlFor={`hero-upload-${index}`} className="cursor-pointer">
-                    <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm font-medium mb-2">
+                  <Label
+                    htmlFor={`hero-upload-${index}`}
+                    className="flex flex-col items-center justify-center p-10 cursor-pointer w-full"
+                  >
+                    <div className="bg-primary/10 p-4 rounded-full mb-4 group-hover:bg-primary/20 transition-colors">
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-base font-semibold text-foreground mb-1 text-center">
                       {slide.file ? slide.file.name : "Click to upload media"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Images: WebP/JPG (max 2MB, 1920x1080px recommended)
+                    <p className="text-sm text-muted-foreground text-center">
+                      WebP, JPG, or PNG (max 2MB)
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2 text-center opacity-70">
+                      1920x1080px recommended for desktop
                     </p>
                   </Label>
                 </div>
@@ -403,21 +416,28 @@ const HeroSlider = () => {
             ))}
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row gap-3 mt-8">
             <Button
               variant="outline"
               onClick={addNewSlideForm}
               disabled={uploading}
-              className="flex-1"
+              className="flex-1 h-12 text-base"
             >
               Add Another Slide
             </Button>
             <Button
               onClick={handleSubmitAllSlides}
               disabled={uploading}
-              className="flex-1"
+              className="flex-1 h-12 text-base font-semibold shadow-md"
             >
-              {uploading ? "Uploading..." : `Upload ${newSlides.length} Slide(s)`}
+              {uploading ? (
+                <>
+                  <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                `Upload ${newSlides.length} Slide(s)`
+              )}
             </Button>
           </div>
         </Card>
@@ -432,27 +452,30 @@ const HeroSlider = () => {
             </Card>
           ) : (
             slides.map((slide) => (
-              <Card key={slide.id} className="p-4">
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                  <div className="flex items-center gap-4 w-full md:w-auto flex-1">
-                    <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0" />
+              <Card key={slide.id} className="p-4 overflow-hidden relative group">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
+                    <div className="p-1 hover:bg-accent rounded cursor-move touch-none">
+                      <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    </div>
 
-                    <div className="w-20 h-14 md:w-32 md:h-20 bg-muted rounded overflow-hidden flex-shrink-0">
-                      <img src={slide.image_url} alt={slide.title || ''} className="w-full h-full object-cover" />
+                    <div className="w-24 h-16 md:w-32 md:h-20 bg-muted rounded overflow-hidden flex-shrink-0 border shadow-sm">
+                      <img src={slide.image_url} alt={slide.title || ''} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{slide.title || "Untitled"}</p>
-                      <p className="text-sm text-muted-foreground truncate">{slide.subtitle || "No subtitle"}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Order: {slide.order_index}
-                      </p>
+                      <p className="font-semibold truncate text-base">{slide.title || "Untitled Slide"}</p>
+                      <p className="text-sm text-muted-foreground truncate">{slide.subtitle || "No description"}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px] h-4 uppercase tracking-wider">{slide.order_index}</Badge>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Index</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between w-full md:w-auto gap-4 pl-9 md:pl-0">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={`active-${slide.id}`} className="text-sm">Active</Label>
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-4 pt-4 sm:pt-0 border-t sm:border-0">
+                    <div className="flex items-center gap-2 bg-accent/30 sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-full">
+                      <Label htmlFor={`active-${slide.id}`} className="text-xs font-semibold cursor-pointer">Live</Label>
                       <Switch
                         id={`active-${slide.id}`}
                         checked={slide.is_active}
@@ -464,7 +487,7 @@ const HeroSlider = () => {
                       variant="destructive"
                       size="icon"
                       onClick={() => deleteSlide(slide.id, slide.image_url)}
-                      className="flex-shrink-0"
+                      className="h-10 w-10 sm:h-9 sm:w-9 shadow-sm"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

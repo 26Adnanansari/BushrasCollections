@@ -56,7 +56,11 @@ const CATEGORIES = [
 ];
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
-const FABRIC_TYPES = ['Cotton', 'Silk', 'Chiffon', 'Georgette', 'Velvet', 'Satin', 'Lawn', 'Karandi'];
+const FABRIC_TYPES = [
+  'Cotton', 'Silk', 'Chiffon', 'Georgette', 'Velvet', 'Satin', 'Lawn', 'Karandi',
+  'PURE RAW SILK', 'PURE SHAMOZ SILK', 'PURE ORGANZA', 'TASAR SILK',
+  'PURE LAMA TISUE', 'PURE KHADI NET', 'NET', 'CHIFFON PURE', 'JAMAWAR PURE'
+];
 const OCCASIONS = ['Wedding', 'Party', 'Casual', 'Formal', 'Eid', 'Mehendi', 'Walima'];
 const EMBELLISHMENTS = ['Embroidery', 'Sequins', 'Plain', 'Beadwork', 'Stone Work', 'Thread Work'];
 
@@ -90,6 +94,7 @@ const AdminProducts = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
 
   const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: editingProduct ? `product_${editingProduct.id}` : 'product_new',
@@ -256,7 +261,7 @@ const AdminProducts = () => {
         description: formData.description,
         price: parseFloat(formData.price),
         list_price: formData.list_price ? parseFloat(formData.list_price) : undefined,
-        category: formData.category === '__custom__' ? formData.category : formData.category,
+        category: formData.category === '__custom__' ? customCategory : formData.category,
         brand: formData.brand,
         stock_quantity: parseInt(formData.stock_quantity),
         fabric_type: formData.fabric_type || undefined,
@@ -328,6 +333,7 @@ const AdminProducts = () => {
         occasion_type: '',
         embellishment: [],
       });
+      setCustomCategory("");
       setProductImages([]);
       fetchProducts();
     } catch (error) {
@@ -548,10 +554,10 @@ const AdminProducts = () => {
 
                   <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
 
-                  <form onSubmit={handleSubmit}>
-                    <div className="space-y-4">
+                  <form onSubmit={handleSubmit} className="mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       {/* 1. SKU CODE (Auto-generated) */}
-                      <div>
+                      <div className="md:col-span-2">
                         <Label htmlFor="sku">SKU Code (Auto-generated if empty)</Label>
                         <Input
                           id="sku"
@@ -565,27 +571,28 @@ const AdminProducts = () => {
                       </div>
 
                       {/* 2. PRODUCT NAME */}
-                      <div>
-                        <Label htmlFor="name">Product Name *</Label>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">Product Name *</Label>
                         <Input
                           id="name"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           required
+                          className="h-11"
                         />
                       </div>
 
                       {/* 3. CATEGORY (Dropdown) */}
                       <div>
-                        <Label htmlFor="category">Category *</Label>
+                        <Label htmlFor="category" className="text-sm font-medium mb-1.5 block">Category *</Label>
                         <Select
                           value={formData.category}
                           onValueChange={(value) => setFormData({ ...formData, category: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
                             {CATEGORIES.map((cat) => (
                               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                             ))}
@@ -593,116 +600,131 @@ const AdminProducts = () => {
                           </SelectContent>
                         </Select>
                         {formData.category === '__custom__' && (
-                          <Input
-                            className="mt-2"
-                            placeholder="Enter custom category"
-                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                          />
+                          <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                            <Label htmlFor="custom-category" className="text-xs mb-1 block">New Category Name</Label>
+                            <Input
+                              id="custom-category"
+                              placeholder="Enter custom category"
+                              value={customCategory}
+                              onChange={(e) => setCustomCategory(e.target.value)}
+                            />
+                          </div>
                         )}
                       </div>
 
-                      {/* 4. PRICES */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="price">Sale Price (PKR) *</Label>
-                          <Input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            value={formData.price}
-                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="list_price">List Price (PKR) (Optional)</Label>
-                          <Input
-                            id="list_price"
-                            type="number"
-                            step="0.01"
-                            value={formData.list_price}
-                            onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
-                            placeholder="Original price"
-                          />
-                        </div>
-                      </div>
+                    </div>
 
-                      {/* 5. STOCK */}
-                      <div>
-                        <Label htmlFor="stock_quantity">Stock Quantity *</Label>
-                        <Input
-                          id="stock_quantity"
-                          type="number"
-                          value={formData.stock_quantity}
-                          onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                          required
-                        />
-                      </div>
+                    {/* 4. BRAND */}
+                    <div>
+                      <Label htmlFor="brand" className="text-sm font-medium mb-1.5 block">Brand *</Label>
+                      <Input
+                        id="brand"
+                        value={formData.brand}
+                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                        required
+                        className="h-11"
+                      />
+                    </div>
 
-                      {/* 6. BRAND */}
-                      <div>
-                        <Label htmlFor="brand">Brand *</Label>
-                        <Input
-                          id="brand"
-                          value={formData.brand}
-                          onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                          required
-                        />
-                      </div>
+                    {/* 5. PRICES */}
+                    <div>
+                      <Label htmlFor="price" className="text-sm font-medium mb-1.5 block">Sale Price (PKR) *</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        required
+                        className="h-11"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="list_price" className="text-sm font-medium mb-1.5 block">List Price (PKR) (Optional)</Label>
+                      <Input
+                        id="list_price"
+                        type="number"
+                        step="0.01"
+                        value={formData.list_price}
+                        onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
+                        placeholder="Original price"
+                        className="h-11"
+                      />
+                    </div>
 
-                      {/* 7. PRODUCT IMAGES */}
+                    {/* 6. STOCK */}
+                    <div className="md:col-span-1">
+                      <Label htmlFor="stock_quantity" className="text-sm font-medium mb-1.5 block">Stock Quantity *</Label>
+                      <Input
+                        id="stock_quantity"
+                        type="number"
+                        value={formData.stock_quantity}
+                        onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                        required
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <Label className="text-sm font-medium mb-3 block">Product Images *</Label>
                       <ImageUpload
                         images={productImages}
                         onChange={setProductImages}
                         maxImages={5}
                         maxSizeMB={1}
                       />
+                    </div>
 
-                      {/* 8. DESCRIPTION */}
-                      <div>
-                        <Label htmlFor="description">Description *</Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description}
-                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          rows={3}
-                          required
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setFormData({
-                              ...formData,
-                              description: `Elegant ${formData.name} perfect for special occasions`
-                            })}
-                          >
-                            Use Template
-                          </Button>
-                        </div>
+                    {/* 7. DESCRIPTION */}
+                    <div className="md:col-span-2">
+                      <Label htmlFor="description" className="text-sm font-medium mb-1.5 block">Description *</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={4}
+                        className="resize-none"
+                        required
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData({
+                            ...formData,
+                            description: `Elegant ${formData.name} perfect for special occasions`
+                          })}
+                        >
+                          Use Template
+                        </Button>
                       </div>
+                    </div>
 
-                      {/* 9. BOUTIQUE DETAILS (Collapsible) */}
+                    {/* 8. BOUTIQUE DETAILS (Collapsible) */}
+                    <div className="md:col-span-2">
                       <Collapsible>
                         <CollapsibleTrigger asChild>
-                          <Button type="button" variant="outline" className="w-full">
-                            <ChevronDown className="h-4 w-4 mr-2" />
-                            Additional Boutique Details (Optional)
+                          <Button type="button" variant="outline" className="w-full h-11 justify-between px-4">
+                            <span className="flex items-center">
+                              <ChevronDown className="h-4 w-4 mr-2" />
+                              Additional Boutique Details (Optional)
+                            </span>
+                            <Badge variant="secondary" className="ml-2">Optional</Badge>
                           </Button>
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="space-y-4 mt-4">
+                        <CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 animate-in slide-in-from-top-2">
                           {/* Fabric Type */}
                           <div>
-                            <Label htmlFor="fabric_type">Fabric Type</Label>
+                            <Label htmlFor="fabric_type" className="text-sm font-medium mb-1.5 block">Fabric Type</Label>
                             <Select
                               value={formData.fabric_type}
                               onValueChange={(value) => setFormData({ ...formData, fabric_type: value })}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11">
                                 <SelectValue placeholder="Select fabric" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
                                 {FABRIC_TYPES.map((fabric) => (
                                   <SelectItem key={fabric} value={fabric}>{fabric}</SelectItem>
                                 ))}
@@ -710,15 +732,34 @@ const AdminProducts = () => {
                             </Select>
                           </div>
 
-                          {/* Available Sizes */}
+                          {/* Occasion Type */}
                           <div>
-                            <Label>Available Sizes</Label>
-                            <div className="flex flex-wrap gap-2 mt-2">
+                            <Label htmlFor="occasion_type" className="text-sm font-medium mb-1.5 block">Occasion Type</Label>
+                            <Select
+                              value={formData.occasion_type}
+                              onValueChange={(value) => setFormData({ ...formData, occasion_type: value })}
+                            >
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Select occasion" />
+                              </SelectTrigger>
+                              <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
+                                {OCCASIONS.map((occasion) => (
+                                  <SelectItem key={occasion} value={occasion}>{occasion}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Available Sizes */}
+                          <div className="md:col-span-2">
+                            <Label className="text-sm font-medium mb-3 block">Available Sizes</Label>
+                            <div className="flex flex-wrap gap-x-4 gap-y-3 p-3 border rounded-lg bg-accent/30">
                               {SIZES.map((size) => (
-                                <div key={size} className="flex items-center">
+                                <div key={size} className="flex items-center space-x-2">
                                   <Checkbox
                                     id={`size-${size}`}
                                     checked={formData.available_sizes.includes(size)}
+                                    className="h-5 w-5"
                                     onCheckedChange={(checked) => {
                                       if (checked) {
                                         setFormData({
@@ -733,19 +774,20 @@ const AdminProducts = () => {
                                       }
                                     }}
                                   />
-                                  <Label htmlFor={`size-${size}`} className="ml-1">{size}</Label>
+                                  <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer select-none">{size}</Label>
                                 </div>
                               ))}
                             </div>
                           </div>
 
                           {/* Available Colors */}
-                          <div>
-                            <Label htmlFor="available_colors">Available Colors</Label>
+                          <div className="md:col-span-2">
+                            <Label htmlFor="available_colors" className="text-sm font-medium mb-1.5 block">Available Colors</Label>
                             <Input
                               id="available_colors"
                               placeholder="e.g., Red, Blue, Green (comma-separated)"
                               value={formData.available_colors.join(', ')}
+                              className="h-11"
                               onChange={(e) => setFormData({
                                 ...formData,
                                 available_colors: e.target.value.split(',').map(c => c.trim()).filter(Boolean)
@@ -753,60 +795,46 @@ const AdminProducts = () => {
                             />
                           </div>
 
-                          {/* Occasion Type */}
-                          <div>
-                            <Label htmlFor="occasion_type">Occasion Type</Label>
-                            <Select
-                              value={formData.occasion_type}
-                              onValueChange={(value) => setFormData({ ...formData, occasion_type: value })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select occasion" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {OCCASIONS.map((occasion) => (
-                                  <SelectItem key={occasion} value={occasion}>{occasion}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {/* Occasion Type moved up */}
 
                           {/* Embellishment - Multi-select checkboxes */}
-                          <div>
-                            <Label>Embellishment</Label>
-
-                            {/* Quick select checkboxes */}
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {EMBELLISHMENTS.map((emb) => (
-                                <div key={emb} className="flex items-center">
-                                  <Checkbox
-                                    id={`emb-${emb}`}
-                                    checked={formData.embellishment.includes(emb)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setFormData({
-                                          ...formData,
-                                          embellishment: [...formData.embellishment, emb]
-                                        });
-                                      } else {
-                                        setFormData({
-                                          ...formData,
-                                          embellishment: formData.embellishment.filter(e => e !== emb)
-                                        });
-                                      }
-                                    }}
-                                  />
-                                  <Label htmlFor={`emb-${emb}`} className="ml-1 cursor-pointer">{emb}</Label>
-                                </div>
-                              ))}
+                          <div className="md:col-span-2 space-y-4">
+                            <div>
+                              <Label className="text-sm font-medium mb-3 block">Embellishment Selection</Label>
+                              <div className="flex flex-wrap gap-x-4 gap-y-3 p-3 border rounded-lg bg-accent/30">
+                                {EMBELLISHMENTS.map((emb) => (
+                                  <div key={emb} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`emb-${emb}`}
+                                      checked={formData.embellishment.includes(emb)}
+                                      className="h-5 w-5"
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setFormData({
+                                            ...formData,
+                                            embellishment: [...formData.embellishment, emb]
+                                          });
+                                        } else {
+                                          setFormData({
+                                            ...formData,
+                                            embellishment: formData.embellishment.filter(e => e !== emb)
+                                          });
+                                        }
+                                      }}
+                                    />
+                                    <Label htmlFor={`emb-${emb}`} className="text-sm cursor-pointer select-none">{emb}</Label>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
 
                             {/* Custom embellishment input */}
-                            <div className="mt-3">
-                              <Label className="text-sm text-muted-foreground">Add Custom Embellishment</Label>
-                              <div className="flex gap-2 mt-1">
+                            <div>
+                              <Label className="text-sm font-medium mb-1.5 block">Add Custom Embellishment</Label>
+                              <div className="flex gap-2">
                                 <Input
                                   placeholder="Enter custom embellishment..."
+                                  className="h-11"
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                       e.preventDefault();
@@ -823,8 +851,7 @@ const AdminProducts = () => {
                                 />
                                 <Button
                                   type="button"
-                                  variant="outline"
-                                  size="sm"
+                                  variant="secondary"
                                   onClick={(e) => {
                                     const input = e.currentTarget.previousElementSibling as HTMLInputElement;
                                     const value = input?.value.trim();
@@ -836,6 +863,7 @@ const AdminProducts = () => {
                                       if (input) input.value = '';
                                     }
                                   }}
+                                  className="h-11 px-4"
                                 >
                                   <Plus className="h-4 w-4" />
                                 </Button>
@@ -844,12 +872,12 @@ const AdminProducts = () => {
 
                             {/* Selected embellishments display */}
                             {formData.embellishment.length > 0 && (
-                              <div className="mt-3">
-                                <Label className="text-sm text-muted-foreground">Selected:</Label>
-                                <div className="flex flex-wrap gap-2 mt-1">
+                              <div className="pt-2">
+                                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Selected Embellishments:</Label>
+                                <div className="flex flex-wrap gap-2">
                                   {formData.embellishment.map((emb) => (
-                                    <Badge key={emb} variant="secondary" className="gap-1">
-                                      {emb}
+                                    <Badge key={emb} variant="outline" className="pl-3 pr-1 py-1 gap-1 bg-background border-primary/20">
+                                      <span className="text-sm">{emb}</span>
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -858,9 +886,9 @@ const AdminProducts = () => {
                                             embellishment: formData.embellishment.filter(e => e !== emb)
                                           });
                                         }}
-                                        className="ml-1 hover:text-destructive"
+                                        className="p-1 hover:bg-destructive hover:text-destructive-foreground rounded-full transition-colors"
                                       >
-                                        ×
+                                        <Plus className="h-3 w-3 rotate-45" />
                                       </button>
                                     </Badge>
                                   ))}
@@ -870,13 +898,14 @@ const AdminProducts = () => {
                           </div>
 
                           {/* Care Instructions */}
-                          <div>
-                            <Label htmlFor="care_instructions">Care Instructions</Label>
+                          <div className="md:col-span-2">
+                            <Label htmlFor="care_instructions" className="text-sm font-medium mb-1.5 block">Care Instructions</Label>
                             <Textarea
                               id="care_instructions"
                               value={formData.care_instructions}
                               onChange={(e) => setFormData({ ...formData, care_instructions: e.target.value })}
-                              rows={2}
+                              rows={3}
+                              className="resize-none h-24"
                               placeholder="e.g., Dry clean only, Hand wash recommended"
                             />
                           </div>
@@ -884,28 +913,42 @@ const AdminProducts = () => {
                       </Collapsible>
 
                       {/* 10. PUBLISH CHECKBOX */}
-                      <div className="flex items-center space-x-2">
+                      <div className="md:col-span-2 bg-accent/20 p-4 rounded-lg flex items-center space-x-3 border border-border/50">
                         <Checkbox
                           id="is_active"
                           checked={formData.is_active}
+                          className="h-5 w-5"
                           onCheckedChange={(checked) =>
                             setFormData({ ...formData, is_active: checked as boolean })
                           }
                         />
-                        <Label
-                          htmlFor="is_active"
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          Publish this product (uncheck to save as draft)
-                        </Label>
+                        <div className="space-y-0.5 pointer-events-none">
+                          <Label
+                            htmlFor="is_active"
+                            className="text-sm font-semibold cursor-pointer pointer-events-auto"
+                          >
+                            Publish this product
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Uncheck to save as a draft (hidden from store)
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    <DialogFooter className="mt-6">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <DialogFooter className="mt-8 pt-6 border-t gap-3 sm:gap-2 flex-col sm:flex-row">
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => setIsDialogOpen(false)}
+                        className="w-full sm:w-auto h-11 px-8 order-2 sm:order-1"
+                      >
                         Cancel
                       </Button>
-                      <Button type="submit">
+                      <Button
+                        type="submit"
+                        className="w-full sm:w-auto h-11 px-10 order-1 sm:order-2"
+                      >
                         {editingProduct ? 'Update Product' : 'Add Product'}
                       </Button>
                     </DialogFooter>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Upload, Link as LinkIcon } from "lucide-react";
+import { X, Upload, Link as LinkIcon, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,11 +13,11 @@ interface ImageUploadProps {
   maxSizeMB?: number;
 }
 
-export const ImageUpload = ({ 
-  images, 
-  onChange, 
-  maxImages = 5, 
-  maxSizeMB = 1 
+export const ImageUpload = ({
+  images,
+  onChange,
+  maxImages = 5,
+  maxSizeMB = 2
 }: ImageUploadProps) => {
   const [urlInput, setUrlInput] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -25,7 +25,7 @@ export const ImageUpload = ({
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
+
     if (images.length + files.length > maxImages) {
       toast({
         title: "Too many images",
@@ -112,30 +112,34 @@ export const ImageUpload = ({
 
   return (
     <div className="space-y-4">
-      <Label>Product Images (1-{maxImages} images, max {maxSizeMB}MB each) *</Label>
-      
+      <div className="flex justify-between items-end">
+        <Label className="text-sm font-semibold tracking-tight">Product Gallery ({images.length}/{maxImages}) *</Label>
+        <span className="text-[10px] text-muted-foreground uppercase font-medium">Max {maxSizeMB}MB each</span>
+      </div>
+
       {/* Image Previews */}
       {images.length > 0 && (
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {images.map((url, index) => (
-            <div key={index} className="relative group aspect-square">
-              <img 
-                src={url} 
+            <div key={index} className="relative group aspect-square rounded-xl overflow-hidden border shadow-sm bg-accent/10">
+              <img
+                src={url}
                 alt={`Product ${index + 1}`}
-                className="w-full h-full object-cover rounded-lg border"
+                className="w-full h-full object-cover transition-transform group-hover:scale-110"
               />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
               <Button
                 type="button"
                 variant="destructive"
                 size="icon"
-                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
+                className="absolute top-1.5 right-1.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all h-8 w-8 rounded-full shadow-lg"
                 onClick={() => removeImage(index)}
               >
                 <X className="h-4 w-4" />
               </Button>
               {index === 0 && (
-                <div className="absolute bottom-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                  Primary
+                <div className="absolute bottom-1.5 left-1.5 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded shadow-sm backdrop-blur-sm">
+                  PRIMARY
                 </div>
               )}
             </div>
@@ -145,50 +149,58 @@ export const ImageUpload = ({
 
       {/* Upload Controls */}
       {images.length < maxImages && (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border rounded-xl bg-accent/5 border-dashed border-primary/20">
           {/* File Upload */}
-          <div className="flex items-center gap-2">
+          <div className="relative group overflow-hidden border bg-background rounded-lg hover:border-primary/50 transition-colors">
             <Input
               type="file"
               accept="image/*"
               multiple
               onChange={handleFileUpload}
               disabled={uploading}
-              className="flex-1"
+              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
             />
-            <Upload className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center justify-center gap-2 h-11 px-4 pointer-events-none">
+              <Upload className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Upload Local</span>
+            </div>
           </div>
 
           {/* URL Input */}
-          <div className="flex items-center gap-2">
-            <Input
+          <div className="flex items-center gap-1.5 h-11 px-1 bg-background border rounded-lg focus-within:border-primary/50 transition-colors pl-3">
+            <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <input
               type="url"
-              placeholder="Or paste image URL"
+              placeholder="Paste Image URL"
+              className="flex-1 bg-transparent text-sm h-full focus:outline-none min-w-0"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlAdd())}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlAdd())}
             />
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               onClick={handleUrlAdd}
-              variant="outline"
+              variant="ghost"
               size="icon"
+              className="h-9 w-9 text-primary hover:bg-primary/10"
             >
-              <LinkIcon className="h-4 w-4" />
+              <X className="h-4 w-4 rotate-45" />
             </Button>
           </div>
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        {images.length === 0 && "At least 1 image is required. "}
-        {images.length > 0 && `${images.length}/${maxImages} images added. `}
-        {images.length > 0 && "First image will be the primary display image."}
-      </p>
-
       {uploading && (
-        <p className="text-sm text-primary">Uploading images...</p>
+        <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10 animate-pulse">
+          <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+          <span className="text-sm font-medium text-primary">Uploading your images...</span>
+        </div>
       )}
+
+      <p className="text-xs text-muted-foreground italic px-1">
+        {images.length === 0 && "📸 At least 1 image is required to publish."}
+        {images.length > 0 && `✅ ${images.length}/${maxImages} images added. Drag items or use Primary tag behavior.`}
+      </p>
     </div>
   );
 };

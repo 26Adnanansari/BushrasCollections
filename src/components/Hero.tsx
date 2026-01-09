@@ -127,35 +127,37 @@ const Hero = () => {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id}>
-              <div className="container mx-auto px-6 lg:px-12 xl:px-16 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-8 md:py-0">
+              <div className="container mx-auto px-6 lg:px-12 xl:px-16 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-8 md:py-0 md:mb-32">
                 {/* Text Content - Left Side */}
-                <div className="w-full md:w-1/2 pt-4 md:pt-0 animate-fade-in relative z-10 text-center md:text-left">
-                  <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
+                <div className="w-full md:w-1/2 pt-4 md:pt-0 relative z-10 text-center md:text-left">
+                  <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight animate-fade-in-up [animation-duration:800ms] [animation-fill-mode:backwards]">
                     {slide.title || "Elegant Fashion Collection"}
                   </h1>
 
-                  <p className="text-base md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
+                  <p className="text-base md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed animate-fade-in-up [animation-duration:1000ms] [animation-delay:200ms] [animation-fill-mode:backwards]">
                     {slide.subtitle || "Discover timeless elegance"}
                   </p>
 
                   {slide.cta_text && (
-                    <Button
-                      size="lg"
-                      className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
-                      onClick={() => slide.cta_link && (window.location.href = slide.cta_link)}
-                    >
-                      {slide.cta_text}
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    <div className="animate-fade-in-up [animation-duration:1200ms] [animation-delay:400ms] [animation-fill-mode:backwards]">
+                      <Button
+                        size="lg"
+                        className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
+                        onClick={() => slide.cta_link && (window.location.href = slide.cta_link)}
+                      >
+                        {slide.cta_text}
+                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
                   )}
                 </div>
 
                 {/* Media - Right Side */}
-                <div className="w-full md:w-1/2 relative h-auto aspect-[4/5] md:h-[85vh] md:aspect-auto">
+                <div className="w-full md:w-1/2 relative h-auto aspect-[4/5] md:h-[85vh] md:aspect-auto overflow-hidden rounded-lg md:rounded-none">
                   <img
                     src={(slide as any).image_url || (slide as any).image || (slide as any).media_url || heroImage}
                     alt={slide.title || "Hero slide"}
-                    className="w-full h-full object-contain md:object-contain mx-auto"
+                    className="w-full h-full object-contain md:object-contain mx-auto animate-ken-burns"
                     loading={index === 0 ? "eager" : "lazy"}
                   />
                   <div
