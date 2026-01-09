@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { queryClient } from './lib/queryClient';
 import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 console.log("[APP DEBUG] Main entry point hit. Start time:", new Date().toLocaleTimeString());
 if (performance.navigation.type === 1) {

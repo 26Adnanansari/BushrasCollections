@@ -55,6 +55,24 @@ const App = () => {
     initializeVisitor();
   }, [initializeVisitor, location.pathname, location.search]);
 
+  // DEBUG: Track window focus and visibility
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("[APP DEBUG] Window gained focus at:", new Date().toLocaleTimeString());
+    };
+    const handleVisibilityChange = () => {
+      console.log("[APP DEBUG] Visibility changed to:", document.visibilityState, "at:", new Date().toLocaleTimeString());
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   // Init wishlist whenever auth status changes (implicitly handled by store but good to trigger)
   useEffect(() => {
     initializeWishlist();
