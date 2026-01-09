@@ -71,48 +71,59 @@ const ClientDairy = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
                                 >
-                                    <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl bg-card">
+                                    <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-3xl bg-card/60 backdrop-blur-xl border border-white/20">
                                         <div className="relative aspect-[4/5] overflow-hidden">
                                             <img
                                                 src={post.images[0]}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                                                 alt="Moment"
                                             />
-                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <div className="flex gap-4 text-white">
-                                                    <button className="flex items-center gap-1.5 text-sm font-medium hover:text-primary transition-colors">
-                                                        <Heart className="h-5 w-5" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+
+                                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                                {post.featured && (
+                                                    <Badge className="bg-primary/95 text-primary-foreground backdrop-blur-md shadow-lg border-none px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+                                                        <Sparkles className="h-3 w-3 mr-1" /> Featured
+                                                    </Badge>
+                                                )}
+                                                {/* Logic for identifying Admin posts (if user has no order or specifically marked) */}
+                                                {!post.order_id && (
+                                                    <Badge className="bg-black/80 text-white backdrop-blur-md border-none px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+                                                        Official Moment
+                                                    </Badge>
+                                                )}
+                                            </div>
+
+                                            <div className="absolute bottom-6 left-6 right-6 text-white transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <button className="flex items-center gap-1.5 text-xs font-bold hover:text-primary transition-colors bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
+                                                        <Heart className="h-4 w-4" />
                                                         {post.likes_count}
                                                     </button>
-                                                    <button className="flex items-center gap-1.5 text-sm font-medium hover:text-primary transition-colors">
-                                                        <MessageCircle className="h-5 w-5" />
-                                                        Comment
+                                                    <button className="flex items-center gap-1.5 text-xs font-bold hover:text-primary transition-colors bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
+                                                        <Share2 className="h-4 w-4" />
+                                                        Share
                                                     </button>
                                                 </div>
                                             </div>
-                                            {post.featured && (
-                                                <div className="absolute top-4 left-4">
-                                                    <Badge className="bg-primary/95 backdrop-blur-md shadow-lg border-none">FEATURED</Badge>
-                                                </div>
-                                            )}
                                         </div>
-                                        <CardContent className="p-5">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                                        <CardContent className="p-6 relative">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold text-primary shadow-inner">
                                                         {post.profiles?.name?.[0] || 'U'}
                                                     </div>
-                                                    <span className="font-bold text-sm">{post.profiles?.name || 'Vivid Soul'}</span>
+                                                    <div>
+                                                        <span className="block font-bold text-sm text-foreground tracking-tight">{post.profiles?.name || 'Vivid Soul'}</span>
+                                                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Verified Purchase</span>
+                                                    </div>
                                                 </div>
-                                                <button className="text-muted-foreground hover:text-primary transition-colors">
-                                                    <Share2 className="h-4 w-4" />
-                                                </button>
                                             </div>
-                                            <p className="text-sm text-foreground/80 line-clamp-3 leading-relaxed mb-4 italic">
+                                            <p className="text-sm text-foreground/70 line-clamp-2 leading-relaxed italic mb-4 font-serif">
                                                 "{post.content}"
                                             </p>
-                                            <div className="flex items-center justify-between pt-4 border-t border-primary/5">
-                                                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
+                                            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                                                     {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </span>
                                                 <Button variant="link" size="sm" className="h-auto p-0 text-xs font-bold text-primary group-hover:underline">

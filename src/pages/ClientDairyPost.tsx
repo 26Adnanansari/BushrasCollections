@@ -27,7 +27,9 @@ const ClientDairyPost = () => {
             navigate('/auth');
             return;
         }
-        fetchOrderDetails();
+        if (orderId && orderId !== 'external') {
+            fetchOrderDetails();
+        }
     }, [orderId, user]);
 
     const fetchOrderDetails = async () => {
@@ -99,9 +101,15 @@ const ClientDairyPost = () => {
                                 <div className="p-2 bg-primary rounded-lg text-primary-foreground">
                                     <Sparkles className="h-5 w-5" />
                                 </div>
-                                <h1 className="text-2xl font-serif font-bold">Client Dairy</h1>
+                                <h1 className="text-2xl font-serif font-bold">
+                                    {orderId === 'external' ? 'Share Your Moment' : 'Client Dairy'}
+                                </h1>
                             </div>
-                            <p className="text-muted-foreground">Share your beautiful moments with our collection</p>
+                            <p className="text-muted-foreground">
+                                {orderId === 'external'
+                                    ? "We'd love to see how you styled your favorites from Bushra's Collection!"
+                                    : "Share your beautiful moments with our collection"}
+                            </p>
                         </div>
 
                         <CardContent className="p-6">

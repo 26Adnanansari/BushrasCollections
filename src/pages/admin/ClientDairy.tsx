@@ -6,12 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Eye, ThumbsUp, Trash2, ArrowLeft } from "lucide-react";
+import { Check, X, Eye, ThumbsUp, Trash2, ArrowLeft, Plus, Link as LinkIcon, Share2, Send, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 const AdminClientDairy = () => {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newPostContent, setNewPostContent] = useState("");
+    const [newPostImages, setNewPostImages] = useState<string[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -84,6 +92,48 @@ const AdminClientDairy = () => {
         }
     };
 
+    const generateShareLink = () => {
+        const link = `${window.location.origin}/client-dairy/post/external`;
+        navigator.clipboard.writeText(link);
+        toast({
+            title: "Link Copied!",
+            description: "You can now share this link with your customers.",
+        });
+    };
+
+    const handleCreateAdminPost = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPostImages.length === 0) {
+            toast({ title: "Please upload at least one image", variant: "destructive" });
+            return;
+        }
+
+        setIsCreating(true);
+        try {
+            const { error } = await supabase
+                .from('client_dairy')
+                .insert({
+                    user_id: (await supabase.auth.getUser()).data.user?.id,
+                    content: newPostContent,
+                    images: newPostImages,
+                    status: 'approved',
+                    featured: true
+                });
+
+            if (error) throw error;
+
+            toast({ title: "Post Created!", description: "Official brand moment has been posted." });
+            setIsCreateModalOpen(false);
+            setNewPostContent("");
+            setNewPostImages([]);
+            fetchPosts();
+        } catch (error: any) {
+            toast({ title: "Failed to create post", description: error.message, variant: "destructive" });
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background">
             <Navigation />
@@ -94,10 +144,88 @@ const AdminClientDairy = () => {
                         Admin Dashboard
                     </Button>
 
-                    <header className="mb-8">
-                        <h1 className="text-3xl font-serif font-bold">Client Dairy Moderation</h1>
-                        <p className="text-muted-foreground">Approve or reject community moments before they go live.</p>
-                    </header>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h1 className="text-3xl font-serif font-bold">Client Dairy Moderation</h1>
+                            <p className="text-muted-foreground">Approve or reject community moments before they go live.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button onClick={generateShareLink} variant="outline" className="border-primary text-primary hover:bg-primary/5">
+                                <LinkIcon className="h-4 w-4 mr-2" />
+                                Share Posting Link
+                            </Button>
+
+                            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-primary hover:bg-primary/90">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add New Moment
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-xl">
+                                    <DialogHeader>
+                                        <DialogTitle>Create Official Moment</DialogTitle>
+                                    </DialogHeader>
+                                    <form onSubmit={handleCreateAdminPost} className="space-y-6 pt-4">
+                                        <div className="space-y-2">
+                                            <Label>What's the moment?</Label>
+                                            <Textarea
+                                                value={newPostContent}
+                                                onChange={(e) => setNewPostContent(e.target.value)}
+                                                placeholder="Write a beautiful caption for this moment..."
+                                                className="min-h-[100px]"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <Label>Images/Videos (Max 5)</Label>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                {newPostImages.map((img, idx) => (
+                                                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border">
+                                                        <img src={img} className="w-full h-full object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setNewPostImages(prev => prev.filter((_, i) => i !== idx))}
+                                                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {newPostImages.length < 5 && (
+                                                    <label className="border-2 border-dashed rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:bg-accent transition-colors">
+                                                        <Camera className="h-6 w-6 text-muted-foreground mb-1" />
+                                                        <span className="text-[10px] uppercase font-bold text-muted-foreground underline">Upload</span>
+                                                        <input
+                                                            type="file"
+                                                            className="hidden"
+                                                            accept="image/*,video/*"
+                                                            onChange={async (e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    try {
+                                                                        const url = await uploadToCloudinary(file);
+                                                                        setNewPostImages(prev => [...prev, url]);
+                                                                    } catch (err: any) {
+                                                                        toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+                                                                    }
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <Button type="submit" className="w-full font-bold" disabled={isCreating}>
+                                            {isCreating ? 'Creating...' : 'Post Official Moment'}
+                                        </Button>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
 
                     <Card>
                         <CardHeader>
