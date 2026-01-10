@@ -98,6 +98,10 @@ const AdminProducts = () => {
   const [customCategory, setCustomCategory] = useState("");
   const [customFabric, setCustomFabric] = useState("");
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
+
   const { loadDraft, saveDraft, clearDraft, lastSaved } = useFormDraft({
     formId: editingProduct ? `product_${editingProduct.id}` : 'product_new',
     defaultValues: { ...formData, productImages },
@@ -128,11 +132,11 @@ const AdminProducts = () => {
           stock_quantity: draft.stock_quantity || '0',
           is_active: draft.is_active ?? true,
           fabric_type: draft.fabric_type || '',
-          available_sizes: draft.available_sizes || [],
-          available_colors: draft.available_colors || [],
+          available_sizes: Array.isArray(draft.available_sizes) ? draft.available_sizes : (draft.available_sizes ? (typeof draft.available_sizes === 'string' ? draft.available_sizes.split(',').map((s: string) => s.trim()) : []) : []),
+          available_colors: Array.isArray(draft.available_colors) ? draft.available_colors : (draft.available_colors ? (typeof draft.available_colors === 'string' ? draft.available_colors.split(',').map((c: string) => c.trim()) : []) : []),
           care_instructions: draft.care_instructions || '',
           occasion_type: draft.occasion_type || '',
-          embellishment: draft.embellishment || [],
+          embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? draft.embellishment.split(',').map((e: string) => e.trim()) : []) : []),
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -803,18 +807,19 @@ const AdminProducts = () => {
                                 <div key={size} className="flex items-center space-x-2">
                                   <Checkbox
                                     id={`size-${size}`}
-                                    checked={formData.available_sizes.includes(size)}
+                                    checked={Array.isArray(formData.available_sizes) && formData.available_sizes.includes(size)}
                                     className="h-5 w-5"
                                     onCheckedChange={(checked) => {
+                                      const currentSizes = Array.isArray(formData.available_sizes) ? formData.available_sizes : [];
                                       if (checked) {
                                         setFormData({
                                           ...formData,
-                                          available_sizes: [...formData.available_sizes, size]
+                                          available_sizes: [...currentSizes, size]
                                         });
                                       } else {
                                         setFormData({
                                           ...formData,
-                                          available_sizes: formData.available_sizes.filter(s => s !== size)
+                                          available_sizes: currentSizes.filter(s => s !== size)
                                         });
                                       }
                                     }}
@@ -831,7 +836,7 @@ const AdminProducts = () => {
                             <Input
                               id="available_colors"
                               placeholder="e.g., Red, Blue, Green (comma-separated)"
-                              value={formData.available_colors.join(', ')}
+                              value={Array.isArray(formData.available_colors) ? formData.available_colors.join(', ') : ''}
                               className="h-11"
                               onChange={(e) => setFormData({
                                 ...formData,
@@ -851,18 +856,19 @@ const AdminProducts = () => {
                                   <div key={emb} className="flex items-center space-x-2">
                                     <Checkbox
                                       id={`emb-${emb}`}
-                                      checked={formData.embellishment.includes(emb)}
+                                      checked={Array.isArray(formData.embellishment) && formData.embellishment.includes(emb)}
                                       className="h-5 w-5"
                                       onCheckedChange={(checked) => {
+                                        const currentEmb = Array.isArray(formData.embellishment) ? formData.embellishment : [];
                                         if (checked) {
                                           setFormData({
                                             ...formData,
-                                            embellishment: [...formData.embellishment, emb]
+                                            embellishment: [...currentEmb, emb]
                                           });
                                         } else {
                                           setFormData({
                                             ...formData,
-                                            embellishment: formData.embellishment.filter(e => e !== emb)
+                                            embellishment: currentEmb.filter(e => e !== emb)
                                           });
                                         }
                                       }}
@@ -884,10 +890,11 @@ const AdminProducts = () => {
                                     if (e.key === 'Enter') {
                                       e.preventDefault();
                                       const value = e.currentTarget.value.trim();
-                                      if (value && !formData.embellishment.includes(value)) {
+                                      const currentEmb = Array.isArray(formData.embellishment) ? formData.embellishment : [];
+                                      if (value && !currentEmb.includes(value)) {
                                         setFormData({
                                           ...formData,
-                                          embellishment: [...formData.embellishment, value]
+                                          embellishment: [...currentEmb, value]
                                         });
                                         e.currentTarget.value = '';
                                       }
@@ -900,10 +907,11 @@ const AdminProducts = () => {
                                   onClick={(e) => {
                                     const input = e.currentTarget.previousElementSibling as HTMLInputElement;
                                     const value = input?.value.trim();
-                                    if (value && !formData.embellishment.includes(value)) {
+                                    const currentEmb = Array.isArray(formData.embellishment) ? formData.embellishment : [];
+                                    if (value && !currentEmb.includes(value)) {
                                       setFormData({
                                         ...formData,
-                                        embellishment: [...formData.embellishment, value]
+                                        embellishment: [...currentEmb, value]
                                       });
                                       if (input) input.value = '';
                                     }
@@ -916,7 +924,7 @@ const AdminProducts = () => {
                             </div>
 
                             {/* Selected embellishments display */}
-                            {formData.embellishment.length > 0 && (
+                            {Array.isArray(formData.embellishment) && formData.embellishment.length > 0 && (
                               <div className="pt-2">
                                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Selected Embellishments:</Label>
                                 <div className="flex flex-wrap gap-2">
@@ -1021,66 +1029,112 @@ const AdminProducts = () => {
                   {loading ? (
                     <div className="text-center py-8">Loading products...</div>
                   ) : (
-                    <div className="relative w-full overflow-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Image</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Stock</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {products.map((product) => (
-                            <TableRow key={product.id}>
-                              <TableCell>
-                                <img
-                                  src={product.image_url || '/placeholder.svg'}
-                                  alt={product.name}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium">{product.name}</TableCell>
-                              <TableCell>{product.category}</TableCell>
-                              <TableCell>PKR {product.price}</TableCell>
-                              <TableCell>{product.stock_quantity}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-1">
-                                  <Badge
-                                    variant={product.is_active ? "default" : "secondary"}
-                                    className="cursor-pointer"
-                                    onClick={() => toggleActive(product)}
-                                  >
-                                    {product.is_active ? "Active" : "Inactive"}
-                                  </Badge>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex space-x-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEdit(product)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDelete(product.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
+                    <div className="space-y-4">
+                      <div className="relative w-full overflow-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Image</TableHead>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Category</TableHead>
+                              <TableHead>Price</TableHead>
+                              <TableHead>Stock</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Actions</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {products
+                              .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                              .map((product) => (
+                                <TableRow key={product.id}>
+                                  <TableCell>
+                                    <img
+                                      src={product.image_url || '/placeholder.svg'}
+                                      alt={product.name}
+                                      className="w-12 h-12 object-cover rounded"
+                                    />
+                                  </TableCell>
+                                  <TableCell className="font-medium">{product.name}</TableCell>
+                                  <TableCell>{product.category}</TableCell>
+                                  <TableCell>PKR {product.price}</TableCell>
+                                  <TableCell>{product.stock_quantity}</TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-1">
+                                      <Badge
+                                        variant={product.is_active ? "default" : "secondary"}
+                                        className="cursor-pointer"
+                                        onClick={() => toggleActive(product)}
+                                      >
+                                        {product.is_active ? "Active" : "Inactive"}
+                                      </Badge>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleEdit(product)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleDelete(product.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Pagination Controls */}
+                      {products.length > ITEMS_PER_PAGE && (
+                        <div className="flex items-center justify-between border-t pt-4">
+                          <div className="text-sm text-muted-foreground font-medium">
+                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, products.length)} of {products.length} products
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                              className="font-bold"
+                            >
+                              Previous
+                            </Button>
+                            <div className="flex items-center gap-1 mx-2">
+                              {Array.from({ length: Math.ceil(products.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                                <Button
+                                  key={i}
+                                  variant={currentPage === i + 1 ? "default" : "ghost"}
+                                  size="sm"
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="h-8 w-8 p-0 text-xs font-bold"
+                                >
+                                  {i + 1}
+                                </Button>
+                              ))}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(products.length / ITEMS_PER_PAGE), prev + 1))}
+                              disabled={currentPage === Math.ceil(products.length / ITEMS_PER_PAGE)}
+                              className="font-bold"
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </TabsContent>
