@@ -4,11 +4,14 @@ import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/store/auth';
 
 const NotificationBanner = () => {
     const { isReturning, visitCount } = useVisitorStore();
     const [isVisible, setIsVisible] = useState(false);
     const { toast } = useToast();
+    const { user } = useAuthStore();
 
     useEffect(() => {
         // Check if browser supports notifications
@@ -23,6 +26,29 @@ const NotificationBanner = () => {
             return () => clearTimeout(timer);
         }
     }, [isReturning, visitCount]);
+
+    const subscribeToPush = async () => {
+        try {
+            if (!('serviceWorker' in navigator)) return false;
+            const registration = await navigator.serviceWorker.ready;
+            const subscribeOptions = {
+                userVisibleOnly: true,
+                applicationServerKey: 'BEl62vp9IH1w4z_E69G04_lQj-7_XmU8L48-cI_u6Sgq-5W-L4oP-E_O6h-v6_-L9-L6-O-L_L-L'
+            };
+            const subscription = await registration.pushManager.subscribe(subscribeOptions);
+            const { error } = await supabase
+                .from('push_subscriptions')
+                .upsert({
+                    user_id: user?.id || null,
+                    subscription: JSON.parse(JSON.stringify(subscription))
+                }, { onConflict: 'subscription' as any });
+            if (error) console.error('Error saving subscription:', error);
+            return true;
+        } catch (error) {
+            console.error('Push subscription failed:', error);
+            return false;
+        }
+    };
 
     const handleEnable = async () => {
         try {

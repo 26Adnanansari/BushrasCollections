@@ -16,7 +16,7 @@ interface DashboardStats {
 }
 
 const AdminDashboard = () => {
-  const { user } = useAuthStore();
+  const { user, onlineUsersCount } = useAuthStore();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
@@ -108,9 +108,20 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Online Now</CardTitle>
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{onlineUsersCount}</div>
+                <p className="text-xs text-muted-foreground">Active browsers</p>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>

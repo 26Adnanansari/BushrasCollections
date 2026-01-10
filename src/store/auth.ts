@@ -9,6 +9,7 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   initialized: boolean;
+  onlineUsersCount: number;
   setUser: (user: AuthUser | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>()(
       session: null,
       loading: true,
       initialized: false,
+      onlineUsersCount: 0,
 
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
@@ -110,6 +112,30 @@ export const useAuthStore = create<AuthState>()(
           } else {
             set({ session, loading: false, initialized: true });
           }
+
+          // Initialize Presence Tracking
+          const presenceChannel = supabase.channel('online-users', {
+            config: {
+              presence: {
+                key: 'user',
+              },
+            },
+          });
+
+          presenceChannel
+            .on('presence' as any, { event: 'sync' }, () => {
+              const newState = presenceChannel.presenceState();
+              const count = Object.keys(newState).length;
+              set({ onlineUsersCount: count });
+            })
+            .subscribe(async (status) => {
+              if (status === 'SUBSCRIBED') {
+                await presenceChannel.track({
+                  online_at: new Date().toISOString(),
+                });
+              }
+            });
+
         } catch (error) {
           set({ loading: false, initialized: true });
         }

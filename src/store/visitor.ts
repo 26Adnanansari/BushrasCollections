@@ -16,6 +16,8 @@ interface SessionData {
 
 interface VisitorState {
     visitorId: string | null;
+    visitCount: number;
+    isReturning: boolean;
     initialize: () => Promise<void>;
     logPageView: () => void;
 }
@@ -25,6 +27,8 @@ const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 export const useVisitorStore = create<VisitorState>((set, get) => ({
     visitorId: null,
+    visitCount: 0,
+    isReturning: false,
 
     initialize: async () => {
         let cookieData = getJsonCookie<VisitorData>(VISITOR_COOKIE);
@@ -110,6 +114,13 @@ export const useVisitorStore = create<VisitorState>((set, get) => ({
                 setJsonCookie(VISITOR_COOKIE, cookieData, { expires: 365 });
             }
         }
+
+        const totalSessions = cookieData.sessions.length;
+        set({
+            visitorId,
+            visitCount: totalSessions,
+            isReturning: totalSessions > 1
+        });
     },
 
     logPageView: () => {

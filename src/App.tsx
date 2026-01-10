@@ -53,6 +53,13 @@ const App = () => {
   // Pulse session on every route change (handles timeouts and campaigns)
   useEffect(() => {
     initializeVisitor();
+
+    // Register Service Worker for Push Notifications
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then((reg) => console.log('[SW] Registered:', reg.scope))
+        .catch((err) => console.error('[SW] Registration failed:', err));
+    }
   }, [initializeVisitor, location.pathname, location.search]);
 
   // DEBUG: Track window focus and visibility
