@@ -35,11 +35,19 @@ const ClientDairyPost = () => {
     const fetchOrderDetails = async () => {
         if (!orderId) return;
         try {
-            const { data, error } = await supabase
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+
+            let query = supabase
                 .from('orders')
-                .select('*, order_items(product:products(name))')
-                .or(`id.eq.${orderId},order_number.eq.${orderId}`)
-                .single();
+                .select('*, order_items(product:products(name))');
+
+            if (isUUID) {
+                query = query.or(`id.eq.${orderId},order_number.eq.${orderId}`);
+            } else {
+                query = query.eq('order_number', orderId);
+            }
+
+            const { data, error } = await query.single();
 
             if (error) throw error;
             setOrder(data);

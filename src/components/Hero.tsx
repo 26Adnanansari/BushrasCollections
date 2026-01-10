@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -30,6 +31,7 @@ const Hero = () => {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSlides();
@@ -127,7 +129,7 @@ const Hero = () => {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id}>
-              <div className="container mx-auto px-6 lg:px-12 xl:px-16 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-8 md:py-0 md:mb-32">
+              <div className="container mx-auto px-6 lg:px-12 xl:px-16 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12 py-8 md:py-0 md:mb-20">
                 {/* Text Content - Left Side */}
                 <div className="w-full md:w-1/2 pt-4 md:pt-0 relative z-10 text-center md:text-left">
                   <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight animate-fade-in-up [animation-duration:800ms] [animation-fill-mode:backwards]">
@@ -143,7 +145,7 @@ const Hero = () => {
                       <Button
                         size="lg"
                         className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
-                        onClick={() => slide.cta_link && (window.location.href = slide.cta_link)}
+                        onClick={() => slide.cta_link && navigate(slide.cta_link)}
                       >
                         {slide.cta_text}
                         <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -175,7 +177,7 @@ const Hero = () => {
         <CarouselNext className="hidden md:flex right-4 h-12 w-12 border-2 border-white/20 bg-background/20 backdrop-blur-sm hover:bg-background/40" />
 
         {/* Dots Indicator */}
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
           {slides.map((_, index) => (
             <button
               key={index}

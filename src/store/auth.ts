@@ -64,7 +64,13 @@ export const useAuthStore = create<AuthState>()(
           supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'TOKEN_REFRESHED') return;
 
-            set({ session, loading: true }); // KEEP loading true until roles are fetched
+            // Only set loading if we don't have a user yet to prevent unmounting/remounting
+            const currentUser = get().user;
+            if (!currentUser) {
+              set({ session, loading: true });
+            } else {
+              set({ session });
+            }
 
             if (session?.user) {
               // Fetch profile and roles - must use setTimeout to avoid deadlock
