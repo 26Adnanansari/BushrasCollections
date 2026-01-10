@@ -382,6 +382,16 @@ const HeroSlider = () => {
                       placeholder="e.g., /products/summer-collection"
                       className="h-11"
                     />
+                    <div className="flex flex-col gap-1 mt-1">
+                      <p className="text-[10px] text-muted-foreground">
+                        Internal path (e.g., /products) or full external URL.
+                      </p>
+                      {slide.cta_link && slide.cta_link.includes(" ") && (
+                        <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
+                          ⚠️ Text detected. We'll extract only the URL.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

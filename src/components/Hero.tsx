@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import heroImage from "@/assets/hero-fashion.jpg";
+import { handleCTANavigation } from "@/utils/linkHelpers";
 
 interface HeroSlide {
   id: string;
@@ -145,7 +146,7 @@ const Hero = () => {
                       <Button
                         size="lg"
                         className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
-                        onClick={() => slide.cta_link && navigate(slide.cta_link)}
+                        onClick={() => handleCTANavigation(slide.cta_link, navigate)}
                       >
                         {slide.cta_text}
                         <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

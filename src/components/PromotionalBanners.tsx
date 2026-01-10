@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { handleCTANavigation } from "@/utils/linkHelpers";
 
 const PromotionalBanners = () => {
   const [banners, setBanners] = useState<any[]>([]);
@@ -55,13 +56,7 @@ const PromotionalBanners = () => {
   };
 
   const handleCTAClick = () => {
-    if (currentBanner.cta_link) {
-      if (currentBanner.cta_link.startsWith('http')) {
-        window.location.href = currentBanner.cta_link;
-      } else {
-        navigate(currentBanner.cta_link);
-      }
-    }
+    handleCTANavigation(currentBanner.cta_link, navigate);
   };
 
   return (

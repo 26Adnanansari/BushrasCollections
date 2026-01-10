@@ -196,7 +196,7 @@ const AdminBanners = () => {
                   {editingBanner ? 'Update' : 'Create'} a promotional banner for your store
                 </DialogDescription>
               </DialogHeader>
-              <DraftIndicator lastSaved={lastSaved} onClear={clearDraft} />
+              <DraftIndicator lastSaved={lastSaved ? lastSaved.toISOString() : null} onClear={clearDraft} />
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="title">Title *</Label>
@@ -243,6 +243,14 @@ const AdminBanners = () => {
                       onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
                       placeholder="/products"
                     />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Internal path (e.g., /products) or full URL.
+                    </p>
+                    {formData.cta_link && formData.cta_link.includes(" ") && (
+                      <p className="text-[10px] text-amber-600 mt-1 font-medium">
+                        ⚠️ Note: Extra text detected. We will try to extract only the URL.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
