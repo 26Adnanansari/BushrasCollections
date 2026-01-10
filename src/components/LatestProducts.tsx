@@ -98,7 +98,7 @@ const LatestProducts = () => {
               price={product.price}
               image={product.image_url || '/placeholder.svg'}
               category={product.category || 'Fashion'}
-              isNew={true}
+              isNew={product.is_new}
               averageRating={product.averageRating}
               totalReviews={product.totalReviews}
               slug={product.slug}

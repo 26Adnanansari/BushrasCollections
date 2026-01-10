@@ -83,6 +83,7 @@ const AdminProducts = () => {
     brand: "Bushra's Collection",
     stock_quantity: '0',
     is_active: true,
+    is_new: true,
     // NEW BOUTIQUE FIELDS
     fabric_type: '',
     available_sizes: [] as string[],
@@ -131,12 +132,13 @@ const AdminProducts = () => {
           brand: draft.brand || "Bushra's Collection",
           stock_quantity: draft.stock_quantity || '0',
           is_active: draft.is_active ?? true,
+          is_new: draft.is_new ?? true,
           fabric_type: draft.fabric_type || '',
-          available_sizes: Array.isArray(draft.available_sizes) ? draft.available_sizes : (draft.available_sizes ? (typeof draft.available_sizes === 'string' ? draft.available_sizes.split(',').map((s: string) => s.trim()) : []) : []),
-          available_colors: Array.isArray(draft.available_colors) ? draft.available_colors : (draft.available_colors ? (typeof draft.available_colors === 'string' ? draft.available_colors.split(',').map((c: string) => c.trim()) : []) : []),
+          available_sizes: Array.isArray(draft.available_sizes) ? draft.available_sizes : (draft.available_sizes ? (typeof draft.available_sizes === 'string' ? (draft.available_sizes as string).split(',').map((s: string) => s.trim()) : []) : []),
+          available_colors: Array.isArray(draft.available_colors) ? draft.available_colors : (draft.available_colors ? (typeof draft.available_colors === 'string' ? (draft.available_colors as string).split(',').map((c: string) => c.trim()) : []) : []),
           care_instructions: draft.care_instructions || '',
           occasion_type: draft.occasion_type || '',
-          embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? draft.embellishment.split(',').map((e: string) => e.trim()) : []) : []),
+          embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? (draft.embellishment as string).split(',').map((e: string) => e.trim()) : []) : []),
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -297,6 +299,7 @@ const AdminProducts = () => {
         image_url: productImages[0], // Use first image as primary
         images: productImages, // Save all images
         is_active: formData.is_active,
+        is_new: formData.is_new,
       };
 
       if (editingProduct) {
@@ -337,6 +340,7 @@ const AdminProducts = () => {
         brand: "Bushra's Collection",
         stock_quantity: '0',
         is_active: true,
+        is_new: true,
         fabric_type: '',
         available_sizes: [],
         available_colors: [],
@@ -400,6 +404,7 @@ const AdminProducts = () => {
       brand: product.brand,
       stock_quantity: product.stock_quantity?.toString() || '0',
       is_active: product.is_active ?? true,
+      is_new: (product as any).is_new ?? true,
       fabric_type: product.fabric_type || '',
       available_sizes: product.available_sizes || [],
       available_colors: product.available_colors || [],
@@ -540,6 +545,7 @@ const AdminProducts = () => {
                       brand: "Bushra's Collection",
                       stock_quantity: '0',
                       is_active: true,
+                      is_new: true,
                       fabric_type: '',
                       available_sizes: [],
                       available_colors: [],
@@ -966,7 +972,7 @@ const AdminProducts = () => {
                       </Collapsible>
 
                       {/* 10. PUBLISH CHECKBOX */}
-                      <div className="md:col-span-2 bg-accent/20 p-4 rounded-lg flex items-center space-x-3 border border-border/50">
+                      <div className="md:col-span-1 bg-accent/20 p-4 rounded-lg flex items-center space-x-3 border border-border/50">
                         <Checkbox
                           id="is_active"
                           checked={formData.is_active}
@@ -980,10 +986,33 @@ const AdminProducts = () => {
                             htmlFor="is_active"
                             className="text-sm font-semibold cursor-pointer pointer-events-auto"
                           >
-                            Publish this product
+                            Publish
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            Uncheck to save as a draft (hidden from store)
+                            Visible to store
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 11. NEW BADGE CHECKBOX */}
+                      <div className="md:col-span-1 bg-primary/10 p-4 rounded-lg flex items-center space-x-3 border border-primary/20">
+                        <Checkbox
+                          id="is_new"
+                          checked={formData.is_new}
+                          className="h-5 w-5"
+                          onCheckedChange={(checked) =>
+                            setFormData({ ...formData, is_new: checked as boolean })
+                          }
+                        />
+                        <div className="space-y-0.5 pointer-events-none">
+                          <Label
+                            htmlFor="is_new"
+                            className="text-sm font-semibold cursor-pointer pointer-events-auto"
+                          >
+                            Show "New" badge
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Add label to image
                           </p>
                         </div>
                       </div>

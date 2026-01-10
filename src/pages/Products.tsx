@@ -280,7 +280,7 @@ const Products = () => {
                       price={product.price}
                       image={Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : ['/placeholder.svg'])}
                       category={product.category}
-                      isNew={new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                      isNew={product.is_new}
                       averageRating={product.averageRating}
                       totalReviews={product.totalReviews}
                     />

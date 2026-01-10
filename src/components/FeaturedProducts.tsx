@@ -107,7 +107,7 @@ const FeaturedProducts = () => {
                   price={product.price}
                   image={product.image_url || '/placeholder.svg'}
                   category={product.category || 'Fashion'}
-                  isNew={product.created_at && new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                  isNew={product.is_new}
                   averageRating={product.averageRating}
                   totalReviews={product.totalReviews}
                   slug={product.slug}
