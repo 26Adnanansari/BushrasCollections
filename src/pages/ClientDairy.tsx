@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Heart, Share2, MessageCircle, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const ClientDairy = () => {
+    const { toast } = useToast();
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -17,21 +19,89 @@ const ClientDairy = () => {
 
     const fetchPosts = async () => {
         try {
-            const { data, error } = await supabase
+            const { data: userData } = await supabase.auth.getUser();
+            const currentUserId = userData.user?.id;
+
+            let query = supabase
                 .from('client_dairy')
                 .select(`
-          *,
-          profiles:user_id (name)
-        `)
-                .eq('status', 'approved')
+                  *,
+                  profiles:user_id (name)
+                `)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setPosts(data || []);
+            // Show approved posts OR posts belonging to the current user
+            if (currentUserId) {
+                query = query.or(`status.eq.approved,user_id.eq.${currentUserId}`);
+            } else {
+                query = query.eq('status', 'approved');
+            }
+
+            const { data, error } = await query;
+
+            // Enrich posts with local like status
+            const likedPosts = JSON.parse(localStorage.getItem('liked_moments') || '[]');
+            const enrichedPosts = (data || []).map(p => ({
+                ...p,
+                isLiked: likedPosts.includes(p.id)
+            }));
+
+            setPosts(enrichedPosts);
         } catch (error) {
             console.error('Error fetching posts:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleLike = async (postId: string, currentLikes: number, isAlreadyLiked: boolean) => {
+        if (isAlreadyLiked) return; // Prevent unliking for now to keep it simple, or toggle if preferred
+
+        // Optimistic UI update
+        setPosts(prev => prev.map(p =>
+            p.id === postId ? { ...p, likes_count: p.likes_count + 1, isLiked: true } : p
+        ));
+
+        // Update localStorage
+        const likedPosts = JSON.parse(localStorage.getItem('liked_moments') || '[]');
+        if (!likedPosts.includes(postId)) {
+            likedPosts.push(postId);
+            localStorage.setItem('liked_moments', JSON.stringify(likedPosts));
+        }
+
+        // Update DB
+        try {
+            const { error } = await supabase
+                .from('client_dairy')
+                .update({ likes_count: currentLikes + 1 })
+                .eq('id', postId);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error liking post:', error);
+            // Revert optimistic update on failure (optional for simplicity here)
+        }
+    };
+
+    const handleShare = async (post: any) => {
+        const shareData = {
+            title: "KAMI Moment - Bushra's Collection",
+            text: `Check out this beautiful moment from ${post.profiles?.name || 'a customer'} at Bushra's Collection!`,
+            url: window.location.href, // Link to the moments page for now
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                toast({
+                    title: "Link Copied!",
+                    description: "Share it with your friends to show the style.",
+                });
+            }
+        } catch (error) {
+            console.error('Sharing failed', error);
         }
     };
 
@@ -96,15 +166,29 @@ const ClientDairy = () => {
 
                                             <div className="absolute bottom-6 left-6 right-6 text-white transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
                                                 <div className="flex items-center gap-4 mb-4">
-                                                    <button className="flex items-center gap-1.5 text-xs font-bold hover:text-primary transition-colors bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-                                                        <Heart className="h-4 w-4" />
+                                                    <button
+                                                        onClick={() => handleLike(post.id, post.likes_count, post.isLiked)}
+                                                        className={`flex items-center gap-1.5 text-xs font-bold transition-colors backdrop-blur-md px-3 py-1.5 rounded-full border ${post.isLiked
+                                                            ? "bg-primary text-primary-foreground border-primary"
+                                                            : "bg-white/10 hover:text-primary border-white/20"
+                                                            }`}
+                                                    >
+                                                        <Heart className={`h-4 w-4 ${post.isLiked ? "fill-current" : ""}`} />
                                                         {post.likes_count}
                                                     </button>
-                                                    <button className="flex items-center gap-1.5 text-xs font-bold hover:text-primary transition-colors bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
+                                                    <button
+                                                        onClick={() => handleShare(post)}
+                                                        className="flex items-center gap-1.5 text-xs font-bold hover:text-primary transition-colors bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20"
+                                                    >
                                                         <Share2 className="h-4 w-4" />
                                                         Share
                                                     </button>
                                                 </div>
+                                                {post.status === 'pending' && (
+                                                    <div className="bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 text-yellow-200 px-3 py-1 rounded-full text-[10px] font-bold inline-block">
+                                                        PENDING APPROVAL (Visible only to you)
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <CardContent className="p-6 relative">

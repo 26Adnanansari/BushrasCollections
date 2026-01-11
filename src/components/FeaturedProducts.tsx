@@ -20,7 +20,7 @@ const FeaturedProducts = () => {
       try {
         const { data: productsData, error } = await supabase
           .from('products')
-          .select('id, name, price, image_url, category, created_at, is_featured, slug')
+          .select('id, name, price, image_url, category, created_at, is_featured, slug, is_new')
           .eq('is_featured', true)
           .order('created_at', { ascending: false })
           .limit(6);

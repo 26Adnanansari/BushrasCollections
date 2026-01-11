@@ -160,11 +160,15 @@ const OrderTracking = () => {
                     {order.status}
                   </Badge>
                 </div>
-                {order.status === 'delivered' && (
+                {order.status !== 'cancelled' && (
                   <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <h4 className="font-bold text-primary">Happy with your purchase?</h4>
-                      <p className="text-sm text-muted-foreground">Share your moment in our Client Dairy!</p>
+                      <h4 className="font-bold text-primary">
+                        {order.status === 'delivered' ? 'Happy with your purchase?' : 'Exicted for your order?'}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {order.status === 'delivered' ? 'Share your moment in our Client Dairy!' : 'Show your excitement and share a moment!'}
+                      </p>
                     </div>
                     <Button
                       onClick={() => navigate(`/client-dairy/post/${order.order_number || order.id}`)}

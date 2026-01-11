@@ -187,7 +187,7 @@ const Checkout = () => {
 
       toast({
         title: "Order Placed Successfully!",
-        description: instructions,
+        description: `${instructions} Don't forget to share your excitement in our Client Dairy!`,
       });
 
       // Clear cart

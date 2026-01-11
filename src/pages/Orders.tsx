@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, Eye } from "lucide-react";
+import { Package, Eye, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -118,13 +118,25 @@ const Orders = () => {
                       <div className="text-2xl font-bold text-primary mb-2">
                         PKR {(order?.total_amount || order?.total || 0).toLocaleString()}
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => navigate(`/orders/${order.order_number || order.id}`)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate(`/orders/${order.order_number || order.id}`)}
+                          className="flex-1 sm:flex-none"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Details
+                        </Button>
+                        {order.status !== 'cancelled' && (
+                          <Button
+                            className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 flex-1 sm:flex-none"
+                            onClick={() => navigate(`/client-dairy/post/${order.order_number || order.id}`)}
+                          >
+                            <Camera className="h-4 w-4 mr-2" />
+                            Share Moment
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

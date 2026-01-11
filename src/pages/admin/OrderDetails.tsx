@@ -149,11 +149,12 @@ const OrderDetailsPage = () => {
     };
 
     const updateOrderStatus = async (newStatus: string) => {
+        if (!order) return;
         try {
             const { error } = await supabase
                 .from('orders')
                 .update({ status: newStatus })
-                .eq('id', orderId);
+                .eq('id', order.id);
 
             if (error) throw error;
 
@@ -173,11 +174,12 @@ const OrderDetailsPage = () => {
     };
 
     const saveTracking = async () => {
+        if (!order) return;
         try {
             const { error } = await supabase
                 .from('orders')
                 .update({ tracking_number: trackingNumber })
-                .eq('id', orderId);
+                .eq('id', order.id);
 
             if (error) throw error;
 
@@ -195,11 +197,12 @@ const OrderDetailsPage = () => {
     };
 
     const saveNotes = async () => {
+        if (!order) return;
         try {
             const { error } = await supabase
                 .from('orders')
                 .update({ admin_notes: adminNotes })
-                .eq('id', orderId);
+                .eq('id', order.id);
 
             if (error) throw error;
 
