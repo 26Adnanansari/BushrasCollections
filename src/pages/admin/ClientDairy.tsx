@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Eye, ThumbsUp, Trash2, ArrowLeft, Plus, Link as LinkIcon, Share2, Send, Camera } from "lucide-react";
+import { Check, X, Eye, ThumbsUp, Trash2, ArrowLeft, Plus, Link as LinkIcon, Share2, Send, Camera, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { uploadToCloudinary } from "@/lib/cloudinary";
@@ -20,6 +20,9 @@ const AdminClientDairy = () => {
     const [newPostContent, setNewPostContent] = useState("");
     const [newPostImages, setNewPostImages] = useState<string[]>([]);
     const [isCreating, setIsCreating] = useState(false);
+    const [selectedPostStats, setSelectedPostStats] = useState<any>(null);
+    const [statsHistory, setStatsHistory] = useState<any[]>([]);
+    const [loadingStats, setLoadingStats] = useState(false);
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -43,6 +46,24 @@ const AdminClientDairy = () => {
             console.error('Error fetching posts:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchStatsHistory = async (postId: string) => {
+        setLoadingStats(true);
+        try {
+            const { data, error } = await supabase
+                .from('client_dairy_activity')
+                .select('*')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setStatsHistory(data || []);
+        } catch (error: any) {
+            toast({ title: "Failed to fetch history", description: error.message, variant: "destructive" });
+        } finally {
+            setLoadingStats(false);
         }
     };
 
@@ -245,6 +266,8 @@ const AdminClientDairy = () => {
                                                 <TableHead>Preview</TableHead>
                                                 <TableHead>User</TableHead>
                                                 <TableHead>Content</TableHead>
+                                                <TableHead>Likes</TableHead>
+                                                <TableHead>Shares</TableHead>
                                                 <TableHead>Status</TableHead>
                                                 <TableHead>Date</TableHead>
                                                 <TableHead className="text-right">Actions</TableHead>
@@ -261,6 +284,18 @@ const AdminClientDairy = () => {
                                                     <TableCell className="font-bold">{post.profiles?.name || 'User'}</TableCell>
                                                     <TableCell className="max-w-xs truncate italic">"{post.content}"</TableCell>
                                                     <TableCell>
+                                                        <div className="flex items-center gap-1">
+                                                            <Heart className="h-3 w-3 text-red-500 fill-current" />
+                                                            <span className="text-sm font-medium">{post.likes_count}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1">
+                                                            <Share2 className="h-3 w-3 text-blue-500" />
+                                                            <span className="text-sm font-medium">{post.shares_count || 0}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
                                                         <Badge variant={post.status === 'approved' ? 'default' : post.status === 'rejected' ? 'destructive' : 'secondary'}>
                                                             {post.status.toUpperCase()}
                                                         </Badge>
@@ -270,6 +305,17 @@ const AdminClientDairy = () => {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex justify-end gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => {
+                                                                    setSelectedPostStats(post);
+                                                                    fetchStatsHistory(post.id);
+                                                                }}
+                                                                className="h-8 border-blue-200 text-blue-600 hover:bg-blue-50"
+                                                            >
+                                                                <Eye className="h-4 w-4 mr-1" /> History
+                                                            </Button>
                                                             {post.status === 'pending' && (
                                                                 <>
                                                                     <Button size="sm" onClick={() => updateStatus(post.id, 'approved')} className="h-8 bg-green-600 hover:bg-green-700">
@@ -303,6 +349,52 @@ const AdminClientDairy = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* Stats History Dialog */}
+            <Dialog open={!!selectedPostStats} onOpenChange={() => setSelectedPostStats(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Interaction History</DialogTitle>
+                        <DialogDescription>
+                            Detailed log of likes and shares for this post.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                        {loadingStats ? (
+                            <div className="text-center py-8">Loading history...</div>
+                        ) : statsHistory.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground italic">No interactions recorded yet.</div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Date & Time</TableHead>
+                                        <TableHead>User ID</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {statsHistory.map((stat) => (
+                                        <TableRow key={stat.id}>
+                                            <TableCell>
+                                                <Badge variant={stat.type === 'like' ? 'default' : 'secondary'} className="capitalize">
+                                                    {stat.type}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                                {new Date(stat.created_at).toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-[10px] text-muted-foreground">
+                                                {stat.user_id || 'Anonymous Guest'}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
