@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, Users, Package, TrendingUp, Image, Star, Camera, Truck, Ticket } from "lucide-react";
+import { ShoppingBag, Users, Package, TrendingUp, Image, Star, Camera, Truck, Ticket, Share2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 
 interface DashboardStats {
@@ -358,6 +358,25 @@ const AdminDashboard = () => {
                 >
                   <Ticket className="h-4 w-4 mr-2" />
                   Manage Offers
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Reach Analytics</CardTitle>
+                <CardDescription>
+                  Track WhatsApp & social engagement
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/admin/social-analytics')}
+                  className="w-full bg-primary/10 text-primary hover:bg-primary/20"
+                  variant="ghost"
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  View Social Data
                 </Button>
               </CardContent>
             </Card>

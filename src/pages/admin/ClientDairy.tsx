@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Eye, ThumbsUp, Trash2, ArrowLeft, Plus, Link as LinkIcon, Share2, Send, Camera, Heart } from "lucide-react";
+import { Check, X, Eye, ThumbsUp, Trash2, ArrowLeft, Plus, Link as LinkIcon, Share2, Send, Camera, Heart, Sparkles, MessageCircle, ExternalLink, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -53,9 +53,16 @@ const AdminClientDairy = () => {
         setLoadingStats(true);
         try {
             const { data, error } = await supabase
-                .from('client_dairy_activity')
-                .select('*')
-                .eq('post_id', postId)
+                .from('site_activity')
+                .select(`
+                    *,
+                    profiles:user_id (
+                        name,
+                        phone
+                    )
+                `)
+                .eq('entity_id', postId)
+                .eq('entity_type', 'client_dairy')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -369,8 +376,9 @@ const AdminClientDairy = () => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Type</TableHead>
+                                        <TableHead>Platform</TableHead>
                                         <TableHead>Date & Time</TableHead>
-                                        <TableHead>User ID</TableHead>
+                                        <TableHead>User Details</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -381,11 +389,20 @@ const AdminClientDairy = () => {
                                                     {stat.type}
                                                 </Badge>
                                             </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="capitalize text-[10px]">
+                                                    {stat.platform || 'native'}
+                                                </Badge>
+                                            </TableCell>
                                             <TableCell className="text-sm">
                                                 {new Date(stat.created_at).toLocaleString()}
                                             </TableCell>
-                                            <TableCell className="font-mono text-[10px] text-muted-foreground">
-                                                {stat.user_id || 'Anonymous Guest'}
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-xs">{stat.profiles?.name || 'Guest'}</span>
+                                                    <span className="text-[10px] text-muted-foreground">{stat.profiles?.phone || 'No phone'}</span>
+                                                    <span className="font-mono text-[8px] opacity-50">{stat.user_id || 'Anonymous'}</span>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}

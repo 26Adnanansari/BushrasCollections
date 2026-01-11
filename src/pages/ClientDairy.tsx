@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Heart, Share2, MessageCircle, ExternalLink, Check, X, ThumbsUp } from "lucide-react";
+import { Sparkles, Heart, Share2, MessageCircle, ExternalLink, Check, X, ThumbsUp, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth";
 import { Separator } from "@/components/ui/separator";
+import { ShareModal } from "@/components/ShareModal";
 
 const ClientDairy = () => {
     const { toast } = useToast();
@@ -19,6 +20,8 @@ const ClientDairy = () => {
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState<any>(null);
     const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [sharingPost, setSharingPost] = useState<any>(null);
 
     useEffect(() => {
         fetchPosts();
@@ -79,9 +82,10 @@ const ClientDairy = () => {
         // Update DB via secure RPC
         try {
             const { error } = await supabase
-                .rpc('increment_dairy_stat', {
-                    post_id: postId,
-                    stat_type: 'like'
+                .rpc('record_site_interaction', {
+                    p_entity_type: 'client_dairy',
+                    p_entity_id: postId,
+                    p_type: 'like'
                 });
 
             if (error) throw error;
@@ -90,43 +94,9 @@ const ClientDairy = () => {
         }
     };
 
-    const handleShare = async (post: any) => {
-        const shareData = {
-            title: "KAMI Moment - Bushra's Collection",
-            text: `Check out this beautiful moment from ${post.profiles?.name || 'a customer'} at Bushra's Collection!`,
-            url: window.location.href, // Link to the moments page for now
-        };
-
-        try {
-            if (navigator.share) {
-                await navigator.share(shareData);
-            } else {
-                await navigator.clipboard.writeText(window.location.href);
-                toast({
-                    title: "Link Copied!",
-                    description: "Share it with your friends to show the style.",
-                });
-            }
-
-            // Update shares_count in DB via secure RPC
-            const { error } = await supabase
-                .rpc('increment_dairy_stat', {
-                    post_id: post.id,
-                    stat_type: 'share'
-                });
-
-            if (!error) {
-                const updatePosts = (prev: any[]) => prev.map(p =>
-                    p.id === post.id ? { ...p, shares_count: (p.shares_count || 0) + 1 } : p
-                );
-                setPosts(updatePosts);
-                if (selectedPost?.id === post.id) {
-                    setSelectedPost((prev: any) => ({ ...prev, shares_count: (prev.shares_count || 0) + 1 }));
-                }
-            }
-        } catch (error) {
-            console.error('Sharing failed', error);
-        }
+    const handleShare = (post: any) => {
+        setSharingPost(post);
+        setIsShareModalOpen(true);
     };
 
     const updatePostStatus = async (id: string, status: 'approved' | 'rejected') => {
@@ -433,6 +403,15 @@ const ClientDairy = () => {
                         )}
                     </DialogContent>
                 </Dialog>
+
+                <ShareModal
+                    isOpen={isShareModalOpen}
+                    onOpenChange={setIsShareModalOpen}
+                    entityType="client_dairy"
+                    entityId={sharingPost?.id || ""}
+                    entityName={`Moment from ${sharingPost?.profiles?.name || 'Vivid Soul'}`}
+                    image={sharingPost?.images?.[0]}
+                />
             </div>
         </div>
     );

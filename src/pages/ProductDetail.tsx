@@ -17,6 +17,7 @@ import { ReviewSummary } from "@/components/reviews/ReviewSummary";
 import { ReviewsList } from "@/components/reviews/ReviewsList";
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ShareModal } from "@/components/ShareModal";
 
 interface Product {
   id: string;
@@ -47,6 +48,7 @@ const ProductDetail = () => {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isZoomed, setIsZoomed] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Variation State
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -173,23 +175,24 @@ const ProductDetail = () => {
     });
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.name,
-          text: `Check out ${product.name} on Bushra's Collection!`,
-          url: window.location.href,
-        });
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link Copied",
-        description: "Product link copied to clipboard",
+  const handleShare = () => {
+    setIsShareModalOpen(true);
+  };
+
+  const handleLike = async () => {
+    if (!product) return;
+
+    // Original wishlist logic (if any) could go here
+
+    try {
+      await supabase.rpc('record_site_interaction', {
+        p_entity_type: 'product',
+        p_entity_id: product.id,
+        p_type: 'like'
       });
+      toast({ title: "Product Saved", description: "This has been added to your interests." });
+    } catch (err) {
+      console.error('Error liking product:', err);
     }
   };
 
@@ -457,7 +460,7 @@ const ProductDetail = () => {
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </Button>
-                <Button variant="outline" size="lg" className="w-12 px-0">
+                <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleLike}>
                   <Heart className="h-5 w-5" />
                 </Button>
                 <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleShare}>
@@ -640,6 +643,16 @@ const ProductDetail = () => {
       </div>
 
       <Footer />
+      {product && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onOpenChange={setIsShareModalOpen}
+          entityType="product"
+          entityId={product.id}
+          entityName={product.name}
+          image={productImages[0]}
+        />
+      )}
     </main>
   );
 };

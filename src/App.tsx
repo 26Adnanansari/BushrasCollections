@@ -39,6 +39,7 @@ import ClientDairy from "./pages/ClientDairy";
 import AdminClientDairy from "./pages/admin/ClientDairy";
 import ShippingSettings from "./pages/admin/ShippingSettings";
 import OfferManagement from "./pages/admin/OfferManagement";
+import AdminSocialAnalytics from "./pages/admin/SocialAnalytics";
 
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
@@ -122,6 +123,7 @@ const App = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/admin/shipping" element={<ProtectedRoute requireAdmin><ShippingSettings /></ProtectedRoute>} />
         <Route path="/admin/offers" element={<ProtectedRoute requireAdmin><OfferManagement /></ProtectedRoute>} />
+        <Route path="/admin/social-analytics" element={<ProtectedRoute requireAdmin><AdminSocialAnalytics /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
