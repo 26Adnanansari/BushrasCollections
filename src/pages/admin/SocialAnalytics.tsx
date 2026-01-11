@@ -28,7 +28,7 @@ const SocialAnalytics = () => {
                 .select(`
                     *,
                     profiles:user_id (name, phone),
-                    products:entity_id (name)
+                    products:product_id (name)
                 `)
                 .order('created_at', { ascending: false });
 

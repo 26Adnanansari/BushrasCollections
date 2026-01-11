@@ -59,10 +59,10 @@ const AdminClientDairy = () => {
                     profiles:user_id (
                         name,
                         phone
-                    )
+                    ),
+                    client_dairy:dairy_id (id)
                 `)
-                .eq('entity_id', postId)
-                .eq('entity_type', 'client_dairy')
+                .eq('dairy_id', postId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
