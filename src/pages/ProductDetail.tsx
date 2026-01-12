@@ -53,6 +53,8 @@ const ProductDetail = () => {
   // Variation State
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
+  const searchParams = new URLSearchParams(location.search);
+  const refId = searchParams.get('ref');
 
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
@@ -108,6 +110,27 @@ const ProductDetail = () => {
 
     fetchProduct();
   }, [slug]);
+
+  // Record view interaction when product data is loaded
+  useEffect(() => {
+    if (product) {
+      recordView();
+    }
+  }, [product]);
+
+  const recordView = async () => {
+    if (!product) return;
+    try {
+      await supabase.rpc('record_site_interaction', {
+        p_entity_type: 'product',
+        p_entity_id: product.id,
+        p_type: 'view',
+        p_referrer_id: refId
+      });
+    } catch (err) {
+      console.error('Error recording view:', err);
+    }
+  };
 
   // Reset selections when product changes
   useEffect(() => {

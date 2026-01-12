@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Orders = () => {
   const [orders, setOrders] = useState<any[]>([]);
+  const [existingPosts, setExistingPosts] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -37,6 +38,20 @@ const Orders = () => {
 
       if (error) throw error;
       setOrders(data || []);
+
+      // Fetch existing posts for these orders
+      if (data && data.length > 0) {
+        const { data: posts } = await supabase
+          .from('client_dairy')
+          .select('order_id')
+          .in('order_id', data.map(o => o.id));
+
+        const postMap: Record<string, boolean> = {};
+        posts?.forEach(p => {
+          if (p.order_id) postMap[p.order_id] = true;
+        });
+        setExistingPosts(postMap);
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -127,13 +142,23 @@ const Orders = () => {
                           <Eye className="h-4 w-4 mr-2" />
                           Details
                         </Button>
-                        {order.status !== 'cancelled' && (
+                        {order.status !== 'cancelled' && !existingPosts[order.id] && (
                           <Button
                             className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 flex-1 sm:flex-none"
                             onClick={() => navigate(`/client-dairy/post/${order.order_number || order.id}`)}
                           >
                             <Camera className="h-4 w-4 mr-2" />
                             Share Moment
+                          </Button>
+                        )}
+                        {existingPosts[order.id] && (
+                          <Button
+                            variant="ghost"
+                            className="text-green-600 font-bold flex-1 sm:flex-none"
+                            disabled
+                          >
+                            <Camera className="h-4 w-4 mr-2" />
+                            Shared
                           </Button>
                         )}
                       </div>

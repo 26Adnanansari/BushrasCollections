@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, Share2, ExternalLink, Sparkles, Copy, Facebook } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/store/auth";
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ interface ShareModalProps {
 
 export const ShareModal = ({ isOpen, onOpenChange, entityType, entityId, entityName, image }: ShareModalProps) => {
     const { toast } = useToast();
+    const { user } = useAuthStore();
 
     const recordShare = async (platform: string) => {
         try {
@@ -30,9 +32,12 @@ export const ShareModal = ({ isOpen, onOpenChange, entityType, entityId, entityN
         }
     };
 
-    const handleShare = async (platform: string) => {
-        const shareUrl = window.location.href;
-        const shareText = `Check out ${entityName} at Bushra's Collection! 💎✨`;
+    const handleSharePlatform = async (platform: string) => {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const refSuffix = user?.id ? `?ref=${user.id}` : '';
+        const shareUrl = baseUrl + refSuffix;
+
+        const shareText = `Check out ${entityName} at Bushra's Collection!`;
 
         let url = "";
         switch (platform) {
@@ -80,21 +85,21 @@ export const ShareModal = ({ isOpen, onOpenChange, entityType, entityId, entityN
 
                     <div className="grid grid-cols-2 gap-4 mt-8">
                         <Button
-                            onClick={() => handleShare('whatsapp')}
+                            onClick={() => handleSharePlatform('whatsapp')}
                             className="bg-[#25D366] hover:bg-[#128C7E] text-white flex flex-col h-auto py-6 rounded-3xl gap-2 shadow-lg hover:scale-105 transition-all border-none"
                         >
                             <Phone className="h-7 w-7" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">WhatsApp</span>
                         </Button>
                         <Button
-                            onClick={() => handleShare('facebook')}
+                            onClick={() => handleSharePlatform('facebook')}
                             className="bg-[#1877F2] hover:bg-[#0d6efd] text-white flex flex-col h-auto py-6 rounded-3xl gap-2 shadow-lg hover:scale-105 transition-all border-none"
                         >
                             <Facebook className="h-7 w-7" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Facebook</span>
                         </Button>
                         <Button
-                            onClick={() => handleShare('copy')}
+                            onClick={() => handleSharePlatform('copy')}
                             variant="outline"
                             className="flex flex-col h-auto py-6 rounded-3xl gap-2 border-primary/20 hover:bg-primary/5 shadow-md hover:scale-105 transition-all"
                         >
@@ -103,7 +108,7 @@ export const ShareModal = ({ isOpen, onOpenChange, entityType, entityId, entityN
                         </Button>
                         {navigator.share && (
                             <Button
-                                onClick={() => handleShare('native')}
+                                onClick={() => handleSharePlatform('native')}
                                 variant="outline"
                                 className="flex flex-col h-auto py-6 rounded-3xl gap-2 border-primary/20 hover:bg-primary/5 shadow-md hover:scale-105 transition-all"
                             >

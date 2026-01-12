@@ -22,6 +22,8 @@ const ClientDairy = () => {
     const [selectedImageIdx, setSelectedImageIdx] = useState(0);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [sharingPost, setSharingPost] = useState<any>(null);
+    const searchParams = new URLSearchParams(window.location.search);
+    const refId = searchParams.get('ref');
 
     useEffect(() => {
         fetchPosts();
@@ -91,6 +93,23 @@ const ClientDairy = () => {
             if (error) throw error;
         } catch (error) {
             console.error('Error liking post:', error);
+        }
+    };
+
+    const handleOpenPost = async (post: any) => {
+        setSelectedPost(post);
+        setSelectedImageIdx(0);
+
+        // Record view interaction
+        try {
+            await supabase.rpc('record_site_interaction', {
+                p_entity_type: 'client_dairy',
+                p_entity_id: post.id,
+                p_type: 'view',
+                p_referrer_id: refId
+            });
+        } catch (err) {
+            console.error('Error recording view:', err);
         }
     };
 
@@ -176,7 +195,7 @@ const ClientDairy = () => {
                                     transition={{ delay: idx * 0.1 }}
                                 >
                                     <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-3xl bg-card/60 backdrop-blur-xl border border-white/20">
-                                        <div className="relative aspect-[4/5] overflow-hidden">
+                                        <div className="relative aspect-[4/5] overflow-hidden cursor-pointer" onClick={() => handleOpenPost(post)}>
                                             <img
                                                 src={post.images[0]}
                                                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -246,10 +265,7 @@ const ClientDairy = () => {
                                                     {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </span>
                                                 <Button
-                                                    onClick={() => {
-                                                        setSelectedPost(post);
-                                                        setSelectedImageIdx(0);
-                                                    }}
+                                                    onClick={() => handleOpenPost(post)}
                                                     variant="link"
                                                     size="sm"
                                                     className="h-auto p-0 text-xs font-bold text-primary group-hover:underline"

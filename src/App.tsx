@@ -1,45 +1,50 @@
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route, useLocation } from "react-router-dom";
-import Profile from "./pages/Profile";
-import Dashboard from "./pages/Dashboard";
-import Promotions from "./pages/admin/Promotions";
 import { useAuthStore } from "@/store/auth";
 import { useVisitorStore } from "@/store/visitor";
 import { useWishlistStore } from "@/store/wishlist";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Products from "./pages/Products";
-import ProductDetail from "./pages/ProductDetail";
-import Wishlist from "./pages/Wishlist";
-import Checkout from "./pages/Checkout";
-import Orders from "./pages/Orders";
-import OrderTracking from "./pages/OrderTracking";
-import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminBanners from "./pages/admin/Banners";
-import AdminProducts from "./pages/admin/Products";
-import AdminOrders from "./pages/admin/Orders";
-import AdminUsers from "./pages/admin/Users";
-import AdminHeroSlider from "./pages/admin/HeroSlider";
-import AdminAnalytics from "./pages/admin/Analytics";
-import AdminTeam from "./pages/admin/Team";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import AdminPermissionManagement from "./pages/admin/PermissionManagement";
-import AdminOrderDetails from "./pages/admin/OrderDetails";
-import AdminPaymentMethods from "./pages/admin/PaymentMethods";
-import AdminReviews from "./pages/admin/Reviews";
-import AnalyticsHelp from "./pages/admin/AnalyticsHelp";
-import ClientDairyPost from "./pages/ClientDairyPost";
-import ClientDairy from "./pages/ClientDairy";
-import AdminClientDairy from "./pages/admin/ClientDairy";
-import ShippingSettings from "./pages/admin/ShippingSettings";
-import OfferManagement from "./pages/admin/OfferManagement";
-import AdminSocialAnalytics from "./pages/admin/SocialAnalytics";
+import PageLoader from "@/components/PageLoader";
+
+// Lazy Load Pages
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Products = lazy(() => import("./pages/Products"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Orders = lazy(() => import("./pages/Orders"));
+const OrderTracking = lazy(() => import("./pages/OrderTracking"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ClientDairyPost = lazy(() => import("./pages/ClientDairyPost"));
+const ClientDairy = lazy(() => import("./pages/ClientDairy"));
+
+// Admin Pages
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminBanners = lazy(() => import("./pages/admin/Banners"));
+const AdminProducts = lazy(() => import("./pages/admin/Products"));
+const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminHeroSlider = lazy(() => import("./pages/admin/HeroSlider"));
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+const AdminTeam = lazy(() => import("./pages/admin/Team"));
+const Promotions = lazy(() => import("./pages/admin/Promotions"));
+const AdminPermissionManagement = lazy(() => import("./pages/admin/PermissionManagement"));
+const AdminOrderDetails = lazy(() => import("./pages/admin/OrderDetails"));
+const AdminPaymentMethods = lazy(() => import("./pages/admin/PaymentMethods"));
+const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
+const AnalyticsHelp = lazy(() => import("./pages/admin/AnalyticsHelp"));
+const ShippingSettings = lazy(() => import("./pages/admin/ShippingSettings"));
+const OfferManagement = lazy(() => import("./pages/admin/OfferManagement"));
+const AdminSocialAnalytics = lazy(() => import("./pages/admin/SocialAnalytics"));
+const AdminClientDairy = lazy(() => import("./pages/admin/ClientDairy"));
 
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
@@ -88,44 +93,46 @@ const App = () => {
 
   return (
     <TooltipProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/client-dairy" element={<ClientDairy />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/product/:slug" element={<ProductDetail />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-        <Route path="/orders/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
-        <Route path="/client-dairy/post/:orderId" element={<ProtectedRoute><ClientDairyPost /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/products" element={<ProtectedRoute requireAdmin><AdminProducts /></ProtectedRoute>} />
-        <Route path="/admin/banners" element={<ProtectedRoute requireAdmin><AdminBanners /></ProtectedRoute>} />
-        <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminOrders /></ProtectedRoute>} />
-        <Route path="/admin/orders/:orderId" element={<ProtectedRoute requireAdmin><AdminOrderDetails /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
-        <Route path="/admin/hero-slider" element={<ProtectedRoute requireAdmin><AdminHeroSlider /></ProtectedRoute>} />
-        <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AdminAnalytics /></ProtectedRoute>} />
-        <Route path="/admin/analytics-help" element={<ProtectedRoute requireAdmin><AnalyticsHelp /></ProtectedRoute>} />
-        <Route path="/admin/team" element={<ProtectedRoute requireAdmin><AdminTeam /></ProtectedRoute>} />
-        <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
-        <Route path="/admin/client-dairy" element={<ProtectedRoute requireAdmin><AdminClientDairy /></ProtectedRoute>} />
-        <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />
-        <Route path="/admin/payment-methods" element={<ProtectedRoute requireAdmin><AdminPaymentMethods /></ProtectedRoute>} />
-        <Route path="/admin/reviews" element={<ProtectedRoute requireAdmin><AdminReviews /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/admin/shipping" element={<ProtectedRoute requireAdmin><ShippingSettings /></ProtectedRoute>} />
-        <Route path="/admin/offers" element={<ProtectedRoute requireAdmin><OfferManagement /></ProtectedRoute>} />
-        <Route path="/admin/social-analytics" element={<ProtectedRoute requireAdmin><AdminSocialAnalytics /></ProtectedRoute>} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/client-dairy" element={<ClientDairy />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/product/:slug" element={<ProductDetail />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/orders/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+          <Route path="/client-dairy/post/:orderId" element={<ProtectedRoute><ClientDairyPost /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/products" element={<ProtectedRoute requireAdmin><AdminProducts /></ProtectedRoute>} />
+          <Route path="/admin/banners" element={<ProtectedRoute requireAdmin><AdminBanners /></ProtectedRoute>} />
+          <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminOrders /></ProtectedRoute>} />
+          <Route path="/admin/orders/:orderId" element={<ProtectedRoute requireAdmin><AdminOrderDetails /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/hero-slider" element={<ProtectedRoute requireAdmin><AdminHeroSlider /></ProtectedRoute>} />
+          <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AdminAnalytics /></ProtectedRoute>} />
+          <Route path="/admin/analytics-help" element={<ProtectedRoute requireAdmin><AnalyticsHelp /></ProtectedRoute>} />
+          <Route path="/admin/team" element={<ProtectedRoute requireAdmin><AdminTeam /></ProtectedRoute>} />
+          <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
+          <Route path="/admin/client-dairy" element={<ProtectedRoute requireAdmin><AdminClientDairy /></ProtectedRoute>} />
+          <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />
+          <Route path="/admin/payment-methods" element={<ProtectedRoute requireAdmin><AdminPaymentMethods /></ProtectedRoute>} />
+          <Route path="/admin/reviews" element={<ProtectedRoute requireAdmin><AdminReviews /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/admin/shipping" element={<ProtectedRoute requireAdmin><ShippingSettings /></ProtectedRoute>} />
+          <Route path="/admin/offers" element={<ProtectedRoute requireAdmin><OfferManagement /></ProtectedRoute>} />
+          <Route path="/admin/social-analytics" element={<ProtectedRoute requireAdmin><AdminSocialAnalytics /></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </TooltipProvider>
   );
 };

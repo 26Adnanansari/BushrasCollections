@@ -21,6 +21,7 @@ const ClientDairyPost = () => {
     const [images, setImages] = useState<string[]>([]);
     const [content, setContent] = useState("");
     const [order, setOrder] = useState<any>(null);
+    const [alreadyPosted, setAlreadyPosted] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -51,6 +52,17 @@ const ClientDairyPost = () => {
 
             if (error) throw error;
             setOrder(data);
+
+            // Check if post already exists
+            const { data: existing } = await supabase
+                .from('client_dairy')
+                .select('id')
+                .eq('order_id', data.id)
+                .single();
+
+            if (existing) {
+                setAlreadyPosted(true);
+            }
         } catch (error) {
             console.error('Error fetching order:', error);
         }
@@ -110,13 +122,15 @@ const ClientDairyPost = () => {
                                     <Sparkles className="h-5 w-5" />
                                 </div>
                                 <h1 className="text-2xl font-serif font-bold">
-                                    {orderId === 'external' ? 'Share Your Moment' : 'Client Dairy'}
+                                    {alreadyPosted ? 'Moment Already Shared' : orderId === 'external' ? 'Share Your Moment' : 'Client Dairy'}
                                 </h1>
                             </div>
                             <p className="text-muted-foreground">
-                                {orderId === 'external'
-                                    ? "We'd love to see how you styled your favorites from Bushra's Collection!"
-                                    : "Share your beautiful moments with our collection"}
+                                {alreadyPosted
+                                    ? "You've already shared a moment for this order. Thank you for your review!"
+                                    : orderId === 'external'
+                                        ? "We'd love to see how you styled your favorites from Bushra's Collection!"
+                                        : "Share your beautiful moments with our collection"}
                             </p>
                         </div>
 
@@ -130,6 +144,7 @@ const ClientDairyPost = () => {
                                         onChange={(e) => setContent(e.target.value)}
                                         className="min-h-[120px] resize-none focus:ring-primary"
                                         required
+                                        disabled={alreadyPosted}
                                     />
                                 </div>
 
@@ -147,6 +162,7 @@ const ClientDairyPost = () => {
                                                     type="button"
                                                     onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}
                                                     className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    disabled={alreadyPosted}
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>
@@ -175,6 +191,7 @@ const ClientDairyPost = () => {
                                                             }
                                                         }
                                                     }}
+                                                    disabled={alreadyPosted}
                                                 />
                                             </label>
                                         )}
@@ -192,10 +209,10 @@ const ClientDairyPost = () => {
                                 <Button
                                     type="submit"
                                     className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20"
-                                    disabled={loading}
+                                    disabled={loading || alreadyPosted}
                                 >
                                     <Send className="h-5 w-5 mr-2" />
-                                    {loading ? 'Posting...' : 'Share My Moment'}
+                                    {loading ? 'Posting...' : alreadyPosted ? 'Already Posted' : 'Share My Moment'}
                                 </Button>
                             </form>
                         </CardContent>
