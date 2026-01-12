@@ -16,7 +16,12 @@ ALTER TABLE public.marketing_leads ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can manage marketing leads" 
 ON public.marketing_leads 
 FOR ALL 
-USING (auth.uid() IN (SELECT id FROM public.profiles WHERE 'admin' = ANY(roles)));
+USING (
+    EXISTS (
+        SELECT 1 FROM public.user_roles 
+        WHERE user_id = auth.uid() AND (role = 'admin' OR role = 'super_admin')
+    )
+);
 
 CREATE POLICY "Anonymous can insert leads" 
 ON public.marketing_leads 
