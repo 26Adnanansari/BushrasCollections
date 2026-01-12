@@ -353,9 +353,11 @@ const AdminProducts = () => {
       fetchProducts();
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation Error Details:', error.issues);
+        const errorMessages = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
         toast({
           title: "Validation Error",
-          description: error.issues[0].message,
+          description: errorMessages,
           variant: "destructive"
         });
       } else {
@@ -606,7 +608,7 @@ const AdminProducts = () => {
                           value={formData.category}
                           onValueChange={(value) => setFormData({ ...formData, category: value })}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger id="category" name="category" className="w-full">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
@@ -618,9 +620,10 @@ const AdminProducts = () => {
                         </Select>
                         {formData.category === '__custom__' && (
                           <div className="mt-2 animate-in fade-in slide-in-from-top-1">
-                            <Label htmlFor="custom-category" className="text-xs mb-1 block">New Category Name</Label>
+                            <Label htmlFor="custom_category" className="text-xs mb-1 block">New Category Name</Label>
                             <Input
-                              id="custom-category"
+                              id="custom_category"
+                              name="custom_category"
                               placeholder="Enter custom category"
                               value={customCategory}
                               onChange={(e) => setCustomCategory(e.target.value)}
@@ -636,6 +639,7 @@ const AdminProducts = () => {
                       <Label htmlFor="brand" className="text-sm font-medium mb-1.5 block">Brand *</Label>
                       <Input
                         id="brand"
+                        name="brand"
                         value={formData.brand}
                         onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                         required
@@ -648,6 +652,7 @@ const AdminProducts = () => {
                       <Label htmlFor="price" className="text-sm font-medium mb-1.5 block">Sale Price (PKR) *</Label>
                       <Input
                         id="price"
+                        name="price"
                         type="number"
                         step="0.01"
                         value={formData.price}
@@ -660,6 +665,7 @@ const AdminProducts = () => {
                       <Label htmlFor="list_price" className="text-sm font-medium mb-1.5 block">List Price (PKR) (Optional)</Label>
                       <Input
                         id="list_price"
+                        name="list_price"
                         type="number"
                         step="0.01"
                         value={formData.list_price}
@@ -674,6 +680,7 @@ const AdminProducts = () => {
                       <Label htmlFor="stock_quantity" className="text-sm font-medium mb-1.5 block">Stock Quantity *</Label>
                       <Input
                         id="stock_quantity"
+                        name="stock_quantity"
                         type="number"
                         value={formData.stock_quantity}
                         onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
@@ -739,7 +746,7 @@ const AdminProducts = () => {
                                 value={formData.fabric_type || ''}
                                 onValueChange={(value) => setFormData({ ...formData, fabric_type: value })}
                               >
-                                <SelectTrigger className="h-11">
+                                <SelectTrigger id="fabric_type" name="fabric_type" className="h-11">
                                   <SelectValue placeholder="Select fabric" />
                                 </SelectTrigger>
                                 <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
@@ -794,7 +801,7 @@ const AdminProducts = () => {
                               value={formData.occasion_type}
                               onValueChange={(value) => setFormData({ ...formData, occasion_type: value })}
                             >
-                              <SelectTrigger className="h-11">
+                              <SelectTrigger id="occasion_type" name="occasion_type" className="h-11">
                                 <SelectValue placeholder="Select occasion" />
                               </SelectTrigger>
                               <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
@@ -841,6 +848,7 @@ const AdminProducts = () => {
                             <Label htmlFor="available_colors" className="text-sm font-medium mb-1.5 block">Available Colors</Label>
                             <Input
                               id="available_colors"
+                              name="available_colors"
                               placeholder="e.g., Red, Blue, Green (comma-separated)"
                               value={Array.isArray(formData.available_colors) ? formData.available_colors.join(', ') : ''}
                               className="h-11"
@@ -887,9 +895,11 @@ const AdminProducts = () => {
 
                             {/* Custom embellishment input */}
                             <div>
-                              <Label className="text-sm font-medium mb-1.5 block">Add Custom Embellishment</Label>
+                              <Label htmlFor="custom_emb" className="text-sm font-medium mb-1.5 block">Add Custom Embellishment</Label>
                               <div className="flex gap-2">
                                 <Input
+                                  id="custom_emb"
+                                  name="custom_emb"
                                   placeholder="Enter custom embellishment..."
                                   className="h-11"
                                   onKeyDown={(e) => {
@@ -961,6 +971,7 @@ const AdminProducts = () => {
                             <Label htmlFor="care_instructions" className="text-sm font-medium mb-1.5 block">Care Instructions</Label>
                             <Textarea
                               id="care_instructions"
+                              name="care_instructions"
                               value={formData.care_instructions}
                               onChange={(e) => setFormData({ ...formData, care_instructions: e.target.value })}
                               rows={3}

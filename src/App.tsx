@@ -6,6 +6,7 @@ import { useVisitorStore } from "@/store/visitor";
 import { useWishlistStore } from "@/store/wishlist";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import PageLoader from "@/components/PageLoader";
+import { ViralHandshake } from "@/components/ViralHandshake";
 
 // Lazy Load Pages
 const Index = lazy(() => import("./pages/Index"));
@@ -94,6 +95,7 @@ const App = () => {
   return (
     <TooltipProvider>
       <Suspense fallback={<PageLoader />}>
+        <ViralHandshake />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/client-dairy" element={<ClientDairy />} />

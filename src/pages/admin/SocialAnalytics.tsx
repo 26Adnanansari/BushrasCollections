@@ -14,6 +14,7 @@ import { format, subDays, startOfDay } from 'date-fns';
 const SocialAnalytics = () => {
     const [activities, setActivities] = useState<any[]>([]);
     const [referrers, setReferrers] = useState<any[]>([]);
+    const [leads, setLeads] = useState<any[]>([]);
     const [chartData, setChartData] = useState<any[]>([]);
     const [stats, setStats] = useState({ totalShares: 0, totalLikes: 0, totalReferrals: 0, topProduct: "" });
     const [loading, setLoading] = useState(true);
@@ -107,6 +108,13 @@ const SocialAnalytics = () => {
             });
 
             setChartData(Object.values(dateMap).reverse());
+
+            // Fetch Marketing Leads
+            const { data: leadsData } = await supabase
+                .from('marketing_leads')
+                .select('*, referrer:referrer_id(name, phone)')
+                .order('created_at', { ascending: false });
+            setLeads(leadsData || []);
 
         } catch (error: any) {
             toast({ title: "Failed to fetch analytics", description: error.message, variant: "destructive" });
@@ -339,6 +347,72 @@ const SocialAnalytics = () => {
                                                         ) : (
                                                             <span className="text-xs text-muted-foreground">Direct/Manual</span>
                                                         )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Viral Leads Section - NEW */}
+                    <div className="mt-12">
+                        <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-primary/5">
+                            <CardHeader className="bg-primary/10 border-b border-primary/10">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="font-serif flex items-center gap-2 text-2xl">
+                                            <Users className="h-6 w-6 text-primary" />
+                                            Referred Guests (The "Whom")
+                                        </CardTitle>
+                                        <CardDescription>Viral leads captured via friend recommendations.</CardDescription>
+                                    </div>
+                                    <Badge className="bg-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                                        {leads.length} Active Leads
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {leads.length === 0 ? (
+                                    <div className="text-center py-20 text-muted-foreground italic">No viral leads captured yet.</div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader className="bg-primary/5">
+                                            <TableRow>
+                                                <TableHead className="font-bold text-primary">Guest Name</TableHead>
+                                                <TableHead className="font-bold text-primary">WhatsApp / Phone</TableHead>
+                                                <TableHead className="font-bold text-primary">Referred By (The "Who")</TableHead>
+                                                <TableHead className="font-bold text-primary">Date Captured</TableHead>
+                                                <TableHead className="font-bold text-primary text-right">Status</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {leads.map((lead) => (
+                                                <TableRow key={lead.id} className="hover:bg-primary/10 transition-colors">
+                                                    <TableCell className="font-bold text-lg">{lead.full_name || 'Incognito Guest'}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="p-1.5 bg-green-100 rounded-full">
+                                                                <Phone className="h-3 w-3 text-green-600" />
+                                                            </div>
+                                                            <span className="font-medium">{lead.phone}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-sm">{lead.referrer?.name || 'Unknown'}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{lead.referrer?.phone}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-sm opacity-70">
+                                                        {format(new Date(lead.created_at), 'MMM dd, yyyy p')}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Badge variant="outline" className="border-primary/30 text-primary uppercase text-[10px] font-bold p-1 px-3">
+                                                            {lead.status}
+                                                        </Badge>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
