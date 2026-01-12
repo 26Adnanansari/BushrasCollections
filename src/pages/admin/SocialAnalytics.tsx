@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format, subDays, startOfDay } from 'date-fns';
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 const SocialAnalytics = () => {
     const [activities, setActivities] = useState<any[]>([]);
@@ -147,7 +148,14 @@ const SocialAnalytics = () => {
                                 <Share2 className="h-16 w-16" />
                             </div>
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-bold uppercase tracking-widest text-primary">Viral Shares</CardTitle>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-primary">Viral Shares</CardTitle>
+                                    <HelperGuide
+                                        title="Viral Shares"
+                                        purpose="Tracks how many times users clicked the WhatsApp/Social share buttons on product pages."
+                                        usage="High numbers here indicate which products have the most 'talkability' among friends."
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-4xl font-bold">{stats.totalShares}</div>
@@ -160,7 +168,14 @@ const SocialAnalytics = () => {
                                 <Heart className="h-16 w-16 text-red-500" />
                             </div>
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-bold uppercase tracking-widest text-red-500">Love & Likes</CardTitle>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-red-500">Love & Likes</CardTitle>
+                                    <HelperGuide
+                                        title="Product Likes"
+                                        purpose="Measures internal 'Wishlist' heart clicks on products."
+                                        usage="Products with many likes but low shares might be 'dream items' that people intend to buy later."
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-4xl font-bold">{stats.totalLikes}</div>
@@ -173,7 +188,14 @@ const SocialAnalytics = () => {
                                 <TrendingUp className="h-16 w-16 text-blue-500" />
                             </div>
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-bold uppercase tracking-widest text-blue-500">Trending Now</CardTitle>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-blue-500">Trending Now</CardTitle>
+                                    <HelperGuide
+                                        title="Trending"
+                                        purpose="Identifies the specific item getting the most interaction in the last 7 days."
+                                        usage="Consider running a limited-time offer on this item to capitalize on the existing momentum."
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold truncate pr-8">{stats.topProduct}</div>
@@ -185,8 +207,17 @@ const SocialAnalytics = () => {
                     {/* Daily Trends Chart */}
                     <Card className="rounded-3xl border-none shadow-xl overflow-hidden mb-12 bg-white/50 backdrop-blur-md">
                         <CardHeader>
-                            <CardTitle className="font-serif">Social Engagement Trends</CardTitle>
-                            <CardDescription>Daily breakdown of how users interact with your collection.</CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="font-serif">Social Engagement Trends</CardTitle>
+                                    <CardDescription>Daily breakdown of how users interact with your collection.</CardDescription>
+                                </div>
+                                <HelperGuide
+                                    title="Engagement Chart"
+                                    purpose="Visualizes the daily growth of shares, likes, and clicks over time."
+                                    usage="Look for peaks—these usually align with your Instagram/TikTok posts or weekend shopping surges."
+                                />
+                            </div>
                         </CardHeader>
                         <CardContent className="h-[300px] w-full pt-4">
                             <ResponsiveContainer width="100%" height="100%">
@@ -369,9 +400,16 @@ const SocialAnalytics = () => {
                                         </CardTitle>
                                         <CardDescription>Viral leads captured via friend recommendations.</CardDescription>
                                     </div>
-                                    <Badge className="bg-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                                        {leads.length} Active Leads
-                                    </Badge>
+                                    <div className="flex items-center gap-3">
+                                        <HelperGuide
+                                            title="Viral Leads"
+                                            purpose="The most valuable table. Shows people who clicked a friend's link and submitted their WhatsApp for a discount."
+                                            usage="Contact these leads via WhatsApp immediately while their interest is fresh!"
+                                        />
+                                        <Badge className="bg-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                                            {leads.length} Active Leads
+                                        </Badge>
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
@@ -424,7 +462,7 @@ const SocialAnalytics = () => {
                     </div>
 
                     <div className="mt-8 flex justify-center">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-bold opacity-40">Powered by Vivid Soul Analytics</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-bold opacity-40">Powered by PakAiVerse Analytics</p>
                     </div>
                 </div>
             </div>

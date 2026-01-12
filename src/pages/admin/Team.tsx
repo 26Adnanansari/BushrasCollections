@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Mail, Shield, User, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 interface TeamMember {
     id: string;
@@ -166,11 +167,18 @@ const Team = () => {
                 <Card>
                     <CardHeader>
                         <div className="flex justify-between items-center">
-                            <div>
-                                <CardTitle>Team Management</CardTitle>
-                                <CardDescription>
-                                    Manage staff members and their roles
-                                </CardDescription>
+                            <div className="flex items-center gap-3">
+                                <div>
+                                    <CardTitle>Team Management</CardTitle>
+                                    <CardDescription>
+                                        Manage staff members and their roles
+                                    </CardDescription>
+                                </div>
+                                <HelperGuide
+                                    title="Team Collaboration"
+                                    purpose="Internal access control. Grant 'Admin' or 'Staff' roles to your employees."
+                                    usage="Members must sign up with their email first. Then you can add them here to give them dashboard access."
+                                />
                             </div>
                             <Button onClick={() => setDialogOpen(true)}>
                                 <Plus className="h-4 w-4 mr-2" />

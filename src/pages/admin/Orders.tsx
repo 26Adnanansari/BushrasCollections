@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, RefreshCw, ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 interface Order {
   id: string;
@@ -162,10 +163,19 @@ const AdminOrders = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>All Orders</CardTitle>
-              <CardDescription>
-                Manage customer orders and update their status
-              </CardDescription>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <CardTitle>All Orders</CardTitle>
+                  <CardDescription>
+                    Manage customer orders and update their status
+                  </CardDescription>
+                </div>
+                <HelperGuide
+                  title="Orders"
+                  purpose="Central hub for sales. Track pending, processing, and shipped orders."
+                  usage="Click 'View' for shipping labels/details. Mark as 'Delivered' to trigger feedback requests."
+                />
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (

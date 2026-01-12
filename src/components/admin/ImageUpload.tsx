@@ -152,31 +152,37 @@ export const ImageUpload = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border rounded-xl bg-accent/5 border-dashed border-primary/20">
           {/* File Upload */}
           <div className="relative group overflow-hidden border bg-background rounded-lg hover:border-primary/50 transition-colors">
+            <Label htmlFor="image-file-upload" className="flex items-center justify-center gap-2 p-3 cursor-pointer w-full h-full">
+              {uploading ? <RefreshCw className="h-5 w-5 animate-spin text-primary" /> : <Upload className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />}
+              <span className="text-sm font-semibold text-primary">Upload Local</span>
+            </Label>
             <Input
+              id="image-file-upload"
+              name="image-file-upload"
               type="file"
               accept="image/*"
               multiple
               onChange={handleFileUpload}
               disabled={uploading}
-              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+              className="absolute inset-0 opacity-0 cursor-pointer"
             />
-            <div className="flex items-center justify-center gap-2 h-11 px-4 pointer-events-none">
-              <Upload className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Upload Local</span>
-            </div>
           </div>
 
-          {/* URL Input */}
-          <div className="flex items-center gap-1.5 h-11 px-1 bg-background border rounded-lg focus-within:border-primary/50 transition-colors pl-3">
-            <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <input
-              type="url"
-              placeholder="Paste Image URL"
-              className="flex-1 bg-transparent text-sm h-full focus:outline-none min-w-0"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlAdd())}
-            />
+          {/* URL Add */}
+          <div className="flex items-center border bg-background rounded-lg hover:border-primary/50 transition-colors pl-3 overflow-hidden">
+            <LinkIcon className="h-4 w-4 text-primary shrink-0 opacity-50" />
+            <div className="flex-1 px-1">
+              <Label htmlFor="image-url-input" className="sr-only">Paste image URL</Label>
+              <Input
+                id="image-url-input"
+                name="image-url-input"
+                placeholder="Paste image URL"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlAdd())}
+                className="h-10 pr-10 bg-transparent border-none focus-visible:ring-0"
+              />
+            </div>
             <Button
               type="button"
               onClick={handleUrlAdd}

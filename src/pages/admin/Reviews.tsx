@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Check, X, Edit, Trash2, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 interface Review {
     id: string;
@@ -148,11 +149,62 @@ const AdminReviews = () => {
         }
     };
 
-    // ... handleApprove, handleReject, handleDelete ...
+    const handleApprove = async (reviewId: string) => {
+        try {
+            const { error } = await supabase
+                .from('reviews')
+                .update({ status: 'approved', admin_notes: adminNotes })
+                .eq('id', reviewId);
+            if (error) throw error;
+            toast({ title: "Review Approved" });
+            fetchReviews();
+            setDialogOpen(false);
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+    };
+
+    const handleReject = async (reviewId: string) => {
+        try {
+            const { error } = await supabase
+                .from('reviews')
+                .update({ status: 'rejected', admin_notes: adminNotes })
+                .eq('id', reviewId);
+            if (error) throw error;
+            toast({ title: "Review Rejected" });
+            fetchReviews();
+            setDialogOpen(false);
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+    };
+
+    const handleDelete = async (reviewId: string) => {
+        if (!confirm("Are you sure you want to delete this review?")) return;
+        try {
+            const { error } = await supabase
+                .from('reviews')
+                .delete()
+                .eq('id', reviewId);
+            if (error) throw error;
+            toast({ title: "Review Deleted" });
+            fetchReviews();
+            setDialogOpen(false);
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+    };
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Manage Reviews</h1>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold">Manage Reviews</h1>
+                <HelperGuide
+                    title="Reviews"
+                    purpose="Social proof management. Approve positive feedback to show on product pages."
+                    usage="New reviews are 'Pending' by default. Approve them to make them public. You can edit typos if needed."
+                />
+            </div>
 
             <div className="mb-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -134,11 +135,11 @@ const AdminProducts = () => {
           is_active: draft.is_active ?? true,
           is_new: draft.is_new ?? true,
           fabric_type: draft.fabric_type || '',
-          available_sizes: Array.isArray(draft.available_sizes) ? draft.available_sizes : (draft.available_sizes ? (typeof draft.available_sizes === 'string' ? (draft.available_sizes as string).split(',').map((s: string) => s.trim()) : []) : []),
-          available_colors: Array.isArray(draft.available_colors) ? draft.available_colors : (draft.available_colors ? (typeof draft.available_colors === 'string' ? (draft.available_colors as string).split(',').map((c: string) => c.trim()) : []) : []),
+          available_sizes: Array.isArray(draft.available_sizes) ? draft.available_sizes : (draft.available_sizes ? (typeof draft.available_sizes === 'string' ? (draft.available_sizes as string).split(',').map((s: string) => s.trim()).filter(Boolean) : []) : []),
+          available_colors: Array.isArray(draft.available_colors) ? draft.available_colors : (draft.available_colors ? (typeof draft.available_colors === 'string' ? (draft.available_colors as string).split(',').map((c: string) => c.trim()).filter(Boolean) : []) : []),
           care_instructions: draft.care_instructions || '',
           occasion_type: draft.occasion_type || '',
-          embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? (draft.embellishment as string).split(',').map((e: string) => e.trim()) : []) : []),
+          embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? (draft.embellishment as string).split(',').map((e: string) => e.trim()).filter(Boolean) : []) : []),
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -225,11 +226,11 @@ const AdminProducts = () => {
                 image_url: images[0] || null, // Primary image
                 images: images, // All images array
                 fabric_type: row.fabric_type,
-                available_sizes: row.available_sizes ? row.available_sizes.split(',').map((s: string) => s.trim()) : [],
-                available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()) : [],
+                available_sizes: row.available_sizes ? row.available_sizes.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+                available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
                 care_instructions: row.care_instructions,
                 occasion_type: row.occasion_type,
-                embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()) : []
+                embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()).filter(Boolean) : []
               };
             });
 
@@ -268,21 +269,31 @@ const AdminProducts = () => {
     e.preventDefault();
 
     try {
+      // Safely prepare data for validation
+      const priceVal = parseFloat(formData.price);
+      const listPriceVal = formData.list_price ? parseFloat(formData.list_price) : undefined;
+      const stockVal = parseInt(formData.stock_quantity) || 0;
+
+      // Ensure array fields are actually arrays before validation
+      const sizes = Array.isArray(formData.available_sizes) ? formData.available_sizes : [];
+      const colors = Array.isArray(formData.available_colors) ? formData.available_colors : [];
+      const embellishments = Array.isArray(formData.embellishment) ? formData.embellishment : [];
+
       const validatedData = productSchema.parse({
         sku: formData.sku || undefined,
         name: formData.name,
         description: formData.description,
-        price: parseFloat(formData.price),
-        list_price: formData.list_price ? parseFloat(formData.list_price) : undefined,
+        price: isNaN(priceVal) ? 0 : priceVal,
+        list_price: listPriceVal && isNaN(listPriceVal) ? undefined : listPriceVal,
         category: formData.category === '__custom__' ? customCategory : formData.category,
         brand: formData.brand,
-        stock_quantity: parseInt(formData.stock_quantity),
+        stock_quantity: isNaN(stockVal) ? 0 : stockVal,
         fabric_type: formData.fabric_type || undefined,
-        available_sizes: formData.available_sizes.length > 0 ? formData.available_sizes : undefined,
-        available_colors: formData.available_colors.length > 0 ? formData.available_colors : undefined,
+        available_sizes: sizes.length > 0 ? sizes : undefined,
+        available_colors: colors.length > 0 ? colors : undefined,
         care_instructions: formData.care_instructions || undefined,
         occasion_type: formData.occasion_type || undefined,
-        embellishment: formData.embellishment.length > 0 ? formData.embellishment : undefined,
+        embellishment: embellishments.length > 0 ? embellishments : undefined,
       });
 
       if (productImages.length === 0) {
@@ -598,6 +609,7 @@ const AdminProducts = () => {
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           required
                           className="h-11"
+                          autoComplete="product-name"
                         />
                       </div>
 
@@ -607,15 +619,16 @@ const AdminProducts = () => {
                         <Select
                           value={formData.category}
                           onValueChange={(value) => setFormData({ ...formData, category: value })}
+                          required
                         >
-                          <SelectTrigger id="category" name="category" className="w-full">
+                          <SelectTrigger id="category" name="category" className="w-full h-11">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
                             {CATEGORIES.map((cat) => (
                               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                             ))}
-                            <SelectItem value="__custom__">Custom Category...</SelectItem>
+                            <SelectItem value="__custom__">+ Add New Category</SelectItem>
                           </SelectContent>
                         </Select>
                         {formData.category === '__custom__' && (
@@ -627,6 +640,7 @@ const AdminProducts = () => {
                               placeholder="Enter custom category"
                               value={customCategory}
                               onChange={(e) => setCustomCategory(e.target.value)}
+                              autoComplete="off"
                             />
                           </div>
                         )}
@@ -644,6 +658,7 @@ const AdminProducts = () => {
                         onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                         required
                         className="h-11"
+                        autoComplete="organization"
                       />
                     </div>
 
@@ -659,6 +674,7 @@ const AdminProducts = () => {
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         required
                         className="h-11"
+                        autoComplete="off"
                       />
                     </div>
                     <div>
@@ -672,6 +688,7 @@ const AdminProducts = () => {
                         onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
                         placeholder="Original price"
                         className="h-11"
+                        autoComplete="off"
                       />
                     </div>
 
@@ -686,6 +703,7 @@ const AdminProducts = () => {
                         onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                         required
                         className="h-11"
+                        autoComplete="off"
                       />
                     </div>
 
@@ -704,11 +722,11 @@ const AdminProducts = () => {
                       <Label htmlFor="description" className="text-sm font-medium mb-1.5 block">Description *</Label>
                       <Textarea
                         id="description"
+                        name="description"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={4}
-                        className="resize-none"
                         required
+                        className="resize-none min-h-[120px]"
                       />
                       <div className="flex gap-2 mt-2">
                         <Button
@@ -759,22 +777,17 @@ const AdminProducts = () => {
                             </div>
 
                             {formData.fabric_type === 'Custom' && (
-                              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                              <div>
+                                <Label htmlFor="custom_fabric" className="text-sm font-medium mb-1.5 block">Add Custom Fabric</Label>
                                 <div className="flex gap-2">
                                   <Input
-                                    placeholder="Type new fabric name..."
+                                    id="custom_fabric"
+                                    name="custom_fabric"
+                                    placeholder="Enter custom fabric..."
                                     value={customFabric}
                                     onChange={(e) => setCustomFabric(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        if (customFabric.trim()) {
-                                          setFormData({ ...formData, fabric_type: customFabric.trim() });
-                                          setCustomFabric("");
-                                        }
-                                      }
-                                    }}
-                                    className="h-11 flex-1"
+                                    className="h-11"
+                                    autoComplete="off"
                                   />
                                   <Button
                                     type="button"
@@ -787,7 +800,7 @@ const AdminProducts = () => {
                                     }}
                                     className="h-11 px-4"
                                   >
-                                    Apply
+                                    <Plus className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
@@ -820,6 +833,7 @@ const AdminProducts = () => {
                                 <div key={size} className="flex items-center space-x-2">
                                   <Checkbox
                                     id={`size-${size}`}
+                                    name="available_sizes"
                                     checked={Array.isArray(formData.available_sizes) && formData.available_sizes.includes(size)}
                                     className="h-5 w-5"
                                     onCheckedChange={(checked) => {
@@ -870,6 +884,7 @@ const AdminProducts = () => {
                                   <div key={emb} className="flex items-center space-x-2">
                                     <Checkbox
                                       id={`emb-${emb}`}
+                                      name="embellishment"
                                       checked={Array.isArray(formData.embellishment) && formData.embellishment.includes(emb)}
                                       className="h-5 w-5"
                                       onCheckedChange={(checked) => {
@@ -1053,10 +1068,19 @@ const AdminProducts = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Manage Products</CardTitle>
-              <CardDescription>
-                Add products manually or upload in bulk via CSV
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Manage Products</CardTitle>
+                  <CardDescription>
+                    Add products manually or upload in bulk via CSV
+                  </CardDescription>
+                </div>
+                <HelperGuide
+                  title="Inventory Hub"
+                  purpose="Manage your store's items. Categorize, price, and track stock levels."
+                  usage="Use 'Bulk Upload' to add hundreds of items at once. Link images via URLs for the fastest setup."
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="list" className="w-full">

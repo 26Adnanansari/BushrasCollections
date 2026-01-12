@@ -425,7 +425,7 @@ const ClientDairy = () => {
                     onOpenChange={setIsShareModalOpen}
                     entityType="client_dairy"
                     entityId={sharingPost?.id || ""}
-                    entityName={`Moment from ${sharingPost?.profiles?.name || 'Vivid Soul'}`}
+                    entityName={`Moment from ${sharingPost?.profiles?.name || 'Bushras Collection'}`}
                     image={sharingPost?.images?.[0]}
                 />
             </div>

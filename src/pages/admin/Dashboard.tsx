@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, Users, Package, TrendingUp, Image, Star, Camera, Truck, Ticket, Share2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 interface DashboardStats {
   totalProducts: number;
@@ -142,9 +143,16 @@ const AdminDashboard = () => {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle>Hero Slider</CardTitle>
+                <div className="flex items-center justify-between mb-2">
+                  <CardTitle>Hero Slider</CardTitle>
+                  <HelperGuide
+                    title="Hero Slider"
+                    purpose="Controls the large rotating images at the top of the homepage."
+                    usage="Use this for major announcements, sales, or seasonal collection launches. Keep images under 500KB."
+                  />
+                </div>
                 <CardDescription>
                   Manage homepage hero carousel slides • {stats.totalProducts} active
                 </CardDescription>
@@ -160,9 +168,16 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle>Product Management</CardTitle>
+                <div className="flex items-center justify-between mb-2">
+                  <CardTitle>Product Management</CardTitle>
+                  <HelperGuide
+                    title="Products"
+                    purpose="Your main inventory hub. Add, edit, or delete items from the store."
+                    usage="Ensure every product has a unique SKU and at least 3 high-quality images for better conversion."
+                  />
+                </div>
                 <CardDescription>
                   Add, edit, or remove products • {stats.totalProducts} total
                 </CardDescription>
@@ -178,9 +193,16 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle>Order Management</CardTitle>
+                <div className="flex items-center justify-between mb-2">
+                  <CardTitle>Order Management</CardTitle>
+                  <HelperGuide
+                    title="Orders"
+                    purpose="Track customer purchases, update delivery status, and view payment details."
+                    usage="Change order status to 'Delivered' to automatically trigger 'Moment Posting' links for customers."
+                  />
+                </div>
                 <CardDescription>
                   View and manage customer orders
                 </CardDescription>
@@ -362,9 +384,16 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover:shadow-md transition-shadow border-primary/20 bg-primary/5">
               <CardHeader>
-                <CardTitle>Social Reach Analytics</CardTitle>
+                <div className="flex items-center justify-between mb-2">
+                  <CardTitle>Social Reach Analytics</CardTitle>
+                  <HelperGuide
+                    title="Social AI"
+                    purpose="Advanced tracking of how many people are sharing your products on WhatsApp/Instagram."
+                    usage="Use the 'Referred Guests' section to capture fresh leads who landed via friend recommendations."
+                  />
+                </div>
                 <CardDescription>
                   Track WhatsApp & social engagement
                 </CardDescription>

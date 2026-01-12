@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Save, Ticket, ArrowLeft, Loader2, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 const OfferManagement = () => {
     const [offers, setOffers] = useState<any[]>([]);
@@ -145,6 +146,11 @@ const OfferManagement = () => {
                                                     <Badge variant="outline" className="font-mono text-lg py-1 px-3 border-primary/20 text-primary">
                                                         {offer.code || "NEW_CODE"}
                                                     </Badge>
+                                                    <HelperGuide
+                                                        title="Coupon Code"
+                                                        purpose="Promotional codes that customers apply at checkout to get discounts."
+                                                        usage="Set a 'Min. Purchase' to ensure you don't lose money on small orders. Use 'Usage Limit' for exclusive deals."
+                                                    />
                                                 </div>
                                                 <CardDescription>{offer.description || "No description provided"}</CardDescription>
                                             </div>

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Shield, User, Phone, Globe, Clock, MessageSquare, ShoppingBag, Heart, Eye, Facebook, Instagram, Youtube, Twitter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { HelperGuide } from "@/components/admin/HelperGuide";
 
 interface UserProfile {
   id: string;
@@ -165,7 +166,14 @@ const AdminUsers = () => {
         <div className="container mx-auto px-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl font-serif">User Management</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-serif">User Management</CardTitle>
+                <HelperGuide
+                  title="User CRM"
+                  purpose="Manage your customer database, roles, and view individual shopping histories."
+                  usage="Click any row to see a user's total lifetime value, wishlist items, and social media presence."
+                />
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
