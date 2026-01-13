@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Share2, Heart, ExternalLink, ArrowLeft, Loader2, Users, TrendingUp, Phone, Mail } from "lucide-react";
+import { Share2, Heart, ExternalLink, ArrowLeft, Loader2, Users, TrendingUp, Phone, Mail, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -344,10 +344,19 @@ const SocialAnalytics = () => {
                                                 <TableRow key={item.id} className="hover:bg-muted/30 transition-colors group">
                                                     <TableCell>
                                                         <div className="flex items-center gap-2">
-                                                            <div className={`p-2 rounded-full ${item.type === 'like' ? 'bg-red-100 text-red-600' : item.platform === 'referral' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
-                                                                {item.type === 'like' ? <Heart className="h-3 w-3 fill-current" /> : item.platform === 'referral' ? <ExternalLink className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
+                                                            <div className={`p-2 rounded-full ${item.type === 'like' ? 'bg-red-100 text-red-600' :
+                                                                    (item.platform === 'referral' || item.referrer_id) ? 'bg-blue-100 text-blue-600' :
+                                                                        item.type === 'view' ? 'bg-slate-100 text-slate-600' :
+                                                                            'bg-green-100 text-green-600'
+                                                                }`}>
+                                                                {item.type === 'like' ? <Heart className="h-3 w-3 fill-current" /> :
+                                                                    (item.platform === 'referral' || item.referrer_id) ? <ExternalLink className="h-3 w-3" /> :
+                                                                        item.type === 'view' ? <Eye className="h-3 w-3" /> :
+                                                                            <Share2 className="h-3 w-3" />}
                                                             </div>
-                                                            <span className="text-sm font-bold capitalize tracking-tight">{item.platform === 'referral' ? 'Click' : item.type}</span>
+                                                            <span className="text-sm font-bold capitalize tracking-tight">
+                                                                {(item.platform === 'referral' || item.referrer_id) ? 'Viral Click' : item.type}
+                                                            </span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>

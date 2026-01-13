@@ -125,7 +125,8 @@ const ProductDetail = () => {
         p_entity_type: 'product',
         p_entity_id: product.id,
         p_type: 'view',
-        p_referrer_id: refId
+        p_referrer_id: refId,
+        p_platform: refId ? 'referral' : 'generic'
       });
     } catch (err) {
       console.error('Error recording view:', err);

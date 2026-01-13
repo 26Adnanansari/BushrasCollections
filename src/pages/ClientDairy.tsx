@@ -106,7 +106,8 @@ const ClientDairy = () => {
                 p_entity_type: 'client_dairy',
                 p_entity_id: post.id,
                 p_type: 'view',
-                p_referrer_id: refId
+                p_referrer_id: refId,
+                p_platform: refId ? 'referral' : 'generic'
             });
         } catch (err) {
             console.error('Error recording view:', err);

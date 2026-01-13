@@ -131,11 +131,17 @@ export const useVisitorStore = create<VisitorState>((set, get) => ({
 
 async function fetchGeoData() {
     try {
-        const res = await fetch('https://ipapi.co/json/');
+        const res = await fetch('https://ipwho.is/');
         const data = await res.json();
+
+        if (!data.success) {
+            console.warn("Geo fetch API reported failure", data.message);
+            return {};
+        }
+
         return {
             city: data.city,
-            country: data.country_name,
+            country: data.country,
             country_code: data.country_code,
             ip_address: data.ip
         };
