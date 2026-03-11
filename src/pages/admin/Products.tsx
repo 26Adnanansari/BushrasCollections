@@ -572,7 +572,17 @@ const AdminProducts = () => {
                     Add Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="w-full max-w-3xl h-[100dvh] sm:h-auto max-h-[95vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-lg p-4 sm:p-6">
+                <DialogContent className="
+                  fixed sm:relative
+                  inset-0 sm:inset-auto
+                  w-full sm:max-w-3xl
+                  h-[100dvh] sm:h-auto sm:max-h-[95vh]
+                  overflow-y-auto overflow-x-hidden
+                  rounded-none sm:rounded-lg
+                  p-3 sm:p-6
+                  translate-x-0 translate-y-0 sm:translate-x-[-50%] sm:translate-y-[-50%]
+                  left-0 top-0 sm:left-[50%] sm:top-[50%]
+                ">
                   <DialogHeader>
                     <DialogTitle>
                       {editingProduct ? 'Edit Product' : 'Add New Product'}
