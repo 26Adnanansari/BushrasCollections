@@ -572,7 +572,7 @@ const AdminProducts = () => {
                     Add Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="w-full max-w-3xl h-[100dvh] sm:h-auto max-h-[95vh] overflow-y-auto rounded-none sm:rounded-lg p-4 sm:p-6">
                   <DialogHeader>
                     <DialogTitle>
                       {editingProduct ? 'Edit Product' : 'Add New Product'}
@@ -1094,7 +1094,7 @@ const AdminProducts = () => {
                     <div className="text-center py-8">Loading products...</div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="relative w-full overflow-auto">
+                      <div className="hidden sm:block relative w-full overflow-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -1158,23 +1158,71 @@ const AdminProducts = () => {
                         </Table>
                       </div>
 
+                      {/* Mobile: Card Layout */}
+                      <div className="block sm:hidden space-y-3">
+                        {products
+                          .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                          .map((product) => (
+                            <div key={product.id} className="flex items-center gap-3 p-3 border rounded-lg bg-card">
+                              <img
+                                src={product.image_url || '/placeholder.svg'}
+                                alt={product.name}
+                                className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm truncate">{product.name}</p>
+                                <p className="text-xs text-muted-foreground">{product.category}</p>
+                                <p className="text-sm font-medium text-primary mt-0.5">PKR {product.price.toLocaleString()}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</span>
+                                  <Badge
+                                    variant={product.is_active ? "default" : "secondary"}
+                                    className="cursor-pointer text-xs px-1.5 py-0"
+                                    onClick={() => toggleActive(product)}
+                                  >
+                                    {product.is_active ? "Active" : "Inactive"}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-1.5 flex-shrink-0">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => handleEdit(product)}
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => handleDelete(product.id)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+
                       {/* Pagination Controls */}
                       {products.length > ITEMS_PER_PAGE && (
-                        <div className="flex items-center justify-between border-t pt-4">
-                          <div className="text-sm text-muted-foreground font-medium">
+                        <div className="flex flex-col sm:flex-row items-center justify-between border-t pt-4 gap-3">
+                          <div className="text-xs sm:text-sm text-muted-foreground font-medium order-2 sm:order-1">
                             Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, products.length)} of {products.length} products
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 order-1 sm:order-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                               disabled={currentPage === 1}
-                              className="font-bold"
+                              className="h-8 px-3 text-xs font-bold"
                             >
-                              Previous
+                              ← Prev
                             </Button>
-                            <div className="flex items-center gap-1 mx-2">
+                            <div className="flex items-center gap-1">
                               {Array.from({ length: Math.ceil(products.length / ITEMS_PER_PAGE) }).map((_, i) => (
                                 <Button
                                   key={i}
@@ -1192,9 +1240,9 @@ const AdminProducts = () => {
                               size="sm"
                               onClick={() => setCurrentPage(prev => Math.min(Math.ceil(products.length / ITEMS_PER_PAGE), prev + 1))}
                               disabled={currentPage === Math.ceil(products.length / ITEMS_PER_PAGE)}
-                              className="font-bold"
+                              className="h-8 px-3 text-xs font-bold"
                             >
-                              Next
+                              Next →
                             </Button>
                           </div>
                         </div>

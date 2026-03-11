@@ -173,7 +173,23 @@ const Navigation = () => {
           </div>
 
           {/* Mobile Menu & Cart */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center gap-1">
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-accent"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.profile?.avatar_url || ''} alt={user.profile?.name || 'User'} />
+                  <AvatarFallback>
+                    <UserCircle2 className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            )}
+
             {!shouldHideCart && (
               <CartDrawer>
                 <Button variant="ghost" size="icon" className="hover:bg-accent">
@@ -202,13 +218,29 @@ const Navigation = () => {
             isMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100 overflow-y-auto" : "max-h-0 opacity-0"
           )}
         >
-          <div className="py-4 space-y-4">
+          <div className="py-4 space-y-1">
+            {/* User Info at top of mobile menu */}
+            {user && (
+              <div className="flex items-center gap-3 px-3 py-3 mb-3 bg-accent/30 rounded-lg">
+                <Avatar className="h-10 w-10 flex-shrink-0">
+                  <AvatarImage src={user.profile?.avatar_url || ''} alt={user.profile?.name || 'User'} />
+                  <AvatarFallback>
+                    <UserCircle2 className="h-6 w-6" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{user.profile?.name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+              </div>
+            )}
+
             {navLinks.map((link) => (
               link.href.startsWith('/#') ? (
                 <a
                   key={link.name}
                   href={link.href}
-                  className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2 text-sm"
+                  className="flex items-center text-foreground hover:text-primary hover:bg-accent/50 transition-colors duration-200 font-medium py-2.5 px-3 rounded-lg text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
@@ -217,50 +249,30 @@ const Navigation = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2 text-sm"
+                  className="flex items-center text-foreground hover:text-primary hover:bg-accent/50 transition-colors duration-200 font-medium py-2.5 px-3 rounded-lg text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
                 </Link>
               )
             ))}
-            <div className="flex flex-col space-y-4 pt-4 border-t border-border">
-              <Button variant="ghost" size="icon" className="hover:bg-accent w-full" onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
-                <Search className="h-5 w-5" />
+
+            <div className="flex flex-col gap-2 pt-3 mt-2 border-t border-border">
+              <Button variant="ghost" className="justify-start gap-2 h-10" onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
+                <Search className="h-4 w-4" />
+                Search Products
               </Button>
 
               {user ? (
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center space-x-2 p-2">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.profile?.avatar_url || ''} alt={user.profile?.name || 'User'} />
-                      <AvatarFallback>
-                        <UserCircle2 className="h-6 w-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{user.profile?.name || 'User'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full mt-1 text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
               ) : (
-                <Button variant="outline" onClick={() => navigate("/auth")} className="w-full">
+                <Button variant="outline" onClick={() => { navigate("/auth"); setIsMenuOpen(false); }} className="w-full">
                   <User className="h-4 w-4 mr-2" />
                   Sign In
                 </Button>
-              )}
-
-              {!shouldHideCart && (
-                <CartDrawer>
-                  <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
-                    <ShoppingBag className="h-5 w-5" />
-                  </Button>
-                </CartDrawer>
               )}
             </div>
           </div>

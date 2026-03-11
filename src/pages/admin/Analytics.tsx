@@ -204,16 +204,16 @@ const Analytics = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-serif font-bold text-foreground mb-2">
+          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-2">
             Analytics Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Comprehensive view of your business performance
           </p>
         </div>
-        <Button variant="outline" onClick={() => window.open('/admin/analytics-help', '_blank')}>
+        <Button variant="outline" size="sm" onClick={() => window.open('/admin/analytics-help', '_blank')}>
           <Users className="mr-2 h-4 w-4" /> User Guide
         </Button>
       </div>
@@ -304,13 +304,15 @@ const Analytics = () => {
 
       {/* Detailed Data Tabs */}
       <Tabs defaultValue="marketing" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="marketing">Marketing (UTM)</TabsTrigger>
-          <TabsTrigger value="geography">Geography</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-5 gap-0">
+            <TabsTrigger value="marketing" className="whitespace-nowrap text-xs sm:text-sm">Marketing (UTM)</TabsTrigger>
+            <TabsTrigger value="geography" className="whitespace-nowrap text-xs sm:text-sm">Geography</TabsTrigger>
+            <TabsTrigger value="customers" className="whitespace-nowrap text-xs sm:text-sm">Customers</TabsTrigger>
+            <TabsTrigger value="orders" className="whitespace-nowrap text-xs sm:text-sm">Orders</TabsTrigger>
+            <TabsTrigger value="products" className="whitespace-nowrap text-xs sm:text-sm">Products</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Marketing Tab */}
         <TabsContent value="marketing" className="space-y-4">
