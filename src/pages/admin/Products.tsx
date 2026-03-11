@@ -572,7 +572,7 @@ const AdminProducts = () => {
                     Add Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="w-full max-w-3xl h-[100dvh] sm:h-auto max-h-[95vh] overflow-y-auto rounded-none sm:rounded-lg p-4 sm:p-6">
+                <DialogContent className="w-full max-w-3xl h-[100dvh] sm:h-auto max-h-[95vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-lg p-4 sm:p-6">
                   <DialogHeader>
                     <DialogTitle>
                       {editingProduct ? 'Edit Product' : 'Add New Product'}
@@ -585,23 +585,25 @@ const AdminProducts = () => {
                   <DraftIndicator lastSaved={lastSaved ? lastSaved.toISOString() : null} onClear={clearDraft} />
 
                   <form onSubmit={handleSubmit} className="mt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                      {/* 1. SKU CODE (Auto-generated) */}
-                      <div className="md:col-span-2">
-                        <Label htmlFor="sku">SKU Code (Auto-generated if empty)</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+
+                      {/* 1. SKU CODE */}
+                      <div className="col-span-1 sm:col-span-2">
+                        <Label htmlFor="sku" className="text-sm font-medium mb-1.5 block">SKU Code <span className="text-muted-foreground font-normal">(Auto-generated if empty)</span></Label>
                         <Input
                           id="sku"
                           value={formData.sku}
                           onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                           placeholder="Leave empty for auto-generation"
+                          className="h-11"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Format: SKU-{'{CATEGORY}'}-{'{5_DIGITS}'} (e.g., SKU-FO-10293)
+                        <p className="text-xs text-muted-foreground mt-1 break-all">
+                          Format: SKU-CATEGORY-12345
                         </p>
                       </div>
 
                       {/* 2. PRODUCT NAME */}
-                      <div className="md:col-span-2">
+                      <div className="col-span-1 sm:col-span-2">
                         <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">Product Name *</Label>
                         <Input
                           id="name"
@@ -613,8 +615,8 @@ const AdminProducts = () => {
                         />
                       </div>
 
-                      {/* 3. CATEGORY (Dropdown) */}
-                      <div>
+                      {/* 3. CATEGORY */}
+                      <div className="col-span-1">
                         <Label htmlFor="category" className="text-sm font-medium mb-1.5 block">Category *</Label>
                         <Select
                           value={formData.category}
@@ -632,7 +634,7 @@ const AdminProducts = () => {
                           </SelectContent>
                         </Select>
                         {formData.category === '__custom__' && (
-                          <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                          <div className="mt-2">
                             <Label htmlFor="custom_category" className="text-xs mb-1 block">New Category Name</Label>
                             <Input
                               id="custom_category"
@@ -646,79 +648,81 @@ const AdminProducts = () => {
                         )}
                       </div>
 
-                    </div>
+                      {/* 4. BRAND */}
+                      <div className="col-span-1">
+                        <Label htmlFor="brand" className="text-sm font-medium mb-1.5 block">Brand *</Label>
+                        <Input
+                          id="brand"
+                          name="brand"
+                          value={formData.brand}
+                          onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                          required
+                          className="h-11"
+                          autoComplete="organization"
+                        />
+                      </div>
 
-                    {/* 4. BRAND */}
-                    <div>
-                      <Label htmlFor="brand" className="text-sm font-medium mb-1.5 block">Brand *</Label>
-                      <Input
-                        id="brand"
-                        name="brand"
-                        value={formData.brand}
-                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                        required
-                        className="h-11"
-                        autoComplete="organization"
-                      />
-                    </div>
+                      {/* 5. PRICES */}
+                      <div className="col-span-1">
+                        <Label htmlFor="price" className="text-sm font-medium mb-1.5 block">Sale Price (PKR) *</Label>
+                        <Input
+                          id="price"
+                          name="price"
+                          type="number"
+                          step="0.01"
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          required
+                          className="h-11"
+                          autoComplete="off"
+                        />
+                      </div>
 
-                    {/* 5. PRICES */}
-                    <div>
-                      <Label htmlFor="price" className="text-sm font-medium mb-1.5 block">Sale Price (PKR) *</Label>
-                      <Input
-                        id="price"
-                        name="price"
-                        type="number"
-                        step="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        required
-                        className="h-11"
-                        autoComplete="off"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="list_price" className="text-sm font-medium mb-1.5 block">List Price (PKR) (Optional)</Label>
-                      <Input
-                        id="list_price"
-                        name="list_price"
-                        type="number"
-                        step="0.01"
-                        value={formData.list_price}
-                        onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
-                        placeholder="Original price"
-                        className="h-11"
-                        autoComplete="off"
-                      />
-                    </div>
+                      <div className="col-span-1">
+                        <Label htmlFor="list_price" className="text-sm font-medium mb-1.5 block">List Price (PKR) <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                        <Input
+                          id="list_price"
+                          name="list_price"
+                          type="number"
+                          step="0.01"
+                          value={formData.list_price}
+                          onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
+                          placeholder="Original price"
+                          className="h-11"
+                          autoComplete="off"
+                        />
+                      </div>
 
-                    {/* 6. STOCK */}
-                    <div className="md:col-span-1">
-                      <Label htmlFor="stock_quantity" className="text-sm font-medium mb-1.5 block">Stock Quantity *</Label>
-                      <Input
-                        id="stock_quantity"
-                        name="stock_quantity"
-                        type="number"
-                        value={formData.stock_quantity}
-                        onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                        required
-                        className="h-11"
-                        autoComplete="off"
-                      />
-                    </div>
+                      {/* 6. STOCK */}
+                      <div className="col-span-1">
+                        <Label htmlFor="stock_quantity" className="text-sm font-medium mb-1.5 block">Stock Quantity *</Label>
+                        <Input
+                          id="stock_quantity"
+                          name="stock_quantity"
+                          type="number"
+                          value={formData.stock_quantity}
+                          onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                          required
+                          className="h-11"
+                          autoComplete="off"
+                        />
+                      </div>
 
-                    <div className="md:col-span-2">
-                      <Label className="text-sm font-medium mb-3 block">Product Images *</Label>
-                      <ImageUpload
-                        images={productImages}
-                        onChange={setProductImages}
-                        maxImages={5}
-                        maxSizeMB={1}
-                      />
-                    </div>
+                      {/* IMAGES */}
+                      <div className="col-span-1 sm:col-span-2">
+                        <Label className="text-sm font-medium mb-3 block">Product Images *</Label>
+                        <ImageUpload
+                          images={productImages}
+                          onChange={setProductImages}
+                          maxImages={5}
+                          maxSizeMB={1}
+                        />
+                      </div>
+
+                    </div>{/* END MAIN GRID */}
 
                     {/* 7. DESCRIPTION */}
-                    <div className="md:col-span-2">
+                    <div className="mt-4">
                       <Label htmlFor="description" className="text-sm font-medium mb-1.5 block">Description *</Label>
                       <Textarea
                         id="description"
@@ -744,7 +748,7 @@ const AdminProducts = () => {
                     </div>
 
                     {/* 8. BOUTIQUE DETAILS (Collapsible) */}
-                    <div className="md:col-span-2">
+                    <div className="mt-4">
                       <Collapsible>
                         <CollapsibleTrigger asChild>
                           <Button type="button" variant="outline" className="w-full h-11 justify-between px-4">
@@ -755,7 +759,7 @@ const AdminProducts = () => {
                             <Badge variant="secondary" className="ml-2">Optional</Badge>
                           </Button>
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 animate-in slide-in-from-top-2">
+                        <CollapsibleContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 animate-in slide-in-from-top-2">
                           {/* Fabric Type */}
                           <div className="space-y-3">
                             <div>

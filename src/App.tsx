@@ -57,7 +57,7 @@ const App = () => {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Pulse session on every route change (handles timeouts and campaigns)
+  // Initialize visitor tracking ONCE on app start — not on every route change
   useEffect(() => {
     initializeVisitor();
 
@@ -67,27 +67,10 @@ const App = () => {
         .then((reg) => console.log('[SW] Registered:', reg.scope))
         .catch((err) => console.error('[SW] Registration failed:', err));
     }
-  }, [initializeVisitor, location.pathname, location.search]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only on mount — NOT on every route change
 
-  // DEBUG: Track window focus and visibility
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log("[APP DEBUG] Window gained focus at:", new Date().toLocaleTimeString());
-    };
-    const handleVisibilityChange = () => {
-      console.log("[APP DEBUG] Visibility changed to:", document.visibilityState, "at:", new Date().toLocaleTimeString());
-    };
-
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  // Init wishlist whenever auth status changes (implicitly handled by store but good to trigger)
+  // Init wishlist whenever auth status changes
   useEffect(() => {
     initializeWishlist();
   }, [initializeWishlist]);

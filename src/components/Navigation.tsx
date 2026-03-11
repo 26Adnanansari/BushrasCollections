@@ -105,22 +105,22 @@ const Navigation = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2 hover:bg-accent">
-                    <Avatar className="h-8 w-8">
+                  {/* Desktop: ONLY show avatar icon — saves space in nav */}
+                  <Button variant="ghost" size="icon" className="hover:bg-accent rounded-full">
+                    <Avatar className="h-9 w-9">
                       <AvatarImage src={user.profile?.avatar_url || ''} alt={user.profile?.name || 'User'} />
                       <AvatarFallback>
                         <UserCircle2 className="h-5 w-5" />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">{user.profile?.name || 'User'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                <DropdownMenuContent align="end" className="w-64">
+                  {/* Show name + email in dropdown header */}
+                  <div className="px-3 py-2 border-b mb-1">
+                    <p className="text-sm font-semibold truncate">{user.profile?.name || 'User'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <UserCircle2 className="mr-2 h-4 w-4" />
                     Profile Settings
@@ -131,6 +131,7 @@ const Navigation = () => {
                   </DropdownMenuItem>
                   {(isAdmin || isSuperAdmin) && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/admin')}>
                         <User className="mr-2 h-4 w-4" />
                         Admin Dashboard

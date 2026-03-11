@@ -293,15 +293,18 @@ const ProductDetail = () => {
           {/* Product Images with Zoom */}
           <div className="space-y-4">
             <div
-              className="aspect-[4/5] rounded-2xl overflow-hidden bg-card relative cursor-crosshair group"
+              className="aspect-[4/5] rounded-2xl overflow-hidden bg-card relative cursor-crosshair group select-none"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
+              onContextMenu={(e) => e.preventDefault()}
             >
               <img
                 src={productImages[selectedImage] || '/placeholder.svg'}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain pointer-events-none select-none"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
               />
               {isZoomed && productImages[selectedImage] && (
                 <div
@@ -314,26 +317,37 @@ const ProductDetail = () => {
                   }}
                 />
               )}
+              {/* Transparent overlay to block right-click save on mobile long-press */}
+              <div
+                className="absolute inset-0 z-10"
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
+              />
               {/* Image Counter */}
-              <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+              <div className="absolute bottom-4 right-4 z-20 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
                 {selectedImage + 1} / {productImages.length}
               </div>
             </div>
 
-            {/* Always show thumbnails for debugging/better UX */}
+            {/* Thumbnails - also protected */}
             <div className="grid grid-cols-4 gap-4">
               {productImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-primary' : 'border-transparent'
-                    }`}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all relative select-none ${
+                    selectedImage === index ? 'border-primary' : 'border-transparent'
+                  }`}
                 >
                   <img
                     src={image || '/placeholder.svg'}
                     alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain pointer-events-none"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
                   />
+                  <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()} />
                 </button>
               ))}
             </div>
