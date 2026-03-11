@@ -17,7 +17,9 @@ coverage
 *.local
 
 # Environment Configuration
-.env # <-- Added this line to ignore the environment variable file!
+.env
+.env.local
+.env.*.local
 
 # Modern Build Tool Artifacts (e.g., Vite, Webpack, Babel)
 .vite
