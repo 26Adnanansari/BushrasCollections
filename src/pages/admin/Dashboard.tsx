@@ -141,7 +141,14 @@ const AdminDashboard = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="
+            grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 
+            [&_h3]:text-xs [&_h3]:sm:text-base [&_h3]:leading-tight
+            [&_p]:hidden [&_p]:sm:block
+            [&_.p-6]:p-3 [&_.p-6]:sm:p-6
+            [&_button]:text-[10px] [&_button]:sm:text-sm [&_button]:h-8 [&_button]:sm:h-10
+            [&_.h-4]:w-3 [&_.h-4]:h-3 [&_.h-4]:sm:w-4 [&_.h-4]:sm:h-4
+          ">
             <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
