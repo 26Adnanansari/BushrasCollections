@@ -28,18 +28,24 @@ const AboutSection = () => {
                   <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">+92 319 628 7472</p>
-                  <p className="text-sm text-muted-foreground">Call or WhatsApp</p>
+                  <p className="font-semibold text-foreground">+92 323 3228259</p>
+                  <p className="text-sm text-muted-foreground">Call & WhatsApp</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">Ghousia Center</p>
-                  <p className="text-sm text-muted-foreground">Opposite Mubarkar Masjid, Gizri, Karachi</p>
+                  <div className="mb-2">
+                    <p className="font-semibold text-foreground">Outlet 1</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area Phase 6, Karachi, Pakistan</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Outlet 2</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">Ghousia Center, Opposite Mubarkar Masjid, Gizri, Karachi</p>
+                  </div>
                 </div>
               </div>
             </div>

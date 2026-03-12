@@ -18,14 +18,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import CartDrawer from "./CartDrawer";
 import { SearchOverlay } from "./SearchOverlay";
+import { useCurrencyStore } from "@/store/currency";
+import { Globe } from "lucide-react";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user } = useAuthStore();
   const { getTotalItems } = useCartStore();
+  const { code, setCurrency, setAuto, rate } = useCurrencyStore();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleCurrencyChange = (newCode: string, symbol: string, rateMultiplier: number) => {
+    setAuto(false); // Turn off auto mode if user manual overrides
+    setCurrency(newCode, symbol, rateMultiplier);
+    toast({ title: "Currency Updated", description: `Prices will now be shown in ${newCode}.` });
+  };
 
   const handleSignOut = async () => {
     const { error } = await authService.signOut();
@@ -98,6 +107,24 @@ const Navigation = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="hidden lg:flex px-2 hover:bg-accent gap-1 text-xs">
+                  <Globe className="h-4 w-4" />
+                  {code}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Select Currency</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleCurrencyChange('PKR', 'Rs.', 1)}>PKR (Pakistan)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCurrencyChange('USD', '$', rate !== 1 && code === 'USD' ? rate : 1/280)}>USD (US Dollar)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCurrencyChange('GBP', '£', rate !== 1 && code === 'GBP' ? rate : 1/350)}>GBP (British Pound)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCurrencyChange('EUR', '€', rate !== 1 && code === 'EUR' ? rate : 1/300)}>EUR (Euro)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCurrencyChange('AED', 'د.إ', rate !== 1 && code === 'AED' ? rate : 1/76)}>AED (UAE Dirham)</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button variant="ghost" size="icon" className="hover:bg-accent" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
@@ -259,6 +286,31 @@ const Navigation = () => {
             ))}
 
             <div className="flex flex-col gap-2 pt-3 mt-2 border-t border-border">
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className="text-sm font-medium text-muted-foreground">Currency</span>
+                <select 
+                  className="bg-accent rounded-md px-2 py-1 text-sm border-none outline-none"
+                  value={code}
+                  onChange={(e) => {
+                    const mapped: Record<string, {symbol: string, defaultRate: number}> = {
+                      'PKR': {symbol: 'Rs.', defaultRate: 1},
+                      'USD': {symbol: '$', defaultRate: (rate !== 1 && code === 'USD' ? rate : 1/280)},
+                      'GBP': {symbol: '£', defaultRate: (rate !== 1 && code === 'GBP' ? rate : 1/350)},
+                      'EUR': {symbol: '€', defaultRate: (rate !== 1 && code === 'EUR' ? rate : 1/300)},
+                      'AED': {symbol: 'د.إ', defaultRate: (rate !== 1 && code === 'AED' ? rate : 1/76)}
+                    };
+                    const sel = mapped[e.target.value];
+                    if (sel) handleCurrencyChange(e.target.value, sel.symbol, sel.defaultRate);
+                  }}
+                >
+                  <option value="PKR">PKR (Rs.)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="AED">AED (د.إ)</option>
+                </select>
+              </div>
+
               <Button variant="ghost" className="justify-start gap-2 h-10" onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
                 <Search className="h-4 w-4" />
                 Search Products

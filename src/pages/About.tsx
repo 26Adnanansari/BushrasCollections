@@ -142,11 +142,19 @@ const About = () => {
                     <MapPin className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground mb-2">Address</h4>
-                    <p className="text-muted-foreground">
-                      Ghousia Center, Opposite Mubarkar Masjid<br />
-                      Gizri, Karachi, Pakistan
-                    </p>
+                    <h4 className="font-semibold text-foreground mb-4">Our Outlets</h4>
+                    <div className="text-muted-foreground space-y-4">
+                      <div>
+                        <span className="font-medium text-foreground block">Outlet 1:</span>
+                        13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area<br />
+                        Phase 6, Karachi, Pakistan.
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground block">Outlet 2:</span>
+                        Ghousia Center, Opposite Mubarkar Masjid<br />
+                        Gizri, Karachi, Pakistan
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -155,18 +163,8 @@ const About = () => {
                     <Phone className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground mb-2">Phone</h4>
-                    <p className="text-muted-foreground">+92 319 628 7472</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Email</h4>
-                    <p className="text-muted-foreground">info@bushrascollection.com</p>
+                    <h4 className="font-semibold text-foreground mb-2">Phone & WhatsApp</h4>
+                    <p className="text-muted-foreground">+92 323 3228259</p>
                   </div>
                 </div>
                 

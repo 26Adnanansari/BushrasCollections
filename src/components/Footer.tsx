@@ -143,17 +143,17 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground text-sm">
-                  Ghousia Center, Opposite Mubarkar Masjid, Gizri, Karachi
+                <span className="text-muted-foreground text-sm space-y-2 block">
+                  <span className="block font-medium text-foreground">Outlet 1:</span>
+                  13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area Phase 6, Karachi, Pakistan.
+                  <br /><br />
+                  <span className="block font-medium text-foreground">Outlet 2:</span>
+                  Ghousia Center, Opposite Mubarkar Masjid, Gizri, Karachi.
                 </span>
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2 pt-2">
                 <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="text-muted-foreground text-sm">+92 319 628 7472</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="text-muted-foreground text-sm">info@bushrascollection.com</span>
+                <span className="text-muted-foreground text-sm">+92 323 3228259</span>
               </li>
             </ul>
           </div>

@@ -234,10 +234,18 @@ const Contact = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-foreground mb-2">Visit Our Store</h4>
-                        <p className="text-muted-foreground mb-4">
-                          Ghousia Center, Opposite Mubarkar Masjid<br />
-                          Gizri, Karachi, Pakistan
-                        </p>
+                        <div className="text-muted-foreground mb-4 space-y-4">
+                          <div>
+                            <span className="font-medium text-foreground block">Outlet 1:</span>
+                            13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area<br />
+                            Phase 6, Karachi, Pakistan.
+                          </div>
+                          <div>
+                            <span className="font-medium text-foreground block">Outlet 2:</span>
+                            Ghousia Center, Opposite Mubarkar Masjid<br />
+                            Gizri, Karachi, Pakistan
+                          </div>
+                        </div>
                         
                         {locations.length > 0 && (
                           <div className="space-y-4 mt-4 w-full pr-4">
@@ -263,20 +271,9 @@ const Contact = () => {
                         <Phone className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-foreground mb-2">Call Us</h4>
-                        <p className="text-muted-foreground">+92 319 628 7472</p>
+                        <h4 className="font-semibold text-foreground mb-2">Call & WhatsApp</h4>
+                        <p className="text-muted-foreground">+92 323 3228259</p>
                         <p className="text-sm text-muted-foreground">Available 10 AM - 8 PM</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Mail className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-2">Email Us</h4>
-                        <p className="text-muted-foreground">info@bushrascollection.com</p>
-                        <p className="text-sm text-muted-foreground">We reply within 24 hours</p>
                       </div>
                     </div>
 
