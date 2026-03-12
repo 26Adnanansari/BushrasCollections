@@ -88,55 +88,54 @@ const AdminDashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6 mb-8">
+            <Card className="p-3 sm:p-5">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium leading-none">Products</CardTitle>
+                <Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : stats.totalProducts}</div>
+              <CardContent className="p-0">
+                <div className="text-lg sm:text-2xl font-bold">{loading ? '...' : stats.totalProducts}</div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            <Card className="p-3 sm:p-5">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium leading-none">Orders</CardTitle>
+                <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : stats.totalOrders}</div>
+              <CardContent className="p-0">
+                <div className="text-lg sm:text-2xl font-bold">{loading ? '...' : stats.totalOrders}</div>
               </CardContent>
             </Card>
 
-            <Card className="bg-primary/5 border-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Online Now</CardTitle>
+            <Card className="bg-primary/5 border-primary/20 p-3 sm:p-5">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium leading-none">Online</CardTitle>
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{onlineUsersCount}</div>
-                <p className="text-xs text-muted-foreground">Active browsers</p>
+              <CardContent className="p-0">
+                <div className="text-lg sm:text-2xl font-bold">{onlineUsersCount}</div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+            <Card className="p-3 sm:p-5">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium leading-none">Customers</CardTitle>
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : stats.totalUsers}</div>
+              <CardContent className="p-0">
+                <div className="text-lg sm:text-2xl font-bold">{loading ? '...' : stats.totalUsers}</div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Card className="p-3 sm:p-5 col-span-2 lg:col-span-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium leading-none">Revenue</CardTitle>
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">PKR {loading ? '...' : stats.revenue.toLocaleString()}</div>
+              <CardContent className="p-0">
+                <div className="text-lg sm:text-2xl font-bold">PKR {loading ? '...' : stats.revenue.toLocaleString()}</div>
               </CardContent>
             </Card>
           </div>
@@ -406,6 +405,26 @@ const AdminDashboard = () => {
                 >
                   <Share2 className="h-4 w-4 mr-2" />
                   View Social Data
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <CardTitle>Site Settings</CardTitle>
+                </div>
+                <CardDescription>
+                  Meta Pixel, Google Maps, and external config
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/admin/site-settings')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Manage Settings
                 </Button>
               </CardContent>
             </Card>

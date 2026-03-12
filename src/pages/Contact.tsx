@@ -19,7 +19,10 @@ const contactSchema = z.object({
   message: z.string().trim().min(1, "Message is required").max(1000, "Message must be less than 1000 characters")
 });
 
+import { useEffect } from "react";
+
 const Contact = () => {
+  const [locations, setLocations] = useState<{name: string, url: string}[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,6 +32,20 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_maps').single();
+        if (data && data.value && data.value.locations) {
+          setLocations(data.value.locations);
+        }
+      } catch (e) {
+        console.error("Failed to map settings", e);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -217,10 +234,27 @@ const Contact = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-foreground mb-2">Visit Our Store</h4>
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground mb-4">
                           Ghousia Center, Opposite Mubarkar Masjid<br />
                           Gizri, Karachi, Pakistan
                         </p>
+                        
+                        {locations.length > 0 && (
+                          <div className="space-y-4 mt-4 w-full pr-4">
+                            {locations.map((loc, i) => loc.url && (
+                              <div key={i} className="flex flex-col gap-2">
+                                <span className="font-medium text-sm text-primary">{loc.name}</span>
+                                <iframe
+                                  src={`https://maps.google.com/maps?q=${encodeURIComponent(loc.url)}&output=embed`}
+                                  width="100%" 
+                                  height="200" 
+                                  loading="lazy"
+                                  className="rounded-xl border border-border shadow-sm"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 

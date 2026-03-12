@@ -131,22 +131,18 @@ export const useVisitorStore = create<VisitorState>((set, get) => ({
 
 async function fetchGeoData() {
     try {
-        const res = await fetch('https://ipwho.is/');
+        const res = await fetch('https://freeipapi.com/api/json');
+        if (!res.ok) return {};
         const data = await res.json();
 
-        if (!data.success) {
-            console.warn("Geo fetch API reported failure", data.message);
-            return {};
-        }
-
         return {
-            city: data.city,
-            country: data.country,
-            country_code: data.country_code,
-            ip_address: data.ip
+            city: data.cityName,
+            country: data.countryName,
+            country_code: data.countryCode,
+            ip_address: data.ipAddress
         };
     } catch (e) {
-        console.warn("Geo fetch failed", e);
+        // Silently fail on adblockers/network issues
         return {};
     }
 }

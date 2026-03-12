@@ -7,6 +7,7 @@ import { useWishlistStore } from "@/store/wishlist";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import PageLoader from "@/components/PageLoader";
 import { ViralHandshake } from "@/components/ViralHandshake";
+import { FacebookPixel } from "@/components/FacebookPixel";
 
 // Lazy Load Pages
 const Index = lazy(() => import("./pages/Index"));
@@ -46,6 +47,7 @@ const ShippingSettings = lazy(() => import("./pages/admin/ShippingSettings"));
 const OfferManagement = lazy(() => import("./pages/admin/OfferManagement"));
 const AdminSocialAnalytics = lazy(() => import("./pages/admin/SocialAnalytics"));
 const AdminClientDairy = lazy(() => import("./pages/admin/ClientDairy"));
+const AdminSiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
 
 const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
@@ -78,6 +80,7 @@ const App = () => {
   return (
     <TooltipProvider>
       <Suspense fallback={<PageLoader />}>
+        <FacebookPixel />
         <ViralHandshake />
         <Routes>
           <Route path="/" element={<Index />} />
@@ -115,6 +118,7 @@ const App = () => {
           <Route path="/admin/shipping" element={<ProtectedRoute requireAdmin><ShippingSettings /></ProtectedRoute>} />
           <Route path="/admin/offers" element={<ProtectedRoute requireAdmin><OfferManagement /></ProtectedRoute>} />
           <Route path="/admin/social-analytics" element={<ProtectedRoute requireAdmin><AdminSocialAnalytics /></ProtectedRoute>} />
+          <Route path="/admin/site-settings" element={<ProtectedRoute requireAdmin><AdminSiteSettings /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
