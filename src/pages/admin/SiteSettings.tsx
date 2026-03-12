@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2, Globe, ShieldAlert, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function SiteSettings() {
@@ -182,6 +182,69 @@ export default function SiteSettings() {
                                 </CardContent>
                             </Card>
 
+                            {/* Upcoming Pro Features (Placeholders aligned with TODOs) */}
+                            <div className="pt-8 border-t space-y-6">
+                                <div>
+                                    <h2 className="text-xl font-serif font-bold italic text-primary">Advanced Features (Coming Soon)</h2>
+                                    <p className="text-sm text-muted-foreground">These modules are currently in development as per the roadmap.</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {/* Auto-Currency */}
+                                    <Card className="rounded-3xl border border-border shadow-sm bg-muted/20 relative overflow-hidden">
+                                        <div className="absolute top-3 right-3">
+                                            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">In Progress</span>
+                                        </div>
+                                        <CardHeader className="pb-2">
+                                            <Globe className="h-6 w-6 text-emerald-600 mb-2" />
+                                            <CardTitle className="text-md">Auto-Currency & Region</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-xs text-muted-foreground mb-4">Automatically shows prices in USD, EUR, AED, etc., based on visitor's IP address to boost international sales.</p>
+                                            <div className="flex items-center gap-2 opacity-50 pointer-events-none">
+                                                <div className="h-5 w-10 bg-slate-300 rounded-full"></div>
+                                                <span className="text-sm">Enable Locator</span>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* VPN/Fraud Detection */}
+                                    <Card className="rounded-3xl border border-border shadow-sm bg-muted/20 relative overflow-hidden">
+                                        <div className="absolute top-3 right-3">
+                                            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Planned</span>
+                                        </div>
+                                        <CardHeader className="pb-2">
+                                            <ShieldAlert className="h-6 w-6 text-red-600 mb-2" />
+                                            <CardTitle className="text-md">VPN & Fraud Blocker</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-xs text-muted-foreground mb-4">Block suspect checkouts or high-risk login attempts automatically using free location proxy detection.</p>
+                                            <div className="flex items-center gap-2 opacity-50 pointer-events-none">
+                                                <div className="h-5 w-10 bg-slate-300 rounded-full"></div>
+                                                <span className="text-sm">Strict Mode</span>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Location Content */}
+                                    <Card className="rounded-3xl border border-border shadow-sm bg-muted/20 relative overflow-hidden">
+                                        <div className="absolute top-3 right-3">
+                                            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Planned</span>
+                                        </div>
+                                        <CardHeader className="pb-2">
+                                            <Megaphone className="h-6 w-6 text-purple-600 mb-2" />
+                                            <CardTitle className="text-md">Local Promo Banners</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-xs text-muted-foreground mb-4">Display "Next Day Delivery in Karachi" specifically to users browsing from Karachi, Sindh.</p>
+                                            <div className="flex items-center gap-2 opacity-50 pointer-events-none">
+                                                <div className="h-5 w-10 bg-slate-300 rounded-full"></div>
+                                                <span className="text-sm">Geo-Targeting</span>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
