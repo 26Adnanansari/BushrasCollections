@@ -33,7 +33,7 @@ export const useCurrencyStore = create<CurrencyState>()(
 
         try {
             // First check if auto-currency is globally enabled by Admin
-            const { data: settingsData } = await supabase.from('site_settings').select('value').eq('key', 'auto_currency').single();
+            const { data: settingsData } = await supabase.from('site_settings').select('value').eq('key', 'auto_currency').maybeSingle();
             if (settingsData && settingsData.value?.enabled === false) {
                 // Admin disabled auto-currency completely
                 set({ code: 'PKR', symbol: 'Rs.', rate: 1, isAuto: false });
