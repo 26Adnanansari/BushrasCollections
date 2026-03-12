@@ -4,6 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
 import { useVisitorStore } from "@/store/visitor";
 import { useWishlistStore } from "@/store/wishlist";
+import { useCurrencyStore } from "@/store/currency";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import PageLoader from "@/components/PageLoader";
 import { ViralHandshake } from "@/components/ViralHandshake";
@@ -53,15 +54,17 @@ const App = () => {
   const initializeAuth = useAuthStore((state) => state.initialize);
   const initializeVisitor = useVisitorStore((state) => state.initialize);
   const initializeWishlist = useWishlistStore((state) => state.initialize);
+  const initializeCurrency = useCurrencyStore((state) => state.initialize);
   const location = useLocation();
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Initialize visitor tracking ONCE on app start — not on every route change
+  // Initialize visitor and currency tracking ONCE on app start
   useEffect(() => {
     initializeVisitor();
+    initializeCurrency();
 
     // Register Service Worker for Push Notifications
     if ('serviceWorker' in navigator) {

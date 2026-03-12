@@ -7,6 +7,7 @@ import { useWishlistStore } from "@/store/wishlist";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { useToast } from "@/hooks/use-toast";
+import { PriceDisplay } from "@/components/PriceDisplay";
 
 interface ProductCardProps {
   id: string;
@@ -182,7 +183,7 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
           </h3>
           <div className="flex flex-col gap-1">
             <span className="text-lg md:text-2xl font-bold text-primary">
-              Rs. {price.toLocaleString()}
+              <PriceDisplay amount={price} />
             </span>
             {totalReviews > 0 ? (
               <div className="flex items-center gap-1">

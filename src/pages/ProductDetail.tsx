@@ -18,6 +18,7 @@ import { ReviewsList } from "@/components/reviews/ReviewsList";
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ShareModal } from "@/components/ShareModal";
+import { PriceDisplay } from "@/components/PriceDisplay";
 
 interface Product {
   id: string;
@@ -278,6 +279,39 @@ const ProductDetail = () => {
     <main className="min-h-screen bg-background">
       <Navigation />
 
+      {/* Auto-SEO: Google Structured Data for Products */}
+      <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+             __html: JSON.stringify({
+                "@context": "https://schema.org/",
+                "@type": "Product",
+                "name": product.name,
+                "image": productImages[0] || "",
+                "description": product.description || `Premium ${product.name} styling from Bushra's Collection.`,
+                "sku": product.id,
+                "offers": {
+                   "@type": "Offer",
+                   "url": window.location.href,
+                   "priceCurrency": "PKR",
+                   "price": product.price,
+                   "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+                   "itemCondition": "https://schema.org/NewCondition",
+                   "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                   "seller": {
+                      "@type": "Organization",
+                      "name": "Bushra's Collection"
+                   }
+                },
+                "aggregateRating": totalReviews > 0 ? {
+                   "@type": "AggregateRating",
+                   "ratingValue": averageRating,
+                   "reviewCount": totalReviews
+                } : undefined
+             })
+          }}
+      />
+
       <div className="container mx-auto px-4 pt-24 pb-20">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
@@ -384,7 +418,7 @@ const ProductDetail = () => {
 
             <div>
               <div className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                PKR {product.price.toLocaleString()}
+                <PriceDisplay amount={product.price} />
               </div>
 
               {product.description && (

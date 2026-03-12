@@ -135,6 +135,10 @@ async function fetchGeoData() {
         if (!res.ok) return {};
         const data = await res.json();
 
+        if (data.countryCode) {
+            localStorage.setItem('visitor_country_code', data.countryCode);
+        }
+
         return {
             city: data.cityName,
             country: data.countryName,
