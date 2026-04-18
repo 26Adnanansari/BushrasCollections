@@ -157,6 +157,27 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
+      // Security Check: VPN / Proxy detection
+      try {
+        const { data: vpnSetting } = await supabase.from('site_settings').select('value').eq('key', 'vpn_blocker').maybeSingle();
+        if (vpnSetting && vpnSetting.value?.enabled) {
+          const res = await fetch('https://freeipapi.com/api/json');
+          const geo = await res.json();
+          if (geo.isProxy) {
+            toast({
+              title: "Checkout Blocked (Security Alert)",
+              description: "You appear to be using a VPN or Proxy. Please disable it to proceed with your order.",
+              variant: "destructive"
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      } catch (e) {
+        // Silently continue if the API fails, to prevent blocking real users
+        console.warn("VPN Check failed", e);
+      }
+
       const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
 
       // Create order in database

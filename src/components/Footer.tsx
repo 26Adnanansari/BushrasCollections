@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Instagram, Facebook, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Facebook, Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -126,7 +126,7 @@ const Footer = () => {
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                  Returns & Exchanges
+                  No Return Policy
                 </a>
               </li>
               <li>
@@ -145,14 +145,17 @@ const Footer = () => {
                 <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-muted-foreground text-sm space-y-2 block">
                   <span className="block font-medium text-foreground">Outlet 1:</span>
-                  13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area Phase 6, Karachi, Pakistan.
+                  13C Ln 5, Bukhari Commercial D.H.A Phase 6, Karachi.
                   <br /><br />
                   <span className="block font-medium text-foreground">Outlet 2:</span>
                   Ghousia Center, Opposite Mubarkar Masjid, Gizri, Karachi.
                 </span>
               </li>
-              <li className="flex items-center gap-2 pt-2">
-                <Phone className="h-5 w-5 text-primary flex-shrink-0" />
+              <li className="flex items-center gap-3 pt-2">
+                <div className="flex gap-2">
+                  <Phone className="h-5 w-5 text-primary flex-shrink-0" />
+                  <MessageCircle className="h-5 w-5 text-[#25D366] flex-shrink-0" />
+                </div>
                 <span className="text-muted-foreground text-sm">+92 323 3228259</span>
               </li>
             </ul>

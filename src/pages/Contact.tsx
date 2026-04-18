@@ -237,8 +237,7 @@ const Contact = () => {
                         <div className="text-muted-foreground mb-4 space-y-4">
                           <div>
                             <span className="font-medium text-foreground block">Outlet 1:</span>
-                            13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area<br />
-                            Phase 6, Karachi, Pakistan.
+                            13C Ln 5, Bukhari Commercial D.H.A Phase 6, Karachi.
                           </div>
                           <div>
                             <span className="font-medium text-foreground block">Outlet 2:</span>
@@ -334,7 +333,7 @@ const Contact = () => {
                   <h3 className="text-2xl font-serif font-bold text-foreground mb-6">Quick Help</h3>
                   <div className="space-y-3">
                     <Button variant="outline" className="w-full justify-start">
-                      Shipping & Returns Policy
+                      Shipping & No Return Policy
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       Size Guide

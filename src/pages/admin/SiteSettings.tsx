@@ -8,10 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2, Globe, ShieldAlert, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 
 export default function SiteSettings() {
     const [pixelId, setPixelId] = useState("");
     const [locations, setLocations] = useState<{ name: string, url: string }[]>([]);
+    const [autoCurrency, setAutoCurrency] = useState(true);
+    const [vpnBlocker, setVpnBlocker] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const { toast } = useToast();
@@ -39,6 +42,16 @@ export default function SiteSettings() {
                 } else {
                     setLocations([{ name: "Outlet 1", url: "" }]);
                 }
+
+                const currencyDoc = data.find(d => d.key === 'auto_currency');
+                if (currencyDoc && currencyDoc.value) {
+                    setAutoCurrency(currencyDoc.value.enabled !== false);
+                }
+
+                const vpnDoc = data.find(d => d.key === 'vpn_blocker');
+                if (vpnDoc && vpnDoc.value) {
+                    setVpnBlocker(vpnDoc.value.enabled === true);
+                }
             }
         } catch (error: any) {
             console.error("Error loading settings", error);
@@ -61,6 +74,17 @@ export default function SiteSettings() {
             await supabase.from('site_settings').upsert({
                 key: 'google_maps',
                 value: { locations: locations.filter(l => l.name || l.url) }
+            }, { onConflict: 'key' });
+
+            // Save Advanced Flags
+            await supabase.from('site_settings').upsert({
+                key: 'auto_currency',
+                value: { enabled: autoCurrency }
+            }, { onConflict: 'key' });
+
+            await supabase.from('site_settings').upsert({
+                key: 'vpn_blocker',
+                value: { enabled: vpnBlocker }
             }, { onConflict: 'key' });
 
             toast({ title: "Success", description: "Settings updated successfully." });
@@ -191,37 +215,31 @@ export default function SiteSettings() {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {/* Auto-Currency */}
-                                    <Card className="rounded-3xl border border-border shadow-sm bg-muted/20 relative overflow-hidden">
-                                        <div className="absolute top-3 right-3">
-                                            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">In Progress</span>
-                                        </div>
+                                    <Card className="rounded-3xl border border-border shadow-sm transition-all duration-300">
                                         <CardHeader className="pb-2">
                                             <Globe className="h-6 w-6 text-emerald-600 mb-2" />
                                             <CardTitle className="text-md">Auto-Currency & Region</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-xs text-muted-foreground mb-4">Automatically shows prices in USD, EUR, AED, etc., based on visitor's IP address to boost international sales.</p>
-                                            <div className="flex items-center gap-2 opacity-50 pointer-events-none">
-                                                <div className="h-5 w-10 bg-slate-300 rounded-full"></div>
-                                                <span className="text-sm">Enable Locator</span>
+                                            <div className="flex items-center gap-3">
+                                                <Switch checked={autoCurrency} onCheckedChange={setAutoCurrency} />
+                                                <span className="text-sm font-medium">Enable Locator</span>
                                             </div>
                                         </CardContent>
                                     </Card>
 
                                     {/* VPN/Fraud Detection */}
-                                    <Card className="rounded-3xl border border-border shadow-sm bg-muted/20 relative overflow-hidden">
-                                        <div className="absolute top-3 right-3">
-                                            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Planned</span>
-                                        </div>
+                                    <Card className="rounded-3xl border border-border shadow-sm transition-all duration-300">
                                         <CardHeader className="pb-2">
                                             <ShieldAlert className="h-6 w-6 text-red-600 mb-2" />
                                             <CardTitle className="text-md">VPN & Fraud Blocker</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-xs text-muted-foreground mb-4">Block suspect checkouts or high-risk login attempts automatically using free location proxy detection.</p>
-                                            <div className="flex items-center gap-2 opacity-50 pointer-events-none">
-                                                <div className="h-5 w-10 bg-slate-300 rounded-full"></div>
-                                                <span className="text-sm">Strict Mode</span>
+                                            <div className="flex items-center gap-3">
+                                                <Switch checked={vpnBlocker} onCheckedChange={setVpnBlocker} />
+                                                <span className="text-sm font-medium">Strict Mode</span>
                                             </div>
                                         </CardContent>
                                     </Card>

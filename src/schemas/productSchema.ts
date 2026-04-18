@@ -64,6 +64,13 @@ export const productSchema = z.object({
   embellishment: z
     .array(z.string())
     .optional(),
+  is_custom: z.boolean().optional().default(false),
+  advance_required: z
+    .number()
+    .min(0, 'Advance percentage must be 0 or greater')
+    .max(100, 'Advance percentage must be 100 or less')
+    .optional()
+    .default(0),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

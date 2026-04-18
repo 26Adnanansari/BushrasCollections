@@ -44,6 +44,8 @@ interface Product {
   care_instructions?: string | null;
   occasion_type?: string | null;
   embellishment?: string[] | null;
+  is_custom: boolean;
+  advance_required: number;
   created_at: string;
 }
 
@@ -92,6 +94,8 @@ const AdminProducts = () => {
     care_instructions: '',
     occasion_type: '',
     embellishment: [],
+    is_custom: false,
+    advance_required: '0',
   });
   const [productImages, setProductImages] = useState<string[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -140,6 +144,8 @@ const AdminProducts = () => {
           care_instructions: draft.care_instructions || '',
           occasion_type: draft.occasion_type || '',
           embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? (draft.embellishment as string).split(',').map((e: string) => e.trim()).filter(Boolean) : []) : []),
+          is_custom: draft.is_custom || false,
+          advance_required: draft.advance_required || '0',
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -230,7 +236,9 @@ const AdminProducts = () => {
                 available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
                 care_instructions: row.care_instructions,
                 occasion_type: row.occasion_type,
-                embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()).filter(Boolean) : []
+                embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()).filter(Boolean) : [],
+                is_custom: row.is_custom === 'TRUE' || row.is_custom === 'true' || row.is_custom === true,
+                advance_required: parseFloat(row.advance_required) || 0
               };
             });
 
@@ -294,6 +302,8 @@ const AdminProducts = () => {
         care_instructions: formData.care_instructions || undefined,
         occasion_type: formData.occasion_type || undefined,
         embellishment: embellishments.length > 0 ? embellishments : undefined,
+        is_custom: formData.is_custom,
+        advance_required: formData.is_custom ? (parseFloat(formData.advance_required) || 0) : 0,
       });
 
       if (productImages.length === 0) {
@@ -358,6 +368,8 @@ const AdminProducts = () => {
         care_instructions: '',
         occasion_type: '',
         embellishment: [],
+        is_custom: false,
+        advance_required: '0',
       });
       setCustomCategory("");
       setProductImages([]);
@@ -424,6 +436,8 @@ const AdminProducts = () => {
       care_instructions: product.care_instructions || '',
       occasion_type: product.occasion_type || '',
       embellishment: product.embellishment || [],
+      is_custom: product.is_custom || false,
+      advance_required: product.advance_required?.toString() || '0',
     });
     setIsDialogOpen(true);
   };
@@ -565,6 +579,8 @@ const AdminProducts = () => {
                       care_instructions: '',
                       occasion_type: '',
                       embellishment: [],
+                      is_custom: false,
+                      advance_required: '0',
                     });
                     setProductImages([]);
                   }} className="flex-1 md:flex-none">
@@ -596,6 +612,46 @@ const AdminProducts = () => {
 
                   <form onSubmit={handleSubmit} className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+                      {/* Inventory Type (Made to Order vs Ready to Wear) */}
+                      <div className="col-span-1">
+                        <Label htmlFor="inventory_type" className="text-sm font-medium mb-1.5 block">Inventory Type *</Label>
+                        <Select
+                          value={formData.is_custom ? 'Made to Order' : 'Ready to Wear'}
+                          onValueChange={(value) => setFormData({ ...formData, is_custom: value === 'Made to Order' })}
+                        >
+                          <SelectTrigger id="inventory_type" className="h-11">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Ready to Wear">Ready to Wear</SelectItem>
+                            <SelectItem value="Made to Order">Made to Order</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Advance Percentage */}
+                      <div className="col-span-1">
+                        <Label htmlFor="advance_required" className={`text-sm font-medium mb-1.5 block ${!formData.is_custom && 'text-muted-foreground'}`}>
+                          Advance Payment % {formData.is_custom ? '*' : ''}
+                        </Label>
+                        <Input
+                          id="advance_required"
+                          name="advance_required"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={formData.is_custom ? formData.advance_required : '0'}
+                          onChange={(e) => setFormData({ ...formData, advance_required: e.target.value })}
+                          disabled={!formData.is_custom}
+                          className="h-11"
+                          placeholder="e.g. 40"
+                        />
+                        {formData.is_custom && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Customer will pay {formData.advance_required || 0}% online, remaining on delivery.
+                          </p>
+                        )}
+                      </div>
 
                       {/* 1. SKU CODE */}
                       <div className="col-span-1 sm:col-span-2">

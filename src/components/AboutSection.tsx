@@ -40,7 +40,7 @@ const AboutSection = () => {
                 <div>
                   <div className="mb-2">
                     <p className="font-semibold text-foreground">Outlet 1</p>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area Phase 6, Karachi, Pakistan</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">13C Ln 5, Bukhari Commercial D.H.A Phase 6, Karachi.</p>
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">Outlet 2</p>

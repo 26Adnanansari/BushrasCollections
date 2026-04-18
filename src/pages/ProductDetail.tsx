@@ -551,16 +551,11 @@ const ProductDetail = () => {
             <div className="space-y-4">
               <Card>
                 <CardContent className="p-4">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <Truck className="h-6 w-6 text-primary mx-auto mb-2" />
-                      <div className="text-sm font-medium">Free Delivery</div>
-                      <div className="text-xs text-muted-foreground">Orders over PKR 5,000</div>
-                    </div>
+                  <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <RefreshCw className="h-6 w-6 text-primary mx-auto mb-2" />
-                      <div className="text-sm font-medium">Easy Returns</div>
-                      <div className="text-xs text-muted-foreground">7-day return policy</div>
+                      <div className="text-sm font-medium">No Returns</div>
+                      <div className="text-xs text-muted-foreground">Strict policy</div>
                     </div>
                     <div>
                       <Shield className="h-6 w-6 text-primary mx-auto mb-2" />

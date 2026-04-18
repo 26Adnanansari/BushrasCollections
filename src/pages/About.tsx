@@ -146,8 +146,7 @@ const About = () => {
                     <div className="text-muted-foreground space-y-4">
                       <div>
                         <span className="font-medium text-foreground block">Outlet 1:</span>
-                        13 Bukhari Ln 5, D.H.A Phase 6 Bukhari Commercial Area<br />
-                        Phase 6, Karachi, Pakistan.
+                        13C Ln 5, Bukhari Commercial D.H.A Phase 6, Karachi.
                       </div>
                       <div>
                         <span className="font-medium text-foreground block">Outlet 2:</span>
