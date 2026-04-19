@@ -159,19 +159,20 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
 
           {/* Action Buttons */}
           <div className={cn(
-            "absolute bottom-4 left-4 right-4 flex gap-2 transition-all duration-300",
+            "absolute bottom-4 left-2 right-2 flex gap-1 transition-all duration-300",
             isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             <Button
-              className="flex-1 bg-gradient-hero hover:shadow-elegant transition-all duration-300 group"
+              className="flex-1 h-9 px-2 text-[11px] font-semibold bg-gradient-hero hover:shadow-elegant transition-all duration-300 group"
               onClick={handleAddToCart}
             >
-              <ShoppingBag className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+              <ShoppingBag className="h-3.5 w-3.5 mr-1.5 group-hover:scale-110 transition-transform" />
               Add to Cart
             </Button>
             <Button 
               variant="outline" 
-              className="bg-background/80 hover:bg-background hover:text-green-600 border-none"
+              size="icon"
+              className="w-9 h-9 bg-background/80 hover:bg-background hover:text-green-600 border-none flex-shrink-0"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -181,7 +182,7 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
             >
               <MessageCircle className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="bg-background/80 hover:bg-background border-none">
+            <Button variant="outline" size="icon" className="w-9 h-9 bg-background/80 hover:bg-background border-none flex-shrink-0">
               <Eye className="h-4 w-4" />
             </Button>
           </div>
