@@ -11,6 +11,8 @@ export interface CartItem {
   size?: string;
   color?: string;
   addedAt?: number;
+  is_custom?: boolean;
+  advance_required?: number;
 }
 
 interface CartState {

@@ -223,9 +223,13 @@ const OrderDetailsPage = () => {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'pending': return 'bg-yellow-100 text-yellow-800';
+            case 'pending_advance': return 'bg-orange-100 text-orange-800';
             case 'processing': return 'bg-blue-100 text-blue-800';
+            case 'confirmed': return 'bg-indigo-100 text-indigo-800';
+            case 'ready_for_dispatch': return 'bg-cyan-100 text-cyan-800';
             case 'shipped': return 'bg-purple-100 text-purple-800';
-            case 'delivered': return 'bg-green-100 text-green-800';
+            case 'delivered': 
+            case 'completed': return 'bg-green-100 text-green-800';
             case 'cancelled': return 'bg-red-100 text-red-800';
             default: return 'bg-gray-100 text-gray-800';
         }
@@ -480,9 +484,13 @@ const OrderDetailsPage = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="pending_advance">Pending Advance</SelectItem>
                                             <SelectItem value="processing">Processing</SelectItem>
+                                            <SelectItem value="confirmed">Confirmed / In-Production</SelectItem>
+                                            <SelectItem value="ready_for_dispatch">Ready for Dispatch</SelectItem>
                                             <SelectItem value="shipped">Shipped</SelectItem>
                                             <SelectItem value="delivered">Delivered</SelectItem>
+                                            <SelectItem value="completed">Completed</SelectItem>
                                             <SelectItem value="cancelled">Cancelled</SelectItem>
                                         </SelectContent>
                                     </Select>

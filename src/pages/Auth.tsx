@@ -93,6 +93,18 @@ const Auth = () => {
       const validatedData = signInSchema.parse(signInForm);
       setIsSigningIn(true);
 
+      // Check rate limit
+      const lockKey = `login_fail_${validatedData.email}`;
+      const lastFailStr = localStorage.getItem(lockKey);
+      if (lastFailStr) {
+        const lastFail = JSON.parse(lastFailStr);
+        if (lastFail.count >= 5 && Date.now() - lastFail.time < 15 * 60 * 1000) {
+          setError("Too many failed attempts. Please try again after 15 minutes.");
+          setIsSigningIn(false);
+          return;
+        }
+      }
+
       const { data, error } = await authService.signIn(
         validatedData.email,
         validatedData.password
@@ -107,8 +119,25 @@ const Auth = () => {
               ? "Please verify your email to continue."
               : msg;
         setError(friendly);
+
+        // Update failed count
+        const failData = lastFailStr ? JSON.parse(lastFailStr) : { count: 0, time: Date.now() };
+        failData.count += 1;
+        failData.time = Date.now();
+        localStorage.setItem(lockKey, JSON.stringify(failData));
+
+        // Log failed login to DB for admin security view
+        supabase.rpc('record_site_interaction', {
+          p_entity_type: 'security',
+          p_entity_id: validatedData.email,
+          p_type: 'failed_login'
+        }).then(() => {});
+
         return;
       }
+      
+      // On success, clear lock
+      localStorage.removeItem(lockKey);
 
       if (data.user) {
         toast({

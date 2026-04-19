@@ -72,7 +72,9 @@ const Analytics = () => {
   });
   const [geoStats, setGeoStats] = useState({
     topCities: [] as any[],
-    topCountries: [] as any[]
+    topCountries: [] as any[],
+    topPurchasingCities: [] as any[],
+    topPurchasingCountries: [] as any[]
   });
 
   useEffect(() => {
@@ -130,7 +132,7 @@ const Analytics = () => {
           campaigns: Object.values(campaigns).sort((a: any, b: any) => b.count - a.count)
         });
 
-        // Geographic Intelligence
+        // Session Geographic Intelligence
         const cities = sessionsData.reduce((acc: any, s) => {
           if (s.city) {
             acc[s.city] = (acc[s.city] || 0) + 1;
@@ -145,9 +147,24 @@ const Analytics = () => {
           return acc;
         }, {});
 
+        // Purchasing Geographic Intelligence
+        const purchasingCities = ordersData?.reduce((acc: any, o) => {
+          const city = o.shipping_address?.city || 'Unknown';
+          acc[city] = (acc[city] || 0) + 1;
+          return acc;
+        }, {});
+
+        const purchasingCountries = ordersData?.reduce((acc: any, o) => {
+          const country = o.shipping_address?.country || 'Unknown';
+          acc[country] = (acc[country] || 0) + 1;
+          return acc;
+        }, {});
+
         setGeoStats({
           topCities: Object.entries(cities).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count),
-          topCountries: Object.entries(countries).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count)
+          topCountries: Object.entries(countries).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count),
+          topPurchasingCities: Object.entries(purchasingCities || {}).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count),
+          topPurchasingCountries: Object.entries(purchasingCountries || {}).map(([name, count]) => ({ name, count })).sort((a: any, b: any) => b.count - a.count)
         });
       }
 
@@ -449,6 +466,67 @@ const Analytics = () => {
                     {geoStats.topCountries.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={2} className="text-center text-muted-foreground">No country data available</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> Top Purchasing Cities
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>City</TableHead>
+                      <TableHead className="text-right">Orders</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {geoStats.topPurchasingCities.filter(c => c.name !== 'Unknown').slice(0, 5).map((city, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{city.name}</TableCell>
+                        <TableCell className="text-right">{city.count}</TableCell>
+                      </TableRow>
+                    ))}
+                    {geoStats.topPurchasingCities.filter(c => c.name !== 'Unknown').length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground">No purchasing data available</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" /> Top Purchasing Countries
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Country</TableHead>
+                      <TableHead className="text-right">Orders</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {geoStats.topPurchasingCountries.filter(c => c.name !== 'Unknown').slice(0, 5).map((country, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{country.name}</TableCell>
+                        <TableCell className="text-right">{country.count}</TableCell>
+                      </TableRow>
+                    ))}
+                    {geoStats.topPurchasingCountries.filter(c => c.name !== 'Unknown').length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground">No purchasing data available</TableCell>
                       </TableRow>
                     )}
                   </TableBody>

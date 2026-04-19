@@ -18,6 +18,8 @@ interface VisitorState {
     visitorId: string | null;
     visitCount: number;
     isReturning: boolean;
+    city: string | null;
+    countryCode: string | null;
     initialize: () => Promise<void>;
     logPageView: () => void;
 }
@@ -29,6 +31,8 @@ export const useVisitorStore = create<VisitorState>((set, get) => ({
     visitorId: null,
     visitCount: 0,
     isReturning: false,
+    city: localStorage.getItem('visitor_city'),
+    countryCode: localStorage.getItem('visitor_country_code'),
 
     initialize: async () => {
         let cookieData = getJsonCookie<VisitorData>(VISITOR_COOKIE);
@@ -138,6 +142,12 @@ async function fetchGeoData() {
         if (data.countryCode) {
             localStorage.setItem('visitor_country_code', data.countryCode);
         }
+        if (data.cityName) {
+            localStorage.setItem('visitor_city', data.cityName);
+        }
+
+        // Update the zustand store directly if possible, or wait for next load
+        useVisitorStore.setState({ city: data.cityName, countryCode: data.countryCode });
 
         return {
             city: data.cityName,

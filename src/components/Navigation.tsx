@@ -20,6 +20,7 @@ import CartDrawer from "./CartDrawer";
 import { SearchOverlay } from "./SearchOverlay";
 import { useCurrencyStore } from "@/store/currency";
 import { Globe } from "lucide-react";
+import { LocationBanner } from "./LocationBanner";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,8 +71,9 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto px-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border flex flex-col">
+      <LocationBanner />
+      <div className="container mx-auto px-4 shadow-sm">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">

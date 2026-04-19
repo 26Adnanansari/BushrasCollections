@@ -19,6 +19,7 @@ import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ShareModal } from "@/components/ShareModal";
 import { PriceDisplay } from "@/components/PriceDisplay";
+import { emitPixelEvent } from "@/utils/pixel";
 
 interface Product {
   id: string;
@@ -37,6 +38,8 @@ interface Product {
   available_colors?: string[];
   occasion_type?: string;
   embellishment?: string[];
+  is_custom?: boolean;
+  advance_required?: number;
 }
 
 const ProductDetail = () => {
@@ -172,7 +175,9 @@ const ProductDetail = () => {
         image: productImages[0] || '/placeholder.svg',
         category: product.category || 'Fashion',
         size: selectedSize,
-        color: selectedColor
+        color: selectedColor,
+        is_custom: product.is_custom,
+        advance_required: product.advance_required
       });
     }
 
@@ -214,6 +219,13 @@ const ProductDetail = () => {
         p_entity_type: 'product',
         p_entity_id: product.id,
         p_type: 'like'
+      });
+      emitPixelEvent('AddToWishlist', {
+        content_name: product.name,
+        content_category: product.category,
+        content_ids: [product.id],
+        value: product.price,
+        currency: 'PKR'
       });
       toast({ title: "Product Saved", description: "This has been added to your interests." });
     } catch (err) {

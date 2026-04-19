@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2, Globe, ShieldAlert, Megaphone } from "lucide-react";
+import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2, Globe, ShieldAlert, Megaphone, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function SiteSettings() {
     const [pixelId, setPixelId] = useState("");
@@ -17,12 +20,30 @@ export default function SiteSettings() {
     const [vpnBlocker, setVpnBlocker] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [securityLogs, setSecurityLogs] = useState<any[]>([]);
     const { toast } = useToast();
     const navigate = useNavigate();
 
     useEffect(() => {
         loadSettings();
+        loadSecurityLogs();
     }, []);
+
+    const loadSecurityLogs = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('site_activity')
+                .select('*')
+                .eq('entity_type', 'security')
+                .order('created_at', { ascending: false })
+                .limit(50);
+                
+            if (error) throw error;
+            if (data) setSecurityLogs(data);
+        } catch (err: any) {
+            console.error("Error loading security logs", err);
+        }
+    };
 
     const loadSettings = async () => {
         try {
@@ -123,14 +144,22 @@ export default function SiteSettings() {
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h1 className="text-3xl font-serif font-bold italic text-primary">Site Settings</h1>
-                            <p className="text-muted-foreground">Manage marketing, pixels, and Google tools.</p>
+                            <h1 className="text-3xl font-serif font-bold italic text-primary">System Settings</h1>
+                            <p className="text-muted-foreground">Manage site-wide configurations and security.</p>
                         </div>
                         <Button onClick={handleSave} disabled={saving || loading}>
                             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             Save Changes
                         </Button>
                     </div>
+
+                    <Tabs defaultValue="settings" className="w-full">
+                        <TabsList className="mb-6">
+                            <TabsTrigger value="settings">General Settings</TabsTrigger>
+                            <TabsTrigger value="security">Security Logs</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="settings">
 
                     {loading ? (
                         <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -265,6 +294,59 @@ export default function SiteSettings() {
                             </div>
                         </div>
                     )}
+                    </TabsContent>
+
+                    <TabsContent value="security">
+                        <Card className="border shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Shield className="h-5 w-5 text-destructive" />
+                                    Security Activity Log
+                                </CardTitle>
+                                <CardDescription>
+                                    Review blocked VPN attempts and brute-force login blocks.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {securityLogs.length === 0 ? (
+                                    <div className="py-8 text-center text-muted-foreground border border-dashed rounded-lg">
+                                        <Shield className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                                        <p>No suspicious activities recorded.</p>
+                                    </div>
+                                ) : (
+                                    <div className="border rounded-lg overflow-hidden">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Date & Time</TableHead>
+                                                    <TableHead>Type</TableHead>
+                                                    <TableHead>Entity / IP Address</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {securityLogs.map((log) => (
+                                                    <TableRow key={log.id}>
+                                                        <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
+                                                        <TableCell>
+                                                            {log.type === 'vpn_blocked' ? (
+                                                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">VPN Checkout Blocked</span>
+                                                            ) : log.type === 'failed_login' ? (
+                                                                <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">Failed Login</span>
+                                                            ) : (
+                                                                <span className="px-2 py-1 bg-slate-100 text-slate-800 text-xs rounded-full">{log.type}</span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-sm">{log.entity_id}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    </Tabs>
                 </div>
             </div>
         </div>

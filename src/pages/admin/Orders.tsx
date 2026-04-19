@@ -16,7 +16,7 @@ interface Order {
   order_number: string;
   user_id: string;
   total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'pending_advance' | 'processing' | 'confirmed' | 'ready_for_dispatch' | 'shipped' | 'delivered' | 'completed' | 'cancelled';
   whatsapp_number?: string;
   shipping_address?: any;
   created_at: string;
@@ -79,7 +79,7 @@ const AdminOrders = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled') => {
+  const updateOrderStatus = async (orderId: string, status: string) => {
     try {
       const { error } = await supabase
         .from('orders')
@@ -103,15 +103,17 @@ const AdminOrders = () => {
     }
   };
 
-  const getStatusBadgeVariant = (status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled') => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'pending':
+      case 'pending_advance':
         return 'secondary';
+      case 'confirmed':
       case 'processing':
-        return 'default';
+      case 'ready_for_dispatch':
       case 'shipped':
-        return 'default';
       case 'delivered':
+      case 'completed':
         return 'default';
       case 'cancelled':
         return 'destructive';
@@ -230,19 +232,27 @@ const AdminOrders = () => {
                                 <Eye className="h-4 w-4 mr-1.5" />
                                 View
                               </Button>
-                              {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                              {order.status !== 'delivered' && order.status !== 'completed' && order.status !== 'cancelled' && (
                                 <Button
                                   size="sm"
                                   onClick={() => {
                                     const nextStatus =
-                                      order.status === 'pending' ? 'processing' :
-                                        order.status === 'processing' ? 'shipped' : 'delivered';
+                                      order.status === 'pending' ? 'pending_advance' :
+                                      order.status === 'pending_advance' ? 'confirmed' :
+                                      order.status === 'confirmed' ? 'processing' :
+                                      order.status === 'processing' ? 'ready_for_dispatch' :
+                                      order.status === 'ready_for_dispatch' ? 'shipped' :
+                                      order.status === 'shipped' ? 'completed' : 'completed';
                                     updateOrderStatus(order.id, nextStatus as any);
                                   }}
                                   className="h-8"
                                 >
-                                  {order.status === 'pending' ? 'Process' :
-                                    order.status === 'processing' ? 'Ship' : 'Deliver'}
+                                  {order.status === 'pending' ? 'Advance' :
+                                   order.status === 'pending_advance' ? 'Confirm' :
+                                   order.status === 'confirmed' ? 'Process' :
+                                   order.status === 'processing' ? 'Ready' :
+                                   order.status === 'ready_for_dispatch' ? 'Ship' :
+                                   order.status === 'shipped' ? 'Deliver' : 'Done'}
                                 </Button>
                               )}
                             </div>
@@ -298,31 +308,22 @@ const AdminOrders = () => {
                                   <Eye className="h-4 w-4" />
                                 </Button>
                                 {order.status === 'pending' && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => updateOrderStatus(order.id, 'processing')}
-                                    className="h-8"
-                                  >
-                                    Process
-                                  </Button>
+                                  <Button size="sm" onClick={() => updateOrderStatus(order.id, 'pending_advance')} className="h-8">Advance</Button>
+                                )}
+                                {order.status === 'pending_advance' && (
+                                  <Button size="sm" onClick={() => updateOrderStatus(order.id, 'confirmed')} className="h-8">Confirm</Button>
+                                )}
+                                {order.status === 'confirmed' && (
+                                  <Button size="sm" onClick={() => updateOrderStatus(order.id, 'processing')} className="h-8">Process</Button>
                                 )}
                                 {order.status === 'processing' && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => updateOrderStatus(order.id, 'shipped')}
-                                    className="h-8"
-                                  >
-                                    Ship
-                                  </Button>
+                                  <Button size="sm" onClick={() => updateOrderStatus(order.id, 'ready_for_dispatch')} className="h-8">Ready</Button>
                                 )}
-                                {order.status === 'shipped' && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => updateOrderStatus(order.id, 'delivered')}
-                                    className="h-8"
-                                  >
-                                    Deliver
-                                  </Button>
+                                {order.status === 'ready_for_dispatch' && (
+                                  <Button size="sm" onClick={() => updateOrderStatus(order.id, 'shipped')} className="h-8">Ship</Button>
+                                )}
+                                {(order.status === 'shipped' || order.status === 'delivered') && (
+                                  <Button size="sm" onClick={() => updateOrderStatus(order.id, 'completed')} className="h-8">Deliver</Button>
                                 )}
                               </div>
                             </TableCell>

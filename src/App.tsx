@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import PageLoader from "@/components/PageLoader";
 import { ViralHandshake } from "@/components/ViralHandshake";
 import { FacebookPixel } from "@/components/FacebookPixel";
+import { CookieBanner } from "@/components/CookieBanner";
 
 // Lazy Load Pages
 const Index = lazy(() => import("./pages/Index"));
@@ -85,6 +86,7 @@ const App = () => {
       <Suspense fallback={<PageLoader />}>
         <FacebookPixel />
         <ViralHandshake />
+        <CookieBanner />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/client-dairy" element={<ClientDairy />} />

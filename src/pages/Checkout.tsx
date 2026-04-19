@@ -58,6 +58,16 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
 
+  // Calculate custom order breakdown
+  const hasCustomProducts = items.some(item => item.is_custom);
+  const advanceRequiredAmount = items.reduce((total, item) => {
+    if (item.is_custom && item.advance_required) {
+      return total + ((item.price * item.quantity) * (item.advance_required / 100));
+    }
+    return total;
+  }, 0);
+  const remainingBalance = getTotalPrice() - advanceRequiredAmount;
+
   const [shippingInfo, setShippingInfo] = useState({
     name: user?.profile?.name || '',
     phone: user?.profile?.phone || '',
@@ -164,6 +174,13 @@ const Checkout = () => {
           const res = await fetch('https://freeipapi.com/api/json');
           const geo = await res.json();
           if (geo.isProxy) {
+            // Log security interaction
+            supabase.rpc('record_site_interaction', {
+              p_entity_type: 'security',
+              p_entity_id: geo.ipAddress || 'unknown_vpn_ip',
+              p_type: 'vpn_blocked'
+            }).then(() => {});
+
             toast({
               title: "Checkout Blocked (Security Alert)",
               description: "You appear to be using a VPN or Proxy. Please disable it to proceed with your order.",
@@ -201,7 +218,9 @@ const Checkout = () => {
       // Payment instructions based on method
       let instructions = '';
       if (selectedPaymentMethod === 'cod') {
-        instructions = 'Pay cash when you receive your order. Our team will contact you shortly.';
+        instructions = hasCustomProducts 
+          ? 'An advance payment is required for custom items. Our team will contact you shortly via WhatsApp for the advance payment details.'
+          : 'Pay cash when you receive your order. Our team will contact you shortly.';
       } else if (selectedPaymentMethod === 'bank_transfer') {
         instructions = 'Please transfer the amount to our bank account. Details will be sent via WhatsApp.';
       }
@@ -256,6 +275,15 @@ const Checkout = () => {
 
         <h1 className="text-4xl font-serif font-bold text-foreground mb-8">Checkout</h1>
 
+        {hasCustomProducts && (
+          <div className="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg p-4 mb-8 flex items-start gap-4">
+            <Package className="h-6 w-6 text-orange-500 mt-1" />
+            <div>
+              <h3 className="font-semibold">Advance Payment Required</h3>
+              <p className="text-sm">Your order contains "Made to Order" items. An advance payment of PKR {advanceRequiredAmount.toLocaleString()} is required to begin production.</p>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
@@ -413,10 +441,27 @@ const Checkout = () => {
                     <span className="text-green-600">Free</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>PKR {getTotalPrice().toLocaleString()}</span>
-                  </div>
+                  {hasCustomProducts ? (
+                    <>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Total Order Value</span>
+                        <span>PKR {getTotalPrice().toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold text-primary mt-2">
+                        <span>Pay Now (Advance)</span>
+                        <span>PKR {advanceRequiredAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                        <span>Remaining Balance</span>
+                        <span>PKR {remainingBalance.toLocaleString()}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>Total</span>
+                      <span>PKR {getTotalPrice().toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
