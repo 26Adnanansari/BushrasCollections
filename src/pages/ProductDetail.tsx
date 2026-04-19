@@ -348,7 +348,7 @@ const ProductDetail = () => {
               <img
                 src={productImages[selectedImage] || '/placeholder.svg'}
                 alt={product.name}
-                className="w-full h-full object-contain pointer-events-none select-none"
+                className="w-full h-full object-cover pointer-events-none select-none"
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
               />
@@ -389,7 +389,7 @@ const ProductDetail = () => {
                   <img
                     src={image || '/placeholder.svg'}
                     alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-contain pointer-events-none"
+                    className="w-full h-full object-cover pointer-events-none"
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}
                   />

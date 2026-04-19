@@ -109,7 +109,7 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
             src={displayImage || '/placeholder.svg'}
             alt={name}
             className={cn(
-              "w-full h-full object-contain transition-transform duration-700",
+              "w-full h-full object-cover transition-transform duration-700",
               isHovered ? "scale-105" : "scale-100"
             )}
           />
