@@ -234,34 +234,36 @@ const Contact = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-foreground mb-2">Visit Our Store</h4>
-                        <div className="text-muted-foreground mb-4 space-y-4">
+                        <div className="text-muted-foreground mb-4 space-y-6">
                           <div>
-                            <span className="font-medium text-foreground block">Outlet 1:</span>
-                            13C Ln 5, Bukhari Commercial D.H.A Phase 6, Karachi.
+                            <span className="font-medium text-primary block mb-2">Outlet 1: Bukhari Commercial</span>
+                            <p className="mb-3 text-sm">13C Ln 5, Bukhari Commercial D.H.A Phase 6, Karachi.</p>
+                            <iframe
+                              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3621.99742653508!2d67.06267787529478!3d24.795541647852307!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33d002dea5511%3A0xd9378c83300b0caf!2sBushra&#39;s%20collection!5e0!3m2!1sen!2s!4v1776613501141!5m2!1sen!2s"
+                              width="100%"
+                              height="250"
+                              style={{ border: 0 }}
+                              allowFullScreen={true}
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              className="rounded-xl border border-border shadow-sm"
+                            />
                           </div>
                           <div>
-                            <span className="font-medium text-foreground block">Outlet 2:</span>
-                            Ghousia Center, Opposite Mubarkar Masjid<br />
-                            Gizri, Karachi, Pakistan
+                            <span className="font-medium text-primary block mb-2">Outlet 2: Gizri</span>
+                            <p className="mb-3 text-sm">Ghousia Center, Opposite Mubarkar Masjid, Gizri, Karachi, Pakistan</p>
+                            <iframe
+                              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3621.291829608294!2d67.04465147529542!3d24.819691746887884!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33d5fd72d92bf%3A0xb416413e63bda142!2sBushra&#39;s%20collection!5e0!3m2!1sen!2s!4v1776613605588!5m2!1sen!2s"
+                              width="100%"
+                              height="250"
+                              style={{ border: 0 }}
+                              allowFullScreen={true}
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              className="rounded-xl border border-border shadow-sm"
+                            />
                           </div>
                         </div>
-                        
-                        {locations.length > 0 && (
-                          <div className="space-y-4 mt-4 w-full pr-4">
-                            {locations.map((loc, i) => loc.url && (
-                              <div key={i} className="flex flex-col gap-2">
-                                <span className="font-medium text-sm text-primary">{loc.name}</span>
-                                <iframe
-                                  src={`https://maps.google.com/maps?q=${encodeURIComponent(loc.url)}&output=embed`}
-                                  width="100%" 
-                                  height="200" 
-                                  loading="lazy"
-                                  className="rounded-xl border border-border shadow-sm"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </div>
 

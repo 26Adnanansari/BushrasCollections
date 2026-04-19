@@ -169,7 +169,19 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
               <ShoppingBag className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
               Add to Cart
             </Button>
-            <Button variant="outline" className="bg-background/80 hover:bg-background">
+            <Button 
+              variant="outline" 
+              className="bg-background/80 hover:bg-background hover:text-green-600 border-none"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const msg = encodeURIComponent(`Hello, I am interested in ${name} (ID: ${id}). Can you please share more details?`);
+                window.open(`https://wa.me/923233228259?text=${msg}`, '_blank');
+              }}
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" className="bg-background/80 hover:bg-background border-none">
               <Eye className="h-4 w-4" />
             </Button>
           </div>

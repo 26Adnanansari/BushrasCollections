@@ -547,6 +547,12 @@ const ProductDetail = () => {
                 <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleLike}>
                   <Heart className="h-5 w-5" />
                 </Button>
+                <Button variant="outline" size="lg" className="w-12 px-0 hover:text-green-600" onClick={() => {
+                  const msg = encodeURIComponent(`Hello, I'm interested in the ${product?.name}. I'd like to ask a question.`);
+                  window.open(`https://wa.me/923233228259?text=${msg}`, '_blank');
+                }}>
+                  <MessageCircle className="h-5 w-5" />
+                </Button>
                 <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleShare}>
                   <Share2 className="h-5 w-5" />
                 </Button>
