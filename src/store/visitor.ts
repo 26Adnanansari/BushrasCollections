@@ -135,25 +135,27 @@ export const useVisitorStore = create<VisitorState>((set, get) => ({
 
 async function fetchGeoData() {
     try {
-        const res = await fetch('https://freeipapi.com/api/json');
+        const res = await fetch('https://ipwho.is/');
         if (!res.ok) return {};
         const data = await res.json();
+        
+        if (!data.success) return {};
 
-        if (data.countryCode) {
-            localStorage.setItem('visitor_country_code', data.countryCode);
+        if (data.country_code) {
+            localStorage.setItem('visitor_country_code', data.country_code);
         }
-        if (data.cityName) {
-            localStorage.setItem('visitor_city', data.cityName);
+        if (data.city) {
+            localStorage.setItem('visitor_city', data.city);
         }
 
         // Update the zustand store directly if possible, or wait for next load
-        useVisitorStore.setState({ city: data.cityName, countryCode: data.countryCode });
+        useVisitorStore.setState({ city: data.city, countryCode: data.country_code });
 
         return {
-            city: data.cityName,
-            country: data.countryName,
-            country_code: data.countryCode,
-            ip_address: data.ipAddress
+            city: data.city,
+            country: data.country,
+            country_code: data.country_code,
+            ip_address: data.ip
         };
     } catch (e) {
         // Silently fail on adblockers/network issues

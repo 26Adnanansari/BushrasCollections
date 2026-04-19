@@ -171,13 +171,13 @@ const Checkout = () => {
       try {
         const { data: vpnSetting } = await supabase.from('site_settings').select('value').eq('key', 'vpn_blocker').maybeSingle();
         if (vpnSetting && vpnSetting.value?.enabled) {
-          const res = await fetch('https://freeipapi.com/api/json');
+          const res = await fetch('https://ipwho.is/');
           const geo = await res.json();
-          if (geo.isProxy) {
+          if (geo.success && geo.security && (geo.security.vpn || geo.security.proxy || geo.security.tor)) {
             // Log security interaction
             supabase.rpc('record_site_interaction', {
               p_entity_type: 'security',
-              p_entity_id: geo.ipAddress || 'unknown_vpn_ip',
+              p_entity_id: geo.ip || 'unknown_vpn_ip',
               p_type: 'vpn_blocked'
             }).then(() => {});
 
