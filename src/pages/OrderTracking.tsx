@@ -197,10 +197,10 @@ const OrderTracking = () => {
                           currency: 'PKR'
                         });
                         const message = encodeURIComponent(`Hello, I have placed an order (${order.order_number || order.id}). I would like to share my payment receipt screenshot to confirm.`);
-                        window.open(`https://wa.me/923001234567?text=${message}`, '_blank');
+                        window.open(`https://wa.me/923233228259?text=${message}`, '_blank');
                       }}
                     >
-                      Chat with Designer
+                      Send your payment receipt & chat
                     </Button>
                   </div>
                 </CardContent>

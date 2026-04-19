@@ -233,8 +233,8 @@ const Checkout = () => {
       // Clear cart
       clearCart();
 
-      // Redirect to orders page or success page
-      navigate('/orders');
+      // Redirect directly to the specific order's tracking page for immediate payment access
+      navigate(`/orders/${order.order_number || order.id}`);
     } catch (error: any) {
       console.error('Error placing order:', error);
       toast({

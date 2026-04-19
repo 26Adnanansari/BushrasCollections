@@ -24,7 +24,12 @@ const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number format (e.g., +1234567890)'),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -192,9 +197,31 @@ const Auth = () => {
       setIsSigningUp(true);
 
 
-      // Open verification modal instead of signing up immediately
-      setShowVerificationModal(true);
-      setIsSigningUp(false);
+      // Direct registration via email since SMS OTP is hidden/disabled
+      const { data, error: signUpError } = await authService.signUp(
+        validatedData.email,
+        validatedData.password,
+        validatedData.name,
+        validatedData.phone
+      );
+
+      if (signUpError) {
+        setError(signUpError.message || "Failed to create account");
+        setIsSigningUp(false);
+        return;
+      }
+
+      if (data.user) {
+        setSignUpEmail(validatedData.email);
+        setShowSuccessDialog(true);
+        setSignUpForm({
+          name: "",
+          phone: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+      }
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         const fieldErrors: any = {};
@@ -211,39 +238,7 @@ const Auth = () => {
     }
   };
 
-  const handleVerifiedSignUp = async () => {
-    try {
-      setIsSigningUp(true);
-      const { data, error } = await authService.signUp(
-        signUpForm.email,
-        signUpForm.password,
-        signUpForm.name,
-        signUpForm.phone
-      );
 
-      if (error) {
-        const msg = error.message || "Failed to create account";
-        setError(msg);
-        return;
-      }
-
-      if (data.user) {
-        setSignUpEmail(signUpForm.email);
-        setShowSuccessDialog(true);
-        setSignUpForm({
-          name: "",
-          phone: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-      }
-    } catch (err: any) {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsSigningUp(false);
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     setError("");
@@ -291,8 +286,8 @@ const Auth = () => {
     }
   };
 
-  // Social auth rendering: Google temporarily disabled for testing
-  const googleEnabled = false;
+  // Social auth rendering: Google enabled, Facebook checks env
+  const googleEnabled = true;
   const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
 
   return (
@@ -652,13 +647,7 @@ const Auth = () => {
             </Card>
           </div>
         )}
-        {/* Verification Modal */}
-        <VerificationModal
-          open={showVerificationModal}
-          onOpenChange={setShowVerificationModal}
-          phone={signUpForm.phone}
-          onVerified={handleVerifiedSignUp}
-        />
+
       </div>
     </div>
   );
