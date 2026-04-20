@@ -611,6 +611,12 @@ const ProductDetail = () => {
                     <span className="text-foreground">{product.occasion_type}</span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type:</span>
+                  <Badge variant="outline" className="font-normal h-5 border-primary/20 bg-primary/5">
+                    {product.is_custom ? 'Made to Order' : 'Ready to Wear'}
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
@@ -656,9 +662,18 @@ const ProductDetail = () => {
                         <div>
                           <span className="text-sm text-muted-foreground">Embellishment</span>
                           <p className="font-medium text-foreground">
-                            {Array.isArray(product.embellishment)
-                              ? product.embellishment.join(', ')
-                              : product.embellishment}
+                            {(() => {
+                              try {
+                                const emb = typeof product.embellishment === 'string'
+                                  ? (product.embellishment.startsWith('[') ? JSON.parse(product.embellishment) : product.embellishment)
+                                  : product.embellishment;
+                                return Array.isArray(emb) ? emb.join(', ') : emb;
+                              } catch (e) {
+                                return Array.isArray(product.embellishment)
+                                  ? product.embellishment.join(', ')
+                                  : product.embellishment;
+                              }
+                            })()}
                           </p>
                         </div>
                       )}

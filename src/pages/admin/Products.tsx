@@ -237,7 +237,7 @@ const AdminProducts = () => {
                 care_instructions: row.care_instructions,
                 occasion_type: row.occasion_type,
                 embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()).filter(Boolean) : [],
-                is_custom: row.is_custom === 'TRUE' || row.is_custom === 'true' || row.is_custom === true,
+                is_custom: row.inventory_type === 'Made to Order' || row.is_custom === 'TRUE' || row.is_custom === 'true' || row.is_custom === true,
                 advance_required: parseFloat(row.advance_required) || 0
               };
             });
@@ -500,14 +500,14 @@ const AdminProducts = () => {
     const headers = [
       'name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity',
       'image1', 'image2', 'image3', 'image4', 'image5', 'image_url',
-      'is_active', 'sku', 'fabric_type', 'available_sizes', 'available_colors', 'occasion_type', 'care_instructions', 'embellishment'
+      'is_active', 'sku', 'inventory_type', 'fabric_type', 'available_sizes', 'available_colors', 'occasion_type', 'care_instructions', 'embellishment'
     ];
 
     const sampleData = [
       [
         'Summer Dress', 'Beautiful floral summer dress', '2999', '3499', 'Fashion Brand', 'Formal Dress', '10',
         'https://example.com/front.jpg', 'https://example.com/back.jpg', '', '', '', '',
-        'true', 'SKU-FO-12345', 'Cotton', 'S,M,L', 'Red,Blue', 'Party', 'Dry clean only', 'Embroidery'
+        'true', 'SKU-FO-12345', 'Ready to Wear', 'Cotton', 'S,M,L', 'Red,Blue', 'Party', 'Dry clean only', 'Embroidery'
       ],
       [
         'Casual Shirt', 'Comfortable cotton casual shirt', '1499', '1799', 'Style Co', 'Casual Dress', '15',
@@ -589,15 +589,11 @@ const AdminProducts = () => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="
-                  fixed sm:relative
-                  inset-0 sm:inset-auto
-                  w-full sm:max-w-3xl
-                  h-[100dvh] sm:h-auto sm:max-h-[95vh]
-                  overflow-y-auto overflow-x-hidden
-                  rounded-none sm:rounded-lg
-                  p-3 sm:p-6
-                  translate-x-0 translate-y-0 sm:translate-x-[-50%] sm:translate-y-[-50%]
-                  left-0 top-0 sm:left-[50%] sm:top-[50%]
+                  max-w-3xl w-[95vw] 
+                  max-h-[85vh] overflow-y-auto 
+                  p-4 sm:p-6 
+                  fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                  bg-background border border-border/50
                 ">
                   <DialogHeader>
                     <DialogTitle>
@@ -1173,6 +1169,7 @@ const AdminProducts = () => {
                               <TableHead>Category</TableHead>
                               <TableHead>Price</TableHead>
                               <TableHead>Stock</TableHead>
+                              <TableHead>Type</TableHead>
                               <TableHead>Status</TableHead>
                               <TableHead>Actions</TableHead>
                             </TableRow>
@@ -1193,6 +1190,11 @@ const AdminProducts = () => {
                                   <TableCell>{product.category}</TableCell>
                                   <TableCell>PKR {product.price}</TableCell>
                                   <TableCell>{product.stock_quantity}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="whitespace-nowrap font-normal text-xs px-2 py-0.5">
+                                      {product.is_custom ? 'Made to Order' : 'Ready to Wear'}
+                                    </Badge>
+                                  </TableCell>
                                   <TableCell>
                                     <div className="flex gap-1">
                                       <Badge
@@ -1244,7 +1246,10 @@ const AdminProducts = () => {
                                 <p className="text-xs text-muted-foreground">{product.category}</p>
                                 <p className="text-sm font-medium text-primary mt-0.5">PKR {product.price.toLocaleString()}</p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</span>
+                                  <span className="text-xs text-muted-foreground mr-1">Stock: {product.stock_quantity}</span>
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0 font-normal">
+                                    {product.is_custom ? 'MTO' : 'RTW'}
+                                  </Badge>
                                   <Badge
                                     variant={product.is_active ? "default" : "secondary"}
                                     className="cursor-pointer text-xs px-1.5 py-0"
@@ -1370,6 +1375,7 @@ const AdminProducts = () => {
                           <li><strong>image_url*</strong> (required) - Single image URL</li>
                           <li><strong>is_active</strong> (optional, true/false) - Product visibility (defaults to true)</li>
                           <li><strong>sku</strong> (optional) - SKU Code</li>
+                          <li><strong>inventory_type</strong> (optional) - 'Ready to Wear' or 'Made to Order'</li>
                           <li><strong>fabric_type</strong> (optional) - Fabric Type</li>
                           <li><strong>available_sizes</strong> (optional) - Comma separated sizes (e.g. S,M,L)</li>
                           <li><strong>available_colors</strong> (optional) - Comma separated colors</li>
