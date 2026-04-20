@@ -1165,6 +1165,7 @@ const AdminProducts = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Image</TableHead>
+                              <TableHead className="w-[120px]">SKU</TableHead>
                               <TableHead>Name</TableHead>
                               <TableHead>Category</TableHead>
                               <TableHead>Price</TableHead>
@@ -1186,6 +1187,7 @@ const AdminProducts = () => {
                                       className="w-12 h-12 object-cover rounded"
                                     />
                                   </TableCell>
+                                  <TableCell className="font-mono text-[10px] sm:text-xs text-muted-foreground uppercase tracking-tighter">{product.sku || '-'}</TableCell>
                                   <TableCell className="font-medium">{product.name}</TableCell>
                                   <TableCell>{product.category}</TableCell>
                                   <TableCell>PKR {product.price}</TableCell>
@@ -1242,7 +1244,10 @@ const AdminProducts = () => {
                                 className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                               />
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm truncate">{product.name}</p>
+                                <div className="flex justify-between items-start">
+                                  <p className="font-semibold text-sm truncate">{product.name}</p>
+                                  <span className="text-[9px] font-mono bg-muted/50 px-1 rounded text-muted-foreground">{product.sku || '-'}</span>
+                                </div>
                                 <p className="text-xs text-muted-foreground">{product.category}</p>
                                 <p className="text-sm font-medium text-primary mt-0.5">PKR {product.price.toLocaleString()}</p>
                                 <div className="flex items-center gap-2 mt-1">
