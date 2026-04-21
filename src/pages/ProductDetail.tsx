@@ -501,44 +501,50 @@ const ProductDetail = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="h-10 w-10 border-primary/20 hover:border-primary hover:bg-primary/5"
+                    onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
                     disabled={quantity <= 1}
                   >
                     -
                   </Button>
                   <div className="w-16">
                     <input
-                      type="number"
-                      min="1"
-                      max={product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0)}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={quantity}
                       onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        const max = product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0);
-                        if (!isNaN(val)) {
-                          setQuantity(Math.min(max, Math.max(1, val)));
-                        } else if (e.target.value === "") {
-                          setQuantity(1); // Default to 1 if empty
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val === '') {
+                          setQuantity(1 as any);
+                          return;
+                        }
+                        const numVal = parseInt(val);
+                        const maxLimit = product.is_custom ? 99 : Math.max(1, (product as any).stock ?? (product as any).stock_quantity ?? 0);
+                        if (!isNaN(numVal)) {
+                          setQuantity(Math.min(maxLimit, Math.max(1, numVal)));
                         }
                       }}
-                      className="w-full h-10 text-center border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none font-medium"
+                      onBlur={() => {
+                        if (!quantity || isNaN(quantity)) setQuantity(1);
+                      }}
+                      className="w-full h-10 text-center border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none font-semibold text-lg"
                     />
                   </div>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10"
+                    className="h-10 w-10 border-primary/20 hover:border-primary hover:bg-primary/5"
                     onClick={() => {
-                      const max = product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0);
-                      setQuantity(Math.min(max, quantity + 1));
+                      const maxLimit = product.is_custom ? 99 : Math.max(1, (product as any).stock ?? (product as any).stock_quantity ?? 0);
+                      setQuantity(prev => Math.min(maxLimit, prev + 1));
                     }}
-                    disabled={quantity >= (product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0))}
+                    disabled={quantity >= (product.is_custom ? 99 : Math.max(1, (product as any).stock ?? (product as any).stock_quantity ?? 0))}
                   >
                     +
                   </Button>
                   <span className="text-sm text-muted-foreground ml-4">
-                    {product.is_custom ? 'Unlimited (Made to Order)' : `${((product as any).stock ?? (product as any).stock_quantity ?? 0)} available`}
+                    {product.is_custom ? 'Made to Order' : `${((product as any).stock ?? (product as any).stock_quantity ?? 0)} available`}
                   </span>
                 </div>
               </div>
