@@ -500,25 +500,45 @@ const ProductDetail = () => {
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="h-10 w-10"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
                     -
                   </Button>
-                  <span className="w-12 text-center text-foreground font-medium">
-                    {quantity}
-                  </span>
+                  <div className="w-16">
+                    <input
+                      type="number"
+                      min="1"
+                      max={product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0)}
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        const max = product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0);
+                        if (!isNaN(val)) {
+                          setQuantity(Math.min(max, Math.max(1, val)));
+                        } else if (e.target.value === "") {
+                          setQuantity(1); // Default to 1 if empty
+                        }
+                      }}
+                      className="w-full h-10 text-center border rounded-md bg-background focus:ring-1 focus:ring-primary outline-none font-medium"
+                    />
+                  </div>
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(Math.min(((product as any).stock ?? (product as any).stock_quantity ?? 0), quantity + 1))}
-                    disabled={quantity >= ((product as any).stock ?? (product as any).stock_quantity ?? 0)}
+                    size="icon"
+                    className="h-10 w-10"
+                    onClick={() => {
+                      const max = product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0);
+                      setQuantity(Math.min(max, quantity + 1));
+                    }}
+                    disabled={quantity >= (product.is_custom ? 99 : ((product as any).stock ?? (product as any).stock_quantity ?? 0))}
                   >
                     +
                   </Button>
                   <span className="text-sm text-muted-foreground ml-4">
-                    {((product as any).stock ?? (product as any).stock_quantity ?? 0)} available
+                    {product.is_custom ? 'Unlimited (Made to Order)' : `${((product as any).stock ?? (product as any).stock_quantity ?? 0)} available`}
                   </span>
                 </div>
               </div>
@@ -529,7 +549,7 @@ const ProductDetail = () => {
                   className="flex-1 min-w-[140px]"
                   size="lg"
                   onClick={handleBookOrder}
-                  disabled={product.stock === 0}
+                  disabled={!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0}
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
                   Book Order
@@ -539,7 +559,7 @@ const ProductDetail = () => {
                   size="lg"
                   className="flex-1 min-w-[140px]"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
@@ -558,7 +578,7 @@ const ProductDetail = () => {
                 </Button>
               </div>
 
-              {product.stock === 0 && (
+              {!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0 && (
                 <p className="text-destructive text-sm">Out of stock</p>
               )}
             </div>
