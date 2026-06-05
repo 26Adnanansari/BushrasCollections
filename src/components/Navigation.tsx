@@ -51,8 +51,7 @@ const Navigation = () => {
 
   // DEBUG: Track why the page replaces/reloads
   useEffect(() => {
-    console.log("[DEBUG] Navigation mounted/path changed:", location.pathname);
-    return () => console.log("[DEBUG] Navigation unmounting from:", location.pathname);
+    // Removed debug logs
   }, [location.pathname]);
 
   const isAdmin = user?.roles?.includes('admin') || false;

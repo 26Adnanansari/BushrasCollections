@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { StarRating } from "./StarRating";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,80 +6,62 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ThumbsUp, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
-interface Review {
-    id: string;
-    rating: number;
-    title: string;
-    comment: string;
-    status: string;
-    created_at: string;
-    is_verified_purchase: boolean;
-    helpful_count: number;
-    profiles?: {
-        name: string;
-    };
-}
+import { useAuthStore } from "@/store/auth";
 
 interface ReviewsListProps {
     productId: string;
     sortBy?: "recent" | "highest" | "lowest";
 }
 
+const fetchReviews = async (productId: string, sortBy: string, userId?: string) => {
+    let query = supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', productId);
+
+    if (userId) {
+        query = query.or(`status.eq.approved,user_id.eq.${userId}`);
+    } else {
+        query = query.eq('status', 'approved');
+    }
+
+    if (sortBy === "highest") {
+        query = query.order('rating', { ascending: false });
+    } else if (sortBy === "lowest") {
+        query = query.order('rating', { ascending: true });
+    } else {
+        query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    if (!data || data.length === 0) return [];
+
+    // Fetch reviewer names separately (avoids FK join issue)
+    const userIds = [...new Set(data.map(r => r.user_id))];
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', userIds);
+
+    return data.map(review => ({
+        ...review,
+        profiles: profiles?.find(p => p.id === review.user_id),
+    }));
+};
+
 export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) => {
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { user } = useAuthStore();
 
-    useEffect(() => {
-        fetchReviews();
-    }, [productId, sortBy]);
+    const { data: reviews = [], isLoading } = useQuery({
+        queryKey: ['reviews-list', productId, sortBy, user?.id],
+        queryFn: () => fetchReviews(productId, sortBy, user?.id),
+        staleTime: 10 * 60 * 1000,
+        enabled: !!productId,
+    });
 
-    const fetchReviews = async () => {
-        try {
-            // Get current user
-            const { data: { user } } = await supabase.auth.getUser();
-
-            // Fetch approved reviews OR user's own reviews (any status)
-            let query = supabase
-                .from('reviews')
-                .select(`
-          *,
-          profiles:user_id (
-            name
-          )
-        `)
-                .eq('product_id', productId);
-
-            // If user is logged in, show their own reviews regardless of status
-            // Otherwise, only show approved reviews
-            if (user) {
-                query = query.or(`status.eq.approved,user_id.eq.${user.id}`);
-            } else {
-                query = query.eq('status', 'approved');
-            }
-
-            // Apply sorting
-            if (sortBy === "recent") {
-                query = query.order('created_at', { ascending: false });
-            } else if (sortBy === "highest") {
-                query = query.order('rating', { ascending: false });
-            } else if (sortBy === "lowest") {
-                query = query.order('rating', { ascending: true });
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            setReviews(data || []);
-        } catch (error) {
-            console.error('Error fetching reviews:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
+    if (isLoading) {
         return <div className="text-center py-8 text-muted-foreground">Loading reviews...</div>;
     }
 
@@ -94,7 +76,7 @@ export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) 
 
     return (
         <div className="space-y-4">
-            {reviews.map((review) => (
+            {reviews.map((review: any) => (
                 <Card key={review.id}>
                     <CardContent className="pt-6">
                         <div className="flex items-start justify-between mb-3">
@@ -107,19 +89,13 @@ export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) 
                                     <div className="flex items-center gap-2 mt-1">
                                         <StarRating rating={review.rating} readonly size="sm" />
                                         {review.is_verified_purchase && (
-                                            <Badge variant="secondary" className="text-xs">
-                                                Verified Purchase
-                                            </Badge>
+                                            <Badge variant="secondary" className="text-xs">Verified Purchase</Badge>
                                         )}
                                         {review.status === 'pending' && (
-                                            <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">
-                                                Pending Approval
-                                            </Badge>
+                                            <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">Pending Approval</Badge>
                                         )}
                                         {review.status === 'rejected' && (
-                                            <Badge variant="destructive" className="text-xs">
-                                                Rejected
-                                            </Badge>
+                                            <Badge variant="destructive" className="text-xs">Rejected</Badge>
                                         )}
                                     </div>
                                 </div>
@@ -128,14 +104,12 @@ export const ReviewsList = ({ productId, sortBy = "recent" }: ReviewsListProps) 
                                 {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
                             </span>
                         </div>
-
                         <h4 className="font-semibold text-foreground mb-2">{review.title}</h4>
                         <p className="text-muted-foreground leading-relaxed">{review.comment}</p>
-
                         <div className="flex items-center gap-4 mt-4 pt-4 border-t">
                             <Button variant="ghost" size="sm" className="text-muted-foreground">
                                 <ThumbsUp className="h-4 w-4 mr-2" />
-                                Helpful ({review.helpful_count})
+                                Helpful ({review.helpful_count ?? 0})
                             </Button>
                         </div>
                     </CardContent>

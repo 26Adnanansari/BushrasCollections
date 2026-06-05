@@ -24,6 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { DraftIndicator } from "@/components/admin/DraftIndicator";
 import { productSchema } from "@/schemas/productSchema";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { DressComponentsManager, DressComponent } from "@/components/admin/DressComponentsManager";
 
 interface Product {
   id: string;
@@ -42,7 +44,8 @@ interface Product {
   available_sizes?: string[] | null;
   available_colors?: string[] | null;
   care_instructions?: string | null;
-  occasion_type?: string | null;
+  dress_components?: DressComponent[] | null;
+  delivery_weeks?: string | null;
   embellishment?: string[] | null;
   is_custom: boolean;
   advance_required: number;
@@ -65,7 +68,6 @@ const FABRIC_TYPES = [
   'PURE RAW SILK', 'PURE SHAMOZ SILK', 'PURE ORGANZA', 'TASAR SILK',
   'PURE LAMA TISUE', 'PURE KHADI NET', 'NET', 'CHIFFON PURE', 'JAMAWAR PURE'
 ];
-const OCCASIONS = ['Wedding', 'Party', 'Casual', 'Formal', 'Eid', 'Mehendi', 'Walima'];
 const EMBELLISHMENTS = ['Embroidery', 'Sequins', 'Plain', 'Beadwork', 'Stone Work', 'Thread Work'];
 
 const AdminProducts = () => {
@@ -92,7 +94,8 @@ const AdminProducts = () => {
     available_sizes: [] as string[],
     available_colors: [] as string[],
     care_instructions: '',
-    occasion_type: '',
+    dress_components: [] as DressComponent[],
+    delivery_weeks: '',
     embellishment: [],
     is_custom: false,
     advance_required: '0',
@@ -142,7 +145,8 @@ const AdminProducts = () => {
           available_sizes: Array.isArray(draft.available_sizes) ? draft.available_sizes : (draft.available_sizes ? (typeof draft.available_sizes === 'string' ? (draft.available_sizes as string).split(',').map((s: string) => s.trim()).filter(Boolean) : []) : []),
           available_colors: Array.isArray(draft.available_colors) ? draft.available_colors : (draft.available_colors ? (typeof draft.available_colors === 'string' ? (draft.available_colors as string).split(',').map((c: string) => c.trim()).filter(Boolean) : []) : []),
           care_instructions: draft.care_instructions || '',
-          occasion_type: draft.occasion_type || '',
+          dress_components: draft.dress_components || [],
+          delivery_weeks: draft.delivery_weeks || '',
           embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? (draft.embellishment as string).split(',').map((e: string) => e.trim()).filter(Boolean) : []) : []),
           is_custom: draft.is_custom || false,
           advance_required: draft.advance_required || '0',
@@ -235,7 +239,8 @@ const AdminProducts = () => {
                 available_sizes: row.available_sizes ? row.available_sizes.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
                 available_colors: row.available_colors ? row.available_colors.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
                 care_instructions: row.care_instructions,
-                occasion_type: row.occasion_type,
+                dress_components: row.dress_components ? JSON.parse(row.dress_components) : [],
+                delivery_weeks: row.delivery_weeks,
                 embellishment: row.embellishment ? row.embellishment.split(',').map((e: string) => e.trim()).filter(Boolean) : [],
                 is_custom: row.inventory_type === 'Made to Order' || row.is_custom === 'TRUE' || row.is_custom === 'true' || row.is_custom === true,
                 advance_required: parseFloat(row.advance_required) || 0
@@ -277,8 +282,15 @@ const AdminProducts = () => {
     e.preventDefault();
 
     try {
-      // Safely prepare data for validation
-      const priceVal = parseFloat(formData.price);
+      // Auto-calculate base price from the first component if available
+      const firstComponentPrice = formData.dress_components && formData.dress_components.length > 0 
+        ? formData.dress_components[0].price 
+        : 0;
+      
+      const calculatedPrice = firstComponentPrice === null || isNaN(Number(firstComponentPrice)) 
+        ? 0 
+        : Number(firstComponentPrice);
+
       const listPriceVal = formData.list_price ? parseFloat(formData.list_price) : undefined;
       const stockVal = parseInt(formData.stock_quantity) || 0;
 
@@ -291,7 +303,7 @@ const AdminProducts = () => {
         sku: formData.sku || undefined,
         name: formData.name,
         description: formData.description,
-        price: isNaN(priceVal) ? 0 : priceVal,
+        price: calculatedPrice,
         list_price: listPriceVal && isNaN(listPriceVal) ? undefined : listPriceVal,
         category: formData.category === '__custom__' ? customCategory : formData.category,
         brand: formData.brand,
@@ -300,7 +312,8 @@ const AdminProducts = () => {
         available_sizes: sizes.length > 0 ? sizes : undefined,
         available_colors: colors.length > 0 ? colors : undefined,
         care_instructions: formData.care_instructions || undefined,
-        occasion_type: formData.occasion_type || undefined,
+        dress_components: formData.dress_components,
+        delivery_weeks: formData.is_custom ? formData.delivery_weeks : undefined,
         embellishment: embellishments.length > 0 ? embellishments : undefined,
         is_custom: formData.is_custom,
         advance_required: formData.is_custom ? (parseFloat(formData.advance_required) || 0) : 0,
@@ -366,7 +379,8 @@ const AdminProducts = () => {
         available_sizes: [],
         available_colors: [],
         care_instructions: '',
-        occasion_type: '',
+        dress_components: [],
+        delivery_weeks: '',
         embellishment: [],
         is_custom: false,
         advance_required: '0',
@@ -434,7 +448,8 @@ const AdminProducts = () => {
       available_sizes: product.available_sizes || [],
       available_colors: product.available_colors || [],
       care_instructions: product.care_instructions || '',
-      occasion_type: product.occasion_type || '',
+      dress_components: product.dress_components || [],
+      delivery_weeks: product.delivery_weeks || '',
       embellishment: product.embellishment || [],
       is_custom: product.is_custom || false,
       advance_required: product.advance_required?.toString() || '0',
@@ -679,11 +694,10 @@ const AdminProducts = () => {
 
                       {/* 3. CATEGORY */}
                       <div className="col-span-1">
-                        <Label htmlFor="category" className="text-sm font-medium mb-1.5 block">Category *</Label>
+                        <Label htmlFor="category" className="text-sm font-medium mb-1.5 block">Category <span className="text-muted-foreground font-normal">(Optional)</span></Label>
                         <Select
                           value={formData.category}
                           onValueChange={(value) => setFormData({ ...formData, category: value })}
-                          required
                         >
                           <SelectTrigger id="category" name="category" className="w-full h-11">
                             <SelectValue placeholder="Select category" />
@@ -724,37 +738,6 @@ const AdminProducts = () => {
                         />
                       </div>
 
-                      {/* 5. PRICES */}
-                      <div className="col-span-1">
-                        <Label htmlFor="price" className="text-sm font-medium mb-1.5 block">Sale Price (PKR) *</Label>
-                        <Input
-                          id="price"
-                          name="price"
-                          type="number"
-                          step="0.01"
-                          value={formData.price}
-                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                          required
-                          className="h-11"
-                          autoComplete="off"
-                        />
-                      </div>
-
-                      <div className="col-span-1">
-                        <Label htmlFor="list_price" className="text-sm font-medium mb-1.5 block">List Price (PKR) <span className="text-muted-foreground font-normal">(Optional)</span></Label>
-                        <Input
-                          id="list_price"
-                          name="list_price"
-                          type="number"
-                          step="0.01"
-                          value={formData.list_price}
-                          onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
-                          placeholder="Original price"
-                          className="h-11"
-                          autoComplete="off"
-                        />
-                      </div>
-
                       {/* 6. STOCK */}
                       <div className="col-span-1">
                         <Label htmlFor="stock_quantity" className="text-sm font-medium mb-1.5 block">Stock Quantity *</Label>
@@ -786,27 +769,18 @@ const AdminProducts = () => {
                     {/* 7. DESCRIPTION */}
                     <div className="mt-4">
                       <Label htmlFor="description" className="text-sm font-medium mb-1.5 block">Description *</Label>
-                      <Textarea
-                        id="description"
-                        name="description"
+                      <RichTextEditor
                         value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        required
-                        className="resize-none min-h-[120px]"
+                        onChange={(val) => setFormData({ ...formData, description: val })}
                       />
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setFormData({
-                            ...formData,
-                            description: `Elegant ${formData.name} perfect for special occasions`
-                          })}
-                        >
-                          Use Template
-                        </Button>
-                      </div>
+                    </div>
+
+                    {/* DRESS COMPONENTS */}
+                    <div className="mt-4">
+                      <DressComponentsManager
+                        components={formData.dress_components}
+                        onChange={(components) => setFormData({ ...formData, dress_components: components })}
+                      />
                     </div>
 
                     {/* 8. BOUTIQUE DETAILS (Collapsible) */}
@@ -873,23 +847,27 @@ const AdminProducts = () => {
                             )}
                           </div>
 
-                          {/* Occasion Type */}
-                          <div>
-                            <Label htmlFor="occasion_type" className="text-sm font-medium mb-1.5 block">Occasion Type</Label>
-                            <Select
-                              value={formData.occasion_type}
-                              onValueChange={(value) => setFormData({ ...formData, occasion_type: value })}
-                            >
-                              <SelectTrigger id="occasion_type" name="occasion_type" className="h-11">
-                                <SelectValue placeholder="Select occasion" />
-                              </SelectTrigger>
-                              <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
-                                {OCCASIONS.map((occasion) => (
-                                  <SelectItem key={occasion} value={occasion}>{occasion}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {/* Delivery Weeks (Only for Custom) */}
+                          {formData.is_custom && (
+                            <div>
+                              <Label htmlFor="delivery_weeks" className="text-sm font-medium mb-1.5 block">Delivery Time (Weeks)</Label>
+                              <Select
+                                value={formData.delivery_weeks || ''}
+                                onValueChange={(value) => setFormData({ ...formData, delivery_weeks: value })}
+                              >
+                                <SelectTrigger id="delivery_weeks" name="delivery_weeks" className="h-11">
+                                  <SelectValue placeholder="Select delivery time" />
+                                </SelectTrigger>
+                                <SelectContent position="popper" sideOffset={5} className="max-h-[300px]">
+                                  <SelectItem value="3-4 Weeks">3-4 Weeks</SelectItem>
+                                  <SelectItem value="4-5 Weeks">4-5 Weeks</SelectItem>
+                                  <SelectItem value="6-7 Weeks">6-7 Weeks</SelectItem>
+                                  <SelectItem value="8-9 Weeks">8-9 Weeks</SelectItem>
+                                  <SelectItem value="10-12 Weeks">10-12 Weeks</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
 
                           {/* Available Sizes */}
                           <div className="md:col-span-2">
@@ -925,21 +903,49 @@ const AdminProducts = () => {
 
                           {/* Available Colors */}
                           <div className="md:col-span-2">
-                            <Label htmlFor="available_colors" className="text-sm font-medium mb-1.5 block">Available Colors</Label>
-                            <Input
-                              id="available_colors"
-                              name="available_colors"
-                              placeholder="e.g., Red, Blue, Green (comma-separated)"
-                              value={Array.isArray(formData.available_colors) ? formData.available_colors.join(', ') : ''}
-                              className="h-11"
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                available_colors: e.target.value.split(',').map(c => c.trim()).filter(Boolean)
-                              })}
-                            />
+                            <Label htmlFor="available_colors" className="text-sm font-medium mb-1.5 block">Available Colors (Hex Codes)</Label>
+                            <div className="flex gap-2 mb-3">
+                              <Input
+                                id="color_picker"
+                                type="color"
+                                className="h-11 w-16 p-1 cursor-pointer"
+                                onChange={(e) => {
+                                  const color = e.target.value;
+                                  if (!formData.available_colors.includes(color)) {
+                                    setFormData({
+                                      ...formData,
+                                      available_colors: [...formData.available_colors, color]
+                                    });
+                                  }
+                                }}
+                              />
+                              <div className="flex-1 flex flex-wrap gap-2 items-center p-2 border rounded-md min-h-[44px]">
+                                {Array.isArray(formData.available_colors) && formData.available_colors.map((color) => (
+                                  <div key={color} className="flex items-center gap-1 bg-accent/30 pr-1 pl-2 py-1 rounded-full border shadow-sm">
+                                    <div className="w-4 h-4 rounded-full border border-border/50 shadow-inner" style={{ backgroundColor: color }} />
+                                    <span className="text-xs uppercase font-medium mx-1">{color}</span>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                                      onClick={() => {
+                                        setFormData({
+                                          ...formData,
+                                          available_colors: formData.available_colors.filter(c => c !== color)
+                                        });
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                                {(!formData.available_colors || formData.available_colors.length === 0) && (
+                                  <span className="text-muted-foreground text-sm italic">No colors added. Use picker.</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-
-                          {/* Occasion Type moved up */}
 
                           {/* Embellishment - Multi-select checkboxes */}
                           <div className="md:col-span-2 space-y-4">

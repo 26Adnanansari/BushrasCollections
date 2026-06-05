@@ -4,7 +4,7 @@
 
 **Bushra's Collection** is a full-stack fashion e-commerce application built with React, TypeScript, Vite, and Supabase. This platform supports product browsing, user authentication, cart management, order placement, and comprehensive admin controls.
 
-**Lovable Project URL**: https://lovable.dev/projects/04ff6587-da9c-4927-a56e-6c144297e032
+
 
 ---
 
@@ -145,11 +145,6 @@ Best for long-term hosting with lower costs and better latency for Pakistani aud
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/04ff6587-da9c-4927-a56e-6c144297e032) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 

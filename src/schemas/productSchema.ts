@@ -15,11 +15,13 @@ export const productSchema = z.object({
     .string()
     .trim()
     .min(10, 'Description must be at least 10 characters')
-    .max(2000, 'Description must be less than 2000 characters'),
+    .max(10000, 'Description must be less than 10000 characters'),
   price: z
     .number()
-    .positive('Price must be greater than 0')
-    .max(9999999.99, 'Price is too high'),
+    .min(0, 'Price must be 0 or greater')
+    .max(9999999.99, 'Price is too high')
+    .optional()
+    .default(0),
   list_price: z
     .number()
     .positive('List price must be greater than 0')
@@ -28,8 +30,8 @@ export const productSchema = z.object({
   category: z
     .string()
     .trim()
-    .min(1, 'Category is required')
-    .max(100, 'Category must be less than 100 characters'),
+    .max(100, 'Category must be less than 100 characters')
+    .optional(),
   brand: z
     .string()
     .trim()
@@ -56,11 +58,6 @@ export const productSchema = z.object({
     .trim()
     .max(500, 'Care instructions must be less than 500 characters')
     .optional(),
-  occasion_type: z
-    .string()
-    .trim()
-    .max(100, 'Occasion type must be less than 100 characters')
-    .optional(),
   embellishment: z
     .array(z.string())
     .optional(),
@@ -71,6 +68,11 @@ export const productSchema = z.object({
     .max(100, 'Advance percentage must be 100 or less')
     .optional()
     .default(0),
+  dress_components: z.array(z.object({
+    name: z.string().min(1, 'Component name is required'),
+    price: z.number().positive().nullable().optional(),
+  })).optional().default([]),
+  delivery_weeks: z.string().max(30).optional().nullable(),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

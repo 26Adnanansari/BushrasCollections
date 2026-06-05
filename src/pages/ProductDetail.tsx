@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -7,19 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Heart, ShoppingCart, ArrowLeft, Truck, Shield, RefreshCw, MessageCircle, Share2 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Star, Heart, ShoppingCart, ArrowLeft, Truck, MessageCircle, Share2 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ReviewSummary } from "@/components/reviews/ReviewSummary";
-import { ReviewsList } from "@/components/reviews/ReviewsList";
-import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+
 import { ShareModal } from "@/components/ShareModal";
 import { PriceDisplay } from "@/components/PriceDisplay";
 import { emitPixelEvent } from "@/utils/pixel";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useQuery } from "@tanstack/react-query";
+
+const YouMayAlsoLike = lazy(() => import("@/components/YouMayAlsoLike"));
+const ReviewSummary = lazy(() => import("@/components/reviews/ReviewSummary").then(m => ({ default: m.ReviewSummary })));
+const ReviewsList = lazy(() => import("@/components/reviews/ReviewsList").then(m => ({ default: m.ReviewsList })));
+const ReviewForm = lazy(() => import("@/components/reviews/ReviewForm").then(m => ({ default: m.ReviewForm })));
+
+interface DressComponent {
+  name: string;
+  price: number | null;
+}
 
 interface Product {
   id: string;
@@ -36,7 +47,8 @@ interface Product {
   care_instructions?: string;
   available_sizes?: string[];
   available_colors?: string[];
-  occasion_type?: string;
+  dress_components?: DressComponent[];
+  delivery_weeks?: string | null;
   embellishment?: string[];
   is_custom?: boolean;
   advance_required?: number;
@@ -45,8 +57,6 @@ interface Product {
 const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
@@ -60,90 +70,73 @@ const ProductDetail = () => {
   const searchParams = new URLSearchParams(location.search);
   const refId = searchParams.get('ref');
 
-  const [averageRating, setAverageRating] = useState(0);
-  const [totalReviews, setTotalReviews] = useState(0);
+  const [selectedComponentIndex, setSelectedComponentIndex] = useState(0);
+  const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+
+  const { whatsappNumber, globalSizeChartUrl } = useSiteSettings();
 
   const { addItem } = useCartStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!slug) return;
-
-      try {
-        // Fetch product with reviews
-        let query = supabase
-          .from('products')
-          .select('*, reviews(rating)');
-
-        // Check if slug looks like a UUID
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-
-        if (isUUID) {
-          query = query.eq('id', slug);
-        } else {
-          query = query.eq('slug', slug);
-        }
-
-        const { data, error } = await query.maybeSingle();
-
-        if (error) {
-          console.error('Error fetching product:', error);
-          return;
-        }
-
-        if (data) {
-          setProduct(data as any);
-
-          // Calculate ratings
-          const ratings = (data as any).reviews?.map((r: any) => r.rating) || [];
-          const avg = ratings.length > 0
-            ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
-            : 0;
-
-          setAverageRating(avg);
-          setTotalReviews(ratings.length);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+  // React Query: fetch product with caching — 2nd visit is instant!
+  const { data: productData, isLoading: loading } = useQuery({
+    queryKey: ['product', slug],
+    queryFn: async () => {
+      if (!slug) return null;
+      let query = supabase.from('products').select('*, reviews(rating)');
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      if (isUUID) {
+        query = query.eq('id', slug);
+      } else {
+        query = query.eq('slug', slug);
       }
-    };
+      const { data, error } = await query.maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+    staleTime: 10 * 60 * 1000,
+  });
 
-    fetchProduct();
-  }, [slug]);
+  const product = productData as any;
+  const ratings = product?.reviews?.map((r: any) => r.rating) || [];
+  const averageRating = ratings.length > 0 ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : 0;
+  const totalReviews = ratings.length;
 
-  // Record view interaction when product data is loaded
+
+  // Record view only once when product first loads
+  const hasRecordedView = useRef(false);
   useEffect(() => {
-    if (product) {
+    if (product && !hasRecordedView.current) {
+      hasRecordedView.current = true;
+      const refId = new URLSearchParams(location.search).get('ref');
+      const recordView = async () => {
+        const { error } = await supabase.rpc('record_site_interaction', {
+          p_entity_type: 'product',
+          p_entity_id: product.id,
+          p_type: 'view',
+          p_referrer_id: refId,
+          p_platform: refId ? 'referral' : 'generic'
+        });
+        if (error) console.error('Error recording view:', error);
+      };
       recordView();
     }
   }, [product]);
-
-  const recordView = async () => {
-    if (!product) return;
-    try {
-      await supabase.rpc('record_site_interaction', {
-        p_entity_type: 'product',
-        p_entity_id: product.id,
-        p_type: 'view',
-        p_referrer_id: refId,
-        p_platform: refId ? 'referral' : 'generic'
-      });
-    } catch (err) {
-      console.error('Error recording view:', err);
-    }
-  };
 
   // Reset selections when product changes
   useEffect(() => {
     if (product) {
       setSelectedSize("");
       setSelectedColor("");
+      setSelectedComponentIndex(0);
     }
-  }, [product]);
+  }, [product?.id]);
+
+  const currentComponent = product?.dress_components?.[selectedComponentIndex];
+  const currentPrice = currentComponent && currentComponent.price !== undefined ? currentComponent.price : product?.price;
+  const isWhatsAppInquiry = currentComponent && currentComponent.price === null;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -170,8 +163,8 @@ const ProductDetail = () => {
     for (let i = 0; i < quantity; i++) {
       addItem({
         id: product.id,
-        name: product.name,
-        price: product.price,
+        name: currentComponent ? `${product.name} - ${currentComponent.name}` : product.name,
+        price: currentPrice || 0,
         image: productImages[0] || '/placeholder.svg',
         category: product.category || 'Fashion',
         size: selectedSize,
@@ -405,6 +398,11 @@ const ProductDetail = () => {
               {isNew && (
                 <Badge variant="secondary" className="mb-2">New Arrival</Badge>
               )}
+              {product.delivery_weeks && (
+                <Badge variant="outline" className="mb-2 ml-2 text-blue-600 border-blue-200 bg-blue-50">
+                  <Truck className="w-3 h-3 mr-1" /> Delivery {product.delivery_weeks}
+                </Badge>
+              )}
               <h1 className="text-2xl md:text-4xl font-serif font-bold text-foreground mb-2">
                 {product.name}
               </h1>
@@ -429,26 +427,72 @@ const ProductDetail = () => {
             <Separator />
 
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                <PriceDisplay amount={product.price} />
-              </div>
-
-              {product.description && (
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-6">
-                  {product.description}
-                </p>
+              {isWhatsAppInquiry ? (
+                <div className="text-2xl md:text-3xl font-bold text-primary mb-4">
+                  Price on Request
+                </div>
+              ) : (
+                <div className="text-2xl md:text-3xl font-bold text-primary mb-4">
+                  <PriceDisplay amount={currentPrice || 0} />
+                </div>
               )}
+
+
             </div>
 
             <Separator />
 
             {/* Variations: Size & Color */}
             <div className="space-y-6">
-              {product.available_sizes && product.available_sizes.length > 0 && (
+              {product.dress_components && product.dress_components.length > 0 && (
                 <div>
                   <label className="text-sm font-medium text-foreground mb-3 block">
-                    Select Size
+                    Select Component
                   </label>
+                  <div className="flex flex-wrap gap-3">
+                    {product.dress_components.map((comp, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedComponentIndex(idx)}
+                        className={`min-w-[4rem] h-10 px-4 rounded-full border text-sm font-medium transition-all
+                          ${selectedComponentIndex === idx
+                            ? 'border-primary bg-primary text-primary-foreground shadow-md scale-105'
+                            : 'border-input hover:border-primary hover:text-primary hover:bg-primary/5'
+                          }`}
+                      >
+                        {comp.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {product.available_sizes && product.available_sizes.length > 0 && (
+                <div>
+                  <div className="flex justify-between items-end mb-3">
+                    <label className="text-sm font-medium text-foreground block">
+                      Select Size
+                    </label>
+                    {globalSizeChartUrl && (
+                      <Dialog open={isSizeChartOpen} onOpenChange={setIsSizeChartOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="link" size="sm" className="h-auto p-0 text-primary">Size Chart</Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                            <DialogTitle>Size Chart</DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-4">
+                            {globalSizeChartUrl.endsWith('.pdf') ? (
+                              <iframe src={globalSizeChartUrl} className="w-full h-[60vh]" />
+                            ) : (
+                              <img src={globalSizeChartUrl} alt="Size Chart" className="w-full h-auto object-contain max-h-[70vh]" />
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-3">
                     {product.available_sizes.map((size) => (
                       <button
@@ -477,13 +521,20 @@ const ProductDetail = () => {
                       <button
                         key={color}
                         onClick={() => setSelectedColor(color)}
-                        className={`h-10 px-4 rounded-md border text-sm font-medium transition-all capitalize
+                        className={`h-10 px-4 rounded-md border text-sm font-medium transition-all capitalize flex items-center gap-2
                           ${selectedColor === color
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-input hover:border-primary hover:text-primary'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-input hover:border-primary hover:bg-primary/5 text-foreground'
                           }`}
                       >
-                        {color}
+                        {color.startsWith('#') ? (
+                           <>
+                             <div className="w-4 h-4 rounded-full border border-border/50 shadow-inner" style={{ backgroundColor: color }} />
+                             <span className="uppercase text-xs">{color}</span>
+                           </>
+                        ) : (
+                          color
+                        )}
                       </button>
                     ))}
                   </div>
@@ -551,34 +602,53 @@ const ProductDetail = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-4">
-                <Button
-                  className="flex-1 min-w-[140px]"
-                  size="lg"
-                  onClick={handleBookOrder}
-                  disabled={!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0}
-                >
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  Book Order
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="flex-1 min-w-[140px]"
-                  onClick={handleAddToCart}
-                  disabled={!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0}
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Add to Cart
-                </Button>
+                {isWhatsAppInquiry ? (
+                  <Button
+                    className="flex-1 min-w-[140px] bg-green-600 hover:bg-green-700"
+                    size="lg"
+                    onClick={() => {
+                      const msg = encodeURIComponent(`Hello, I'm interested in the ${product.name}${currentComponent ? ` (${currentComponent.name})` : ''}. Please let me know the price and details.`);
+                      window.open(`https://wa.me/${whatsappNumber || '923233228259'}?text=${msg}`, '_blank');
+                    }}
+                  >
+                    <MessageCircle className="h-5 w-5 mr-2" />
+                    WhatsApp Inquiry
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      className="flex-1 min-w-[140px]"
+                      size="lg"
+                      onClick={handleBookOrder}
+                      disabled={!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0}
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Book Order
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="flex-1 min-w-[140px]"
+                      onClick={handleAddToCart}
+                      disabled={!product.is_custom && ((product as any).stock ?? (product as any).stock_quantity ?? 0) === 0}
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Add to Cart
+                    </Button>
+                  </>
+                )}
+                
                 <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleLike}>
                   <Heart className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg" className="w-12 px-0 hover:text-green-600" onClick={() => {
-                  const msg = encodeURIComponent(`Hello, I'm interested in the ${product?.name}. I'd like to ask a question.`);
-                  window.open(`https://wa.me/923233228259?text=${msg}`, '_blank');
-                }}>
-                  <MessageCircle className="h-5 w-5" />
-                </Button>
+                {!isWhatsAppInquiry && (
+                  <Button variant="outline" size="lg" className="w-12 px-0 hover:text-green-600" onClick={() => {
+                    const msg = encodeURIComponent(`Hello, I'm interested in the ${product?.name}. I'd like to ask a question.`);
+                    window.open(`https://wa.me/${whatsappNumber || '923233228259'}?text=${msg}`, '_blank');
+                  }}>
+                    <MessageCircle className="h-5 w-5" />
+                  </Button>
+                )}
                 <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleShare}>
                   <Share2 className="h-5 w-5" />
                 </Button>
@@ -589,183 +659,103 @@ const ProductDetail = () => {
               )}
             </div>
 
-            <Separator />
-
-            {/* Product Features */}
-            <div className="space-y-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <RefreshCw className="h-6 w-6 text-primary mx-auto mb-2" />
-                      <div className="text-sm font-medium">No Returns</div>
-                      <div className="text-xs text-muted-foreground">Strict policy</div>
+            {/* Accordions for Description & Disclaimer */}
+            <div className="mt-8">
+              <Accordion type="single" collapsible defaultValue="description" className="w-full">
+                {product.description && (
+                  <AccordionItem value="description">
+                    <AccordionTrigger className="text-base font-semibold">Description</AccordionTrigger>
+                    <AccordionContent>
+                      <div 
+                        className="prose prose-sm max-w-none py-2 w-full overflow-x-auto
+                          prose-headings:text-foreground prose-headings:font-semibold
+                          prose-p:text-muted-foreground prose-p:leading-relaxed
+                          prose-strong:text-foreground prose-strong:font-semibold
+                          prose-li:text-muted-foreground
+                          prose-a:text-foreground prose-a:no-underline
+                          prose-table:w-full prose-table:border-collapse
+                          [&_table]:!w-full [&_table]:min-w-[500px] md:[&_table]:min-w-full
+                          prose-th:border prose-th:border-border prose-th:p-2 prose-th:text-left prose-th:bg-muted/50 prose-th:text-foreground prose-th:font-semibold
+                          prose-td:border prose-td:border-border prose-td:p-2 prose-td:text-muted-foreground"
+                        dangerouslySetInnerHTML={{ __html: product.description }}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+                <AccordionItem value="disclaimer">
+                  <AccordionTrigger className="text-base font-semibold">Disclaimer</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="text-sm text-muted-foreground leading-relaxed py-2 space-y-2">
+                      <p>
+                        We try our best to ensure that the colours viewed on the website are an exact representation of the actual colour of the outfit. However, there may be minor variations due to a number of factors such as, the nature of fabric dyes, weather at the time of dying and differences in display output due to lighting, digital photography, colour settings and capabilities of monitors.
+                      </p>
+                      <p>
+                        Hand woven fabrics may have natural darker threads and marks in their weave. This is an inherent characteristic of the fabric and proof of its authenticity. This raw finish is the beauty of hand crafted products.
+                      </p>
+                      <p>
+                        A variation in size of +/- 2 inches is considered within an acceptable tolerance.
+                      </p>
                     </div>
-                    <div>
-                      <Shield className="h-6 w-6 text-primary mx-auto mb-2" />
-                      <div className="text-sm font-medium">Quality Guarantee</div>
-                      <div className="text-xs text-muted-foreground">Authentic products</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Product Details Summary */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Product Details</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Category:</span>
-                  <span className="text-foreground">{product.category}</span>
-                </div>
-                {product.fabric_type && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fabric:</span>
-                    <span className="text-foreground">{product.fabric_type}</span>
-                  </div>
-                )}
-                {product.care_instructions && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Care:</span>
-                    <span className="text-foreground">{product.care_instructions}</span>
-                  </div>
-                )}
-                {product.occasion_type && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Occasion:</span>
-                    <span className="text-foreground">{product.occasion_type}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type:</span>
-                  <Badge variant="outline" className="font-normal h-5 border-primary/20 bg-primary/5">
-                    {product.is_custom ? 'Made to Order' : 'Ready to Wear'}
-                  </Badge>
-                </div>
-              </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </div>
         </div>
 
-        {/* Product Details & Reviews Tabs */}
-        <div className="mt-16">
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="details">Product Details</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            </TabsList>
-            <TabsContent value="details" className="mt-8">
-              <Card>
-                <CardContent className="p-8 space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {product.description || "This exquisite piece features premium quality fabric and exceptional craftsmanship."}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Specifications</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-sm text-muted-foreground">Category</span>
-                        <p className="font-medium text-foreground">{product.category}</p>
-                      </div>
-                      {product.fabric_type && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Fabric</span>
-                          <p className="font-medium text-foreground">{product.fabric_type}</p>
-                        </div>
-                      )}
-                      {product.care_instructions && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Care Instructions</span>
-                          <p className="font-medium text-foreground">{product.care_instructions}</p>
-                        </div>
-                      )}
-                      {product.embellishment && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Embellishment</span>
-                          <p className="font-medium text-foreground">
-                            {(() => {
-                              try {
-                                const emb = typeof product.embellishment === 'string'
-                                  ? (product.embellishment.startsWith('[') ? JSON.parse(product.embellishment) : product.embellishment)
-                                  : product.embellishment;
-                                return Array.isArray(emb) ? emb.join(', ') : emb;
-                              } catch (e) {
-                                return Array.isArray(product.embellishment)
-                                  ? product.embellishment.join(', ')
-                                  : product.embellishment;
-                              }
-                            })()}
-                          </p>
-                        </div>
-                      )}
-                      {product.available_sizes && product.available_sizes.length > 0 && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Available Sizes</span>
-                          <p className="font-medium text-foreground">{product.available_sizes.join(', ')}</p>
-                        </div>
-                      )}
-                      {product.available_colors && product.available_colors.length > 0 && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Available Colors</span>
-                          <p className="font-medium text-foreground">{product.available_colors.join(', ')}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="reviews" className="mt-8">
-              <Card>
-                <CardContent className="p-8">
-                  {/* Review Summary */}
-                  <ReviewSummary productId={product.id} />
+        {/* Reviews Section - lazy loaded */}
+        <div className="mt-20 max-w-5xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-center mb-8">Client Reviews</h2>
+          <Card>
+            <CardContent className="p-8">
+              <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading reviews...</div>}>
+                <ReviewSummary productId={product.id} />
+              </Suspense>
 
-                  <Separator className="my-8" />
+              <Separator className="my-8" />
 
-                  {/* Write Review Button */}
-                  {user && (
-                    <div className="mb-8">
-                      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button>
-                            Write a Review
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Write a Review</DialogTitle>
-                            <DialogDescription>
-                              Share your experience with {product.name}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <ReviewForm
-                            productId={product.id}
-                            productName={product.name}
-                            onSuccess={() => {
-                              setReviewDialogOpen(false);
-                              // Refresh reviews list
-                              window.location.reload();
-                            }}
-                            onCancel={() => setReviewDialogOpen(false)}
-                          />
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  )}
+              {user && (
+                <div className="mb-8">
+                  <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        Write a Review
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Write a Review</DialogTitle>
+                        <DialogDescription>
+                          Share your experience with {product.name}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <Suspense fallback={<div className="py-4 text-center">Loading form...</div>}>
+                        <ReviewForm
+                          productId={product.id}
+                          productName={product.name}
+                          onSuccess={() => {
+                            setReviewDialogOpen(false);
+                            window.location.reload();
+                          }}
+                          onCancel={() => setReviewDialogOpen(false)}
+                        />
+                      </Suspense>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
 
-                  {/* Reviews List */}
-                  <ReviewsList productId={product.id} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading reviews...</div>}>
+                <ReviewsList productId={product.id} />
+              </Suspense>
+            </CardContent>
+          </Card>
         </div>
+        
+        {/* You May Also Like - lazy loaded */}
+        <Suspense fallback={<div className="mt-24 mb-16 h-64 flex items-center justify-center text-muted-foreground">Loading recommendations...</div>}>
+          <YouMayAlsoLike currentProduct={product} />
+        </Suspense>
       </div>
 
       <Footer />

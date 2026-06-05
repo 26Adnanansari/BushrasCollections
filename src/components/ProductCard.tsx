@@ -27,12 +27,13 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [isHovered, setIsHovered] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const isLiked = isInWishlist(id);
 
   const images: string[] = Array.isArray(image) && image.length > 0 ? image : image ? [image as string] : ['/placeholder.svg'];
-  const displayImage: string = images[currentImageIndex] || images[0] || '/placeholder.svg';
+  
+  // On hover, show the 2nd image if available, else fallback to 1st.
+  const displayImage: string = (isHovered && images.length > 1) ? images[1] : (images[0] || '/placeholder.svg');
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,54 +81,29 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (images.length <= 1) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const imageWidth = rect.width / images.length;
-    const index = Math.min(Math.floor(x / imageWidth), images.length - 1);
-    setCurrentImageIndex(index);
-  };
+  // Removed complex handleMouseMove to fix image flipping conflict.
 
   return (
     <Link to={`/product/${slug || id}`} className="block">
       <div
         className="group relative bg-card rounded-lg overflow-hidden shadow-product hover:shadow-elegant transition-all duration-500"
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          setCurrentImageIndex(0);
-        }}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Product Image */}
         <div
           className="relative aspect-[4/5] overflow-hidden rounded-lg"
-          onMouseMove={handleMouseMove}
         >
           <img
-            src={displayImage || '/placeholder.svg'}
+            src={displayImage}
             alt={name}
             className={cn(
-              "w-full h-full object-cover transition-transform duration-700",
-              isHovered ? "scale-105" : "scale-100"
+              "w-full h-full object-cover transition-all duration-[800ms] ease-out",
+              isHovered ? "scale-110" : "scale-100"
             )}
           />
 
-          {/* Image indicators for multiple images */}
-          {images.length > 1 && isHovered && (
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-              {images.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full transition-all",
-                    idx === currentImageIndex ? "bg-white w-4" : "bg-white/50"
-                  )}
-                />
-              ))}
-            </div>
-          )}
+          {/* Removed the indicator dots since we do a simple flip now */}
 
           {/* Overlay on Hover */}
           <div className={cn(
@@ -195,9 +171,16 @@ const ProductCard = ({ id, slug, name, price, image, category, isNew, averageRat
             {name}
           </h3>
           <div className="flex flex-col gap-1">
-            <span className="text-lg md:text-2xl font-bold text-primary">
-              <PriceDisplay amount={price} />
-            </span>
+            <div className="text-lg md:text-2xl font-bold text-primary">
+              {price > 0 ? (
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Starts from</span>
+                  <PriceDisplay amount={price} />
+                </div>
+              ) : (
+                <span className="text-base font-normal italic text-muted-foreground">Inquire for Price</span>
+              )}
+            </div>
             {totalReviews > 0 ? (
               <div className="flex items-center gap-1">
                 <div className="flex">

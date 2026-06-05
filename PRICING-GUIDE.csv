@@ -1,0 +1,55 @@
+Category,Title of Techs & Features,Short Description,International Worth (USD),Local Worth (PKR),Our Price (Monthly)
+TECH STACK,React 18 + TypeScript,Modern frontend framework with type safety,"$5,000 - $15,000","Rs. 500,000 - 1,500,000",Included
+TECH STACK,Vite,Next-generation build tool for fast development,"$500 - $2,000","Rs. 50,000 - 200,000",Included
+TECH STACK,Tailwind CSS,Utility-first CSS framework for styling,"$800 - $3,000","Rs. 80,000 - 300,000",Included
+TECH STACK,shadcn/ui,Beautiful accessible React components,"$2,000 - $8,000","Rs. 200,000 - 800,000",Included
+TECH STACK,Supabase (Backend),PostgreSQL database with Auth & Storage,"$2,000 - $10,000","Rs. 200,000 - 1,000,000",Free Tier
+TECH STACK,Zustand,Lightweight state management,"$300 - $1,500","Rs. 30,000 - 150,000",Included
+TECH STACK,React Query,Server state caching & synchronization,"$500 - $2,000","Rs. 50,000 - 200,000",Included
+TECH STACK,React Hook Form + Zod,Form handling with validation,"$300 - $1,500","Rs. 30,000 - 150,000",Included
+TECH STACK,React Router v6,Client-side routing,"$200 - $1,000","Rs. 20,000 - 100,000",Included
+TECH STACK,Framer Motion,Smooth animations,"$500 - $2,500","Rs. 50,000 - 250,000",Included
+TECH STACK,Recharts,Data visualization for analytics,"$200 - $1,000","Rs. 20,000 - 100,000",Included
+TECH STACK,Lucide React,Icon library,"$100 - $500","Rs. 10,000 - 50,000",Included
+CUSTOMER FEATURE,Product Catalog & Filtering,Browse products with category filtering,"$2,000 - $8,000","Rs. 200,000 - 800,000",Included
+CUSTOMER FEATURE,User Authentication,Email/password + Google OAuth,"$1,500 - $6,000","Rs. 150,000 - 600,000",Included
+CUSTOMER FEATURE,Avatar Selection System,12 preset avatar options,"$500 - $2,000","Rs. 50,000 - 200,000",Included
+CUSTOMER FEATURE,Shopping Cart,Persistent cart with cookies,"$800 - $3,000","Rs. 80,000 - 300,000",Included
+CUSTOMER FEATURE,Order Placement & Tracking,Complete order flow,"$3,000 - $12,000","Rs. 300,000 - 1,200,000",Included
+CUSTOMER FEATURE,User Dashboard,Profile & order history,"$1,500 - $5,000","Rs. 150,000 - 500,000",Included
+CUSTOMER FEATURE,Phone Collection,Phone number verification system,"$500 - $2,000","Rs. 50,000 - 200,000",Included
+CUSTOMER FEATURE,Wishlist,Save favorite products,"$500 - $2,500","Rs. 50,000 - 250,000",Included
+CUSTOMER FEATURE,Payment Contact System,Manual payment coordination,"$1,000 - $4,000","Rs. 100,000 - 400,000",Included
+CUSTOMER FEATURE,Hero Slider,Homepage promotional carousel,"$500 - $2,000","Rs. 50,000 - 200,000",Included
+CUSTOMER FEATURE,Featured Products,Homepage featured items,"$300 - $1,500","Rs. 30,000 - 150,000",Included
+CUSTOMER FEATURE,Product Search,Fast search functionality,"$800 - $3,000","Rs. 80,000 - 300,000",Included
+CUSTOMER FEATURE,Share Modal,Product sharing feature,"$200 - $800","Rs. 20,000 - 80,000",Included
+CUSTOMER FEATURE,Cookie Consent,GDPR compliance banner,"$100 - $500","Rs. 10,000 - 50,000",Included
+CUSTOMER FEATURE,Cart Drawer,Slide-out cart view,"$300 - $1,500","Rs. 30,000 - 150,000",Included
+ADMIN FEATURE,Admin Dashboard Stats,Revenue orders products analytics,"$3,000 - $10,000","Rs. 300,000 - 1,000,000",Included
+ADMIN FEATURE,Product Management,Full CRUD for products,"$2,500 - $8,000","Rs. 250,000 - 800,000",Included
+ADMIN FEATURE,Image Upload,Supabase storage integration,"$1,500 - $5,000","Rs. 150,000 - 500,000",Included
+ADMIN FEATURE,Order Management,Order status updates,"$2,000 - $7,000","Rs. 200,000 - 700,000",Included
+ADMIN FEATURE,User Management,View & manage users,"$1,500 - $5,000","Rs. 150,000 - 500,000",Included
+ADMIN FEATURE,Role-Based Access,User/Admin/Super Admin roles,"$2,000 - $6,000","Rs. 200,000 - 600,000",Included
+ADMIN FEATURE,Promotional Banners,Banner carousel management,"$1,000 - $4,000","Rs. 100,000 - 400,000",Included
+ADMIN FEATURE,Hero Slider Management,Homepage banner control,"$800 - $3,000","Rs. 80,000 - 300,000",Included
+ADMIN FEATURE,Payment Methods Config,Configure payment options,"$1,500 - $5,000","Rs. 150,000 - 500,000",Included
+ADMIN FEATURE,Form Auto-Save System,Auto-draft saving,"$1,000 - $4,000","Rs. 100,000 - 400,000",Included
+ADMIN FEATURE,Advanced Analytics,Charts & trends,"$2,000 - $8,000","Rs. 200,000 - 800,000",Included
+ADMIN FEATURE,Bulk Upload,CSV product upload,"$1,500 - $5,000","Rs. 150,000 - 500,000",Included
+ADMIN FEATURE,Visitor Tracking,Analytics tracking schema,"$500 - $2,500","Rs. 50,000 - 250,000",Included
+ADVANCED FEATURE,Client Dairy,Blog/content system,"$3,000 - $12,000","Rs. 300,000 - 1,200,000",Included
+ADVANCED FEATURE,Social Analytics,Track social shares,"$1,500 - $5,000","Rs. 150,000 - 500,000",Included
+ADVANCED FEATURE,Push Notifications,Browser push alerts,"$2,000 - $8,000","Rs. 200,000 - 800,000",Included
+ADVANCED FEATURE,Marketing Leads,Lead capture system,"$2,000 - $6,000","Rs. 200,000 - 600,000",Included
+ADVANCED FEATURE,Reviews System,Product reviews,"$1,500 - $6,000","Rs. 150,000 - 600,000",Included
+ADVANCED FEATURE,Facebook Pixel,Marketing tracking,"$300 - $1,500","Rs. 30,000 - 150,000",Included
+ADVANCED FEATURE,Embellishment Support,Product customization,"$2,500 - $10,000","Rs. 250,000 - 1,000,000",Included
+ADVANCED FEATURE,Product Slugs,SEO-friendly URLs,"$500 - $2,000","Rs. 50,000 - 200,000",Included
+SERVICE,Product Upload,Uploa new products with images,,"Rs. 2,000 - 10,000/product","Rs. 500/product"
+SERVICE,New Feature Research,Research & implement new features,,"Rs. 50,000 - 500,000/feature","Rs. 10,000 - 50,000/feature"
+SERVICE,App Maintenance,Bug fixes updates security patches,,"Rs. 30,000 - 150,000/month","Rs. 5,000/month"
+SERVICE,Domain (Yearly),.com .pk domain registration,"$15 - $50/year","Rs. 2,000 - 5,000/year","Rs. 1,680/year (15 USD + Tax)"
+SERVICE,Vercel Hosting,Free tier available,"$0 - $100/month","Rs. 0 - 10,000/month",Free
+SERVICE,Database (Supabase),Free tier available,"$0 - $200/month","Rs. 0 - 20,000/month",Free

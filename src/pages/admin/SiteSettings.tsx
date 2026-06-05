@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2, Globe, ShieldAlert, Megaphone } from "lucide-react";
 import { ArrowLeft, Save, MapPin, Facebook, Loader2, Plus, Trash2, Globe, ShieldAlert, Megaphone, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export default function SiteSettings() {
     const [pixelId, setPixelId] = useState("");
@@ -21,6 +21,8 @@ export default function SiteSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [securityLogs, setSecurityLogs] = useState<any[]>([]);
+    const [whatsappNumber, setWhatsappNumber] = useState("");
+    const [globalSizeChart, setGlobalSizeChart] = useState<string[]>([]);
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -73,6 +75,16 @@ export default function SiteSettings() {
                 if (vpnDoc && vpnDoc.value) {
                     setVpnBlocker(vpnDoc.value.enabled === true);
                 }
+
+                const waDoc = data.find(d => d.key === 'whatsapp_number');
+                if (waDoc && waDoc.value && waDoc.value.number) {
+                    setWhatsappNumber(waDoc.value.number);
+                }
+
+                const chartDoc = data.find(d => d.key === 'global_size_chart');
+                if (chartDoc && chartDoc.value && chartDoc.value.url) {
+                    setGlobalSizeChart([chartDoc.value.url]);
+                }
             }
         } catch (error: any) {
             console.error("Error loading settings", error);
@@ -106,6 +118,18 @@ export default function SiteSettings() {
             await supabase.from('site_settings').upsert({
                 key: 'vpn_blocker',
                 value: { enabled: vpnBlocker }
+            }, { onConflict: 'key' });
+
+            // Save WhatsApp Number
+            await supabase.from('site_settings').upsert({
+                key: 'whatsapp_number',
+                value: { number: whatsappNumber.trim() }
+            }, { onConflict: 'key' });
+
+            // Save Global Size Chart
+            await supabase.from('site_settings').upsert({
+                key: 'global_size_chart',
+                value: { url: globalSizeChart[0] || null }
             }, { onConflict: 'key' });
 
             toast({ title: "Success", description: "Settings updated successfully." });
@@ -153,11 +177,65 @@ export default function SiteSettings() {
                         </Button>
                     </div>
 
-                    <Tabs defaultValue="settings" className="w-full">
+                    <Tabs defaultValue="store" className="w-full">
                         <TabsList className="mb-6">
+                            <TabsTrigger value="store">Store Contact & Media</TabsTrigger>
                             <TabsTrigger value="settings">General Settings</TabsTrigger>
                             <TabsTrigger value="security">Security Logs</TabsTrigger>
                         </TabsList>
+
+                        <TabsContent value="store">
+                            {loading ? (
+                                <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-8">
+                                    <Card className="rounded-3xl border-none shadow-xl bg-green-50/50">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2 text-green-800">
+                                                WhatsApp Contact Number
+                                            </CardTitle>
+                                            <CardDescription>
+                                                This number is used for inquiries and order placements across the site.
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="space-y-2 max-w-md">
+                                                <Label htmlFor="whatsappNumber">Number (with country code)</Label>
+                                                <Input
+                                                    id="whatsappNumber"
+                                                    placeholder="e.g. 923233228259"
+                                                    value={whatsappNumber}
+                                                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                                                    className="bg-white"
+                                                />
+                                                <p className="text-xs text-muted-foreground">Omit the '+' sign. Example: 923233228259</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="rounded-3xl border-none shadow-xl bg-purple-50/50">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2 text-purple-800">
+                                                Global Size Chart
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Upload a single size chart to be used across all products.
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div className="max-w-xl bg-white p-4 rounded-xl">
+                                                <ImageUpload 
+                                                    images={globalSizeChart} 
+                                                    onChange={setGlobalSizeChart} 
+                                                    maxImages={1} 
+                                                    maxSizeMB={5}
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+                        </TabsContent>
                         
                         <TabsContent value="settings">
 

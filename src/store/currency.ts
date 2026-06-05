@@ -67,28 +67,55 @@ export const useCurrencyStore = create<CurrencyState>()(
                 'NZ': { code: 'NZD', symbol: 'NZ$' }
             };
 
-            const loc = countryCode || localStorage.getItem('visitor_country_code');
+            let detectedCountry = countryCode || localStorage.getItem('visitor_country_code');
             
-            // If visitor is in a mapped country, get exchange rates
-            if (loc && countryToCurrency[loc]) {
-                const targetCurrency = countryToCurrency[loc];
-                
-                // Fetch real-time exchange rates (Base PKR)
-                // Use a free API like open.er-api.com
-                const res = await fetch('https://open.er-api.com/v6/latest/PKR');
-                const data = await res.json();
+            // If we don't have location yet (e.g. adblocker blocked ipwhois), fetch from GeoJS
+            if (!detectedCountry) {
+              try {
+                  const geoRes = await fetch('https://get.geojs.io/v1/ip/country.json');
+                  const geoData = await geoRes.json();
+                  detectedCountry = geoData.country;
+              } catch (e) {
+                  console.warn("GeoJS fetch failed", e);
+              }
+            }
 
-                if (data && data.rates && data.rates[targetCurrency.code]) {
-                    set({ 
-                        code: targetCurrency.code, 
-                        symbol: targetCurrency.symbol, 
-                        rate: data.rates[targetCurrency.code] 
-                    });
-                    return;
+            // If visitor is in a mapped country, get exchange rates
+            if (detectedCountry && countryToCurrency[detectedCountry]) {
+                const targetCurrency = countryToCurrency[detectedCountry];
+                
+                try {
+                    // Try Open-source Authentic Fawaz API (hosted on jsDelivr CDN - unblockable)
+                    const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/pkr.json');
+                    const data = await res.json();
+                    const rateKey = targetCurrency.code.toLowerCase();
+
+                    if (data && data.pkr && data.pkr[rateKey]) {
+                        set({ 
+                            code: targetCurrency.code, 
+                            symbol: targetCurrency.symbol, 
+                            rate: data.pkr[rateKey] 
+                        });
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("Fawaz API failed, trying fallback...", e);
+                    // Fallback to open.er-api.com
+                    const res = await fetch('https://open.er-api.com/v6/latest/PKR');
+                    const data = await res.json();
+
+                    if (data && data.rates && data.rates[targetCurrency.code]) {
+                        set({ 
+                            code: targetCurrency.code, 
+                            symbol: targetCurrency.symbol, 
+                            rate: data.rates[targetCurrency.code] 
+                        });
+                        return;
+                    }
                 }
             }
 
-            // Fallback to PKR if API fails or country is unknown/Pakistan
+            // Fallback to PKR if APIs fail or country is unknown/Pakistan
             set({ code: 'PKR', symbol: 'Rs.', rate: 1 });
 
         } catch (error) {
