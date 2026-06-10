@@ -99,6 +99,7 @@ const AdminProducts = () => {
     embellishment: [],
     is_custom: false,
     advance_required: '0',
+    hidden_keywords: '',
   });
   const [productImages, setProductImages] = useState<string[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -150,6 +151,7 @@ const AdminProducts = () => {
           embellishment: Array.isArray(draft.embellishment) ? draft.embellishment : (draft.embellishment ? (typeof draft.embellishment === 'string' ? (draft.embellishment as string).split(',').map((e: string) => e.trim()).filter(Boolean) : []) : []),
           is_custom: draft.is_custom || false,
           advance_required: draft.advance_required || '0',
+          hidden_keywords: draft.hidden_keywords ? (typeof draft.hidden_keywords === 'string' ? draft.hidden_keywords : draft.hidden_keywords.join(', ')) : '',
         });
         if (draft.productImages) {
           setProductImages(draft.productImages);
@@ -328,12 +330,18 @@ const AdminProducts = () => {
         return;
       }
 
+      // Parse hidden_keywords from comma-separated string to array
+      const hiddenKeywordsArray = formData.hidden_keywords
+        ? formData.hidden_keywords.split(',').map(k => k.trim()).filter(Boolean)
+        : [];
+
       const productData = {
         ...validatedData,
-        image_url: productImages[0], // Use first image as primary
-        images: productImages, // Save all images
+        image_url: productImages[0],
+        images: productImages,
         is_active: formData.is_active,
         is_new: formData.is_new,
+        hidden_keywords: hiddenKeywordsArray.length > 0 ? hiddenKeywordsArray : null,
       };
 
       if (editingProduct) {
@@ -384,6 +392,7 @@ const AdminProducts = () => {
         embellishment: [],
         is_custom: false,
         advance_required: '0',
+        hidden_keywords: '',
       });
       setCustomCategory("");
       setProductImages([]);
@@ -453,6 +462,9 @@ const AdminProducts = () => {
       embellishment: product.embellishment || [],
       is_custom: product.is_custom || false,
       advance_required: product.advance_required?.toString() || '0',
+      hidden_keywords: Array.isArray((product as any).hidden_keywords) 
+        ? (product as any).hidden_keywords.join(', ') 
+        : ((product as any).hidden_keywords || ''),
     });
     setIsDialogOpen(true);
   };
@@ -904,21 +916,31 @@ const AdminProducts = () => {
                           {/* Available Colors */}
                           <div className="md:col-span-2">
                             <Label htmlFor="available_colors" className="text-sm font-medium mb-1.5 block">Available Colors (Hex Codes)</Label>
-                            <div className="flex gap-2 mb-3">
-                              <Input
-                                id="color_picker"
-                                type="color"
-                                className="h-11 w-16 p-1 cursor-pointer"
-                                onChange={(e) => {
-                                  const color = e.target.value;
-                                  if (!formData.available_colors.includes(color)) {
-                                    setFormData({
-                                      ...formData,
-                                      available_colors: [...formData.available_colors, color]
-                                    });
-                                  }
-                                }}
-                              />
+                            <div className="flex gap-2 mb-3 items-start">
+                              <div className="flex flex-col gap-2">
+                                <Input
+                                  id="color_picker"
+                                  type="color"
+                                  className="h-11 w-16 p-1 cursor-pointer"
+                                />
+                                <Button 
+                                  type="button" 
+                                  size="sm" 
+                                  variant="secondary"
+                                  onClick={() => {
+                                    const input = document.getElementById('color_picker') as HTMLInputElement;
+                                    const color = input?.value;
+                                    if (color && !formData.available_colors.includes(color)) {
+                                      setFormData({
+                                        ...formData,
+                                        available_colors: [...formData.available_colors, color]
+                                      });
+                                    }
+                                  }}
+                                >
+                                  Add
+                                </Button>
+                              </div>
                               <div className="flex-1 flex flex-wrap gap-2 items-center p-2 border rounded-md min-h-[44px]">
                                 {Array.isArray(formData.available_colors) && formData.available_colors.map((color) => (
                                   <div key={color} className="flex items-center gap-1 bg-accent/30 pr-1 pl-2 py-1 rounded-full border shadow-sm">
@@ -1065,6 +1087,23 @@ const AdminProducts = () => {
                               className="resize-none h-24"
                               placeholder="e.g., Dry clean only, Hand wash recommended"
                             />
+                          </div>
+
+                          {/* Hidden Keywords for SEO & Search */}
+                          <div className="md:col-span-2">
+                            <Label htmlFor="hidden_keywords" className="text-sm font-medium mb-1.5 block">
+                              🔍 Hidden Keywords <span className="text-muted-foreground font-normal">(SEO & Search — comma separated)</span>
+                            </Label>
+                            <Textarea
+                              id="hidden_keywords"
+                              name="hidden_keywords"
+                              value={formData.hidden_keywords}
+                              onChange={(e) => setFormData({ ...formData, hidden_keywords: e.target.value })}
+                              rows={2}
+                              className="resize-none"
+                              placeholder="e.g., laal soot, bridal, red dress, handwork, shadi ka jora"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">Yeh keywords customer ko nazar nahi aayenge lekin search aur Google mein product laayenge.</p>
                           </div>
                         </CollapsibleContent>
                       </Collapsible>

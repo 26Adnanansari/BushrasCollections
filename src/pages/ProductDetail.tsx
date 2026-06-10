@@ -14,7 +14,7 @@ import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 import { ShareModal } from "@/components/ShareModal";
 import { PriceDisplay } from "@/components/PriceDisplay";
@@ -125,18 +125,58 @@ const ProductDetail = () => {
     }
   }, [product]);
 
+  // SEO: Dynamic Page Title, Meta Description, and OpenGraph tags
+  useEffect(() => {
+    if (!product) return;
+    const siteName = "Bushra's Collection";
+    const title = `${product.name} | ${siteName}`;
+    const description = product.description
+      ? product.description.substring(0, 155)
+      : `Shop ${product.name} from ${siteName}. Premium quality ${product.category} in Pakistan.`;
+    const image = product.images?.[0] || product.image_url || '';
+    const url = window.location.href;
+
+    document.title = title;
+
+    const setMeta = (name: string, content: string, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.content = content;
+    };
+
+    setMeta('description', description);
+    setMeta('keywords', [product.name, product.category, product.fabric_type, ...(product.hidden_keywords || [])].filter(Boolean).join(', '));
+    // OpenGraph
+    setMeta('og:title', title, 'property');
+    setMeta('og:description', description, 'property');
+    setMeta('og:image', image, 'property');
+    setMeta('og:url', url, 'property');
+    setMeta('og:type', 'product', 'property');
+    setMeta('og:site_name', siteName, 'property');
+    // Twitter Card
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:title', title);
+    setMeta('twitter:description', description);
+    setMeta('twitter:image', image);
+
+    return () => { document.title = siteName; };
+  }, [product]);
+
   // Reset selections when product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize("");
-      setSelectedColor("");
+      setSelectedSize(product.available_sizes?.length === 1 ? product.available_sizes[0] : "");
+      setSelectedColor(product.available_colors?.length === 1 ? product.available_colors[0] : "");
       setSelectedComponentIndex(0);
     }
   }, [product?.id]);
 
   const currentComponent = product?.dress_components?.[selectedComponentIndex];
   const currentPrice = currentComponent && currentComponent.price !== undefined ? currentComponent.price : product?.price;
-  const isWhatsAppInquiry = currentComponent && currentComponent.price === null;
+  
+  // If ANY component has no price, or if the product itself has no price, then it's a global WhatsApp Inquiry
+  const hasUnpricedComponent = product?.dress_components?.some(c => c.price === null || c.price === undefined || c.price === 0);
+  const isWhatsAppInquiry = hasUnpricedComponent || (!product?.dress_components?.length && (product?.price === null || product?.price === 0));
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -292,9 +332,13 @@ const ProductDetail = () => {
                 "@context": "https://schema.org/",
                 "@type": "Product",
                 "name": product.name,
-                "image": productImages[0] || "",
+                "image": productImages,
                 "description": product.description || `Premium ${product.name} styling from Bushra's Collection.`,
                 "sku": product.id,
+                "brand": { "@type": "Brand", "name": "Bushra's Collection" },
+                "category": product.category,
+                "material": product.fabric_type,
+                "keywords": [product.name, product.category, product.fabric_type, ...(product.hidden_keywords || [])].filter(Boolean).join(', '),
                 "offers": {
                    "@type": "Offer",
                    "url": window.location.href,
@@ -467,7 +511,7 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {product.available_sizes && product.available_sizes.length > 0 && (
+              {product.available_sizes && product.available_sizes.length > 1 && (
                 <div>
                   <div className="flex justify-between items-end mb-3">
                     <label className="text-sm font-medium text-foreground block">
@@ -482,11 +526,15 @@ const ProductDetail = () => {
                           <DialogHeader>
                             <DialogTitle>Size Chart</DialogTitle>
                           </DialogHeader>
-                          <div className="mt-4">
+                          <div className="mt-4 flex justify-center items-center overflow-hidden border rounded-md">
                             {globalSizeChartUrl.endsWith('.pdf') ? (
                               <iframe src={globalSizeChartUrl} className="w-full h-[60vh]" />
                             ) : (
-                              <img src={globalSizeChartUrl} alt="Size Chart" className="w-full h-auto object-contain max-h-[70vh]" />
+                              <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit={true}>
+                                <TransformComponent>
+                                  <img src={globalSizeChartUrl} alt="Size Chart" className="w-full h-auto object-contain max-h-[70vh] cursor-move" draggable="false" />
+                                </TransformComponent>
+                              </TransformWrapper>
                             )}
                           </div>
                         </DialogContent>
@@ -511,7 +559,7 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {product.available_colors && product.available_colors.length > 0 && (
+              {product.available_colors && product.available_colors.length > 1 && (
                 <div>
                   <label className="text-sm font-medium text-foreground mb-3 block">
                     Select Color
@@ -642,11 +690,12 @@ const ProductDetail = () => {
                   <Heart className="h-5 w-5" />
                 </Button>
                 {!isWhatsAppInquiry && (
-                  <Button variant="outline" size="lg" className="w-12 px-0 hover:text-green-600" onClick={() => {
+                  <Button variant="outline" size="lg" className="w-auto px-4 hover:text-green-600" onClick={() => {
                     const msg = encodeURIComponent(`Hello, I'm interested in the ${product?.name}. I'd like to ask a question.`);
                     window.open(`https://wa.me/${whatsappNumber || '923233228259'}?text=${msg}`, '_blank');
                   }}>
-                    <MessageCircle className="h-5 w-5" />
+                    <MessageCircle className="h-5 w-5 mr-2" />
+                    WhatsApp
                   </Button>
                 )}
                 <Button variant="outline" size="lg" className="w-12 px-0" onClick={handleShare}>

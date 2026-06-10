@@ -14,6 +14,7 @@ import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 // Validation schema for shipping information
 const shippingSchema = z.object({
@@ -22,6 +23,16 @@ const shippingSchema = z.object({
     .min(2, "Name must be at least 2 characters")
     .max(100, "Name must be less than 100 characters")
     .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, apostrophes, and hyphens"),
+  email: z.string()
+    .trim()
+    .email("Please enter a valid email address")
+    .optional()
+    .or(z.literal('')),
+  whatsapp: z.string()
+    .trim()
+    .regex(/^(\+92|0)?[0-9]{10,11}$/, "Invalid WhatsApp number. Use format: 03001234567 or +923001234567")
+    .min(10, "WhatsApp number must be at least 10 digits")
+    .max(15, "WhatsApp number must be less than 15 digits"),
   phone: z.string()
     .trim()
     .regex(/^(\+92|0)?[0-9]{10,11}$/, "Invalid phone number. Use format: 03001234567 or +923001234567")
@@ -36,12 +47,6 @@ const shippingSchema = z.object({
     .min(2, "City name must be at least 2 characters")
     .max(100, "City name must be less than 100 characters")
     .regex(/^[a-zA-Z\s,.-]+$/, "City can only contain letters, spaces, commas, periods, and hyphens"),
-  postalCode: z.string()
-    .trim()
-    .max(10, "Postal code must be less than 10 characters")
-    .regex(/^[0-9]{0,10}$/, "Postal code can only contain numbers")
-    .optional()
-    .or(z.literal('')),
   notes: z.string()
     .trim()
     .max(1000, "Notes must be less than 1000 characters")
@@ -54,6 +59,7 @@ const Checkout = () => {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { whatsappNumber: storeWhatsApp } = useSiteSettings();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
@@ -68,12 +74,14 @@ const Checkout = () => {
   }, 0);
   const remainingBalance = getTotalPrice() - advanceRequiredAmount;
 
+  const [isOrderComplete, setIsOrderComplete] = useState(false);
   const [shippingInfo, setShippingInfo] = useState({
     name: user?.profile?.name || '',
+    email: user?.email || '',
+    whatsapp: user?.profile?.phone || '',
     phone: user?.profile?.phone || '',
     address: '',
     city: '',
-    postalCode: '',
     notes: ''
   });
 
@@ -227,14 +235,40 @@ const Checkout = () => {
 
       toast({
         title: "Order Placed Successfully!",
-        description: `${instructions} Don't forget to share your excitement in our Client Dairy!`,
+        description: `${instructions} Redirecting to WhatsApp...`,
       });
 
+      // Format WhatsApp Message
+      let msg = `*New Order Placed*\n\n`;
+      msg += `*Customer Details*\n`;
+      msg += `Name: ${shippingInfo.name}\n`;
+      msg += `WhatsApp: ${shippingInfo.whatsapp}\n`;
+      msg += `Contact: ${shippingInfo.phone}\n`;
+      if (shippingInfo.email) msg += `Email: ${shippingInfo.email}\n`;
+      msg += `Delivery Address: ${shippingInfo.address}, ${shippingInfo.city}\n\n`;
+      
+      msg += `*Order Summary*\n`;
+      items.forEach(item => {
+        msg += `- ${item.quantity}x ${item.name} `;
+        if (item.size || item.color) {
+          msg += `(${item.size ? 'Size: '+item.size : ''}${item.size && item.color ? ', ' : ''}${item.color ? 'Color: '+item.color : ''}) `;
+        }
+        msg += `- PKR ${item.price.toLocaleString()}\n`;
+      });
+      msg += `\n*Total Amount:* PKR ${getTotalPrice().toLocaleString()}\n`;
+      if (shippingInfo.notes) {
+         msg += `\n*Notes:* ${shippingInfo.notes}\n`;
+      }
+      
+      const whatsappNumber = storeWhatsApp?.replace(/\D/g, '') || '923233228259';
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
+      
       // Clear cart
       clearCart();
 
-      // Redirect directly to the specific order's tracking page for immediate payment access
-      navigate(`/orders/${order.order_number || order.id}`);
+      // Open WhatsApp in new tab and show Thank You screen
+      window.open(whatsappUrl, '_blank');
+      setIsOrderComplete(true);
     } catch (error: any) {
       console.error('Error placing order:', error);
       toast({
@@ -273,7 +307,22 @@ const Checkout = () => {
           Back
         </Button>
 
-        <h1 className="text-4xl font-serif font-bold text-foreground mb-8">Checkout</h1>
+        {isOrderComplete ? (
+          <div className="max-w-md mx-auto text-center py-20">
+            <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+              <Package className="h-10 w-10 text-green-600" />
+            </div>
+            <h1 className="text-4xl font-serif font-bold text-foreground mb-4">Thank You!</h1>
+            <p className="text-lg text-muted-foreground mb-8">
+              Your order has been recorded securely. You should have been redirected to WhatsApp to complete your order.
+            </p>
+            <Button onClick={() => navigate('/')} size="lg" className="w-full">
+              Continue Shopping
+            </Button>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-4xl font-serif font-bold text-foreground mb-8">Checkout</h1>
 
         {hasCustomProducts && (
           <div className="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg p-4 mb-8 flex items-start gap-4">
@@ -292,7 +341,7 @@ const Checkout = () => {
                 <CardTitle>Shipping Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
                     <Input
@@ -306,7 +355,36 @@ const Checkout = () => {
                     {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={shippingInfo.email}
+                      onChange={handleInputChange}
+                      placeholder="you@example.com"
+                      className={errors.email ? "border-destructive" : ""}
+                    />
+                    {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="whatsapp">WhatsApp Number *</Label>
+                    <Input
+                      id="whatsapp"
+                      name="whatsapp"
+                      value={shippingInfo.whatsapp}
+                      onChange={handleInputChange}
+                      placeholder="03001234567"
+                      className={errors.whatsapp ? "border-destructive" : ""}
+                      required
+                    />
+                    {errors.whatsapp && <p className="text-sm text-destructive mt-1">{errors.whatsapp}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Contact Number *</Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -333,7 +411,7 @@ const Checkout = () => {
                   {errors.address && <p className="text-sm text-destructive mt-1">{errors.address}</p>}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <Label htmlFor="city">City *</Label>
                     <Input
@@ -345,18 +423,6 @@ const Checkout = () => {
                       required
                     />
                     {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="postalCode">Postal Code</Label>
-                    <Input
-                      id="postalCode"
-                      name="postalCode"
-                      value={shippingInfo.postalCode}
-                      onChange={handleInputChange}
-                      placeholder="54000"
-                      className={errors.postalCode ? "border-destructive" : ""}
-                    />
-                    {errors.postalCode && <p className="text-sm text-destructive mt-1">{errors.postalCode}</p>}
                   </div>
                 </div>
 
@@ -467,6 +533,8 @@ const Checkout = () => {
             </Card>
           </div>
         </div>
+          </>
+        )}
       </div>
     </main>
   );

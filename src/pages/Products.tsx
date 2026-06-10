@@ -43,7 +43,10 @@ const Products = () => {
         .select('*, slug, reviews(rating)');
 
       if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
+        // Smart Full-Text Search: matches name, description, category, fabric_type, AND hidden_keywords
+        query = query.or(
+          `name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%,fabric_type.ilike.%${searchQuery}%`
+        );
       }
 
       if (selectedCategories.length > 0) {
