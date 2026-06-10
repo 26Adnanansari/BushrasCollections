@@ -769,37 +769,6 @@ const ProductDetail = () => {
 
               <Separator className="my-8" />
 
-              {user && (
-                <div className="mb-8">
-                  <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        Write a Review
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Write a Review</DialogTitle>
-                        <DialogDescription>
-                          Share your experience with {product.name}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <Suspense fallback={<div className="py-4 text-center">Loading form...</div>}>
-                        <ReviewForm
-                          productId={product.id}
-                          productName={product.name}
-                          onSuccess={() => {
-                            setReviewDialogOpen(false);
-                            window.location.reload();
-                          }}
-                          onCancel={() => setReviewDialogOpen(false)}
-                        />
-                      </Suspense>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
-
               <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading reviews...</div>}>
                 <ReviewsList productId={product.id} />
               </Suspense>

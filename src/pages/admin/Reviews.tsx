@@ -108,12 +108,14 @@ const AdminReviews = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState("");
     const [editComment, setEditComment] = useState("");
+    const [editRating, setEditRating] = useState(0);
 
     const handleViewReview = (review: Review) => {
         setSelectedReview(review);
         setAdminNotes(review.admin_notes || "");
         setEditTitle(review.title);
         setEditComment(review.comment);
+        setEditRating(review.rating);
         setIsEditing(false); // Reset edit mode
         setDialogOpen(true);
     };
@@ -125,6 +127,7 @@ const AdminReviews = () => {
             const { error } = await supabase
                 .from('reviews')
                 .update({
+                    rating: editRating,
                     title: editTitle,
                     comment: editComment,
                     updated_at: new Date().toISOString()
@@ -329,6 +332,12 @@ const AdminReviews = () => {
 
                             {isEditing ? (
                                 <div className="space-y-4 p-4 border rounded-md bg-muted/30">
+                                    <div>
+                                        <Label>Rating</Label>
+                                        <div className="mt-1">
+                                            <StarRating rating={editRating} onRatingChange={setEditRating} />
+                                        </div>
+                                    </div>
                                     <div>
                                         <Label htmlFor="edit-title">Title</Label>
                                         <Input

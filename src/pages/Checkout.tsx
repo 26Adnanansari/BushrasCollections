@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, MessageCircle, Truck, Package, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Truck, Package, Loader2, CreditCard } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +62,9 @@ const Checkout = () => {
   const { whatsappNumber: storeWhatsApp } = useSiteSettings();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [dbPaymentMethods, setDbPaymentMethods] = useState<any[]>([]);
+  const [isLoadingMethods, setIsLoadingMethods] = useState(true);
 
   // Calculate custom order breakdown
   const hasCustomProducts = items.some(item => item.is_custom);
@@ -87,49 +89,31 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Hardcoded payment methods - COD, Bank Transfer, JazzCash, EasyPaisa
-  const paymentMethods = [
-    {
-      id: 'cod',
-      name: 'Cash on Delivery',
-      type: 'cod',
-      description: 'Pay when you receive your order',
-      icon: Package,
-      disabled: false
-    },
-    {
-      id: 'bank_transfer',
-      name: 'Bank Transfer',
-      type: 'bank_transfer',
-      description: 'Transfer to our bank account',
-      icon: Truck,
-      disabled: false
-    },
-    {
-      id: 'jazzcash',
-      name: 'JazzCash',
-      type: 'digital_wallet',
-      description: import.meta.env.VITE_JAZZCASH_KEY ? 'Pay securely with JazzCash' : 'Coming Soon',
-      icon: Truck,
-      disabled: !import.meta.env.VITE_JAZZCASH_KEY
-    },
-    {
-      id: 'easypaisa',
-      name: 'EasyPaisa',
-      type: 'digital_wallet',
-      description: import.meta.env.VITE_EASYPAISA_KEY ? 'Pay securely with EasyPaisa' : 'Coming Soon',
-      icon: Truck,
-      disabled: !import.meta.env.VITE_EASYPAISA_KEY
-    }
-  ];
-
-
+  // Fetch payment methods from Supabase
   useEffect(() => {
-    // Set default payment method to COD
-    if (!selectedPaymentMethod) {
-      setSelectedPaymentMethod('cod');
-    }
+    const fetchMethods = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('payment_methods')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setDbPaymentMethods(data || []);
+        if (data && data.length > 0) {
+          setSelectedPaymentMethod(data[0].id);
+        }
+      } catch (error) {
+        console.error('Error fetching payment methods:', error);
+      } finally {
+        setIsLoadingMethods(false);
+      }
+    };
+    fetchMethods();
   }, []);
+
+  const forceWhatsAppCheckout = dbPaymentMethods.length === 0 || hasCustomProducts;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -162,7 +146,7 @@ const Checkout = () => {
       return;
     }
 
-    if (!selectedPaymentMethod) {
+    if (!forceWhatsAppCheckout && !selectedPaymentMethod) {
       toast({
         title: "Payment Method Required",
         description: "Please select a payment method",
@@ -215,8 +199,8 @@ const Checkout = () => {
           shipping_address: JSON.parse(JSON.stringify(shippingInfo)),
           whatsapp_number: shippingInfo.phone,
           status: 'pending',
-          payment_method: selectedPaymentMethod, // 'cod' or 'bank_transfer'
-          payment_status: selectedPaymentMethod === 'cod' ? 'pending' : 'pending_payment'
+          payment_method: forceWhatsAppCheckout ? 'whatsapp' : selectedPaymentMethod,
+          payment_status: 'pending'
         }])
         .select()
         .single();
@@ -225,12 +209,13 @@ const Checkout = () => {
 
       // Payment instructions based on method
       let instructions = '';
-      if (selectedPaymentMethod === 'cod') {
-        instructions = hasCustomProducts 
+      if (forceWhatsAppCheckout) {
+         instructions = hasCustomProducts 
           ? 'An advance payment is required for custom items. Our team will contact you shortly via WhatsApp for the advance payment details.'
-          : 'Pay cash when you receive your order. Our team will contact you shortly.';
-      } else if (selectedPaymentMethod === 'bank_transfer') {
-        instructions = 'Please transfer the amount to our bank account. Details will be sent via WhatsApp.';
+          : 'Our team will contact you shortly via WhatsApp to confirm the order details and payment.';
+      } else {
+         const selectedMethodObj = dbPaymentMethods.find(m => m.id === selectedPaymentMethod);
+         instructions = selectedMethodObj?.instructions || 'Proceeding to confirm your order.';
       }
 
       toast({
@@ -329,7 +314,17 @@ const Checkout = () => {
             <Package className="h-6 w-6 text-orange-500 mt-1" />
             <div>
               <h3 className="font-semibold">Advance Payment Required</h3>
-              <p className="text-sm">Your order contains "Made to Order" items. An advance payment of PKR {advanceRequiredAmount.toLocaleString()} is required to begin production.</p>
+              <p className="text-sm">Your order contains "Made to Order" items. An advance payment of PKR {advanceRequiredAmount.toLocaleString()} is required to begin production. You will be redirected to WhatsApp to arrange payment.</p>
+            </div>
+          </div>
+        )}
+
+        {!hasCustomProducts && dbPaymentMethods.length === 0 && !isLoadingMethods && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mb-8 flex items-start gap-4">
+            <MessageCircle className="h-6 w-6 text-blue-500 mt-1" />
+            <div>
+              <h3 className="font-semibold">WhatsApp Order Processing</h3>
+              <p className="text-sm">We are currently processing all orders directly through WhatsApp to ensure the best customer service. You will be redirected to WhatsApp after placing the order.</p>
             </div>
           </div>
         )}
@@ -440,38 +435,50 @@ const Checkout = () => {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <h3 className="font-semibold text-foreground mb-3">Payment Method</h3>
-
-                  <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
-                    <div className="space-y-3">
-                      {paymentMethods.map((method) => {
-                        const Icon = method.icon;
-                        return (
-                          <div key={method.id} className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-accent/20 transition-colors">
-                            <RadioGroupItem value={method.id} id={method.id} className="mt-1" />
-                            <div className="flex-1">
-                              <Label htmlFor={method.id} className="cursor-pointer">
-                                <div className="flex items-center gap-2">
-                                  <Icon className="h-5 w-5 text-primary" />
-                                  <span className="font-semibold text-foreground">{method.name}</span>
+                  {!forceWhatsAppCheckout && (
+                    <>
+                      <h3 className="font-semibold text-foreground mb-3">Payment Method</h3>
+                      
+                      {isLoadingMethods ? (
+                        <div className="flex items-center justify-center p-4">
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                          <div className="space-y-3">
+                            {dbPaymentMethods.map((method) => {
+                              const Icon = method.type === 'offline' ? Truck : CreditCard;
+                              return (
+                                <div key={method.id} className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-accent/20 transition-colors">
+                                  <RadioGroupItem value={method.id} id={method.id} className="mt-1" />
+                                  <div className="flex-1">
+                                    <Label htmlFor={method.id} className="cursor-pointer flex flex-col">
+                                      <div className="flex items-center gap-2">
+                                        <Icon className="h-5 w-5 text-primary" />
+                                        <span className="font-semibold text-foreground">{method.name}</span>
+                                      </div>
+                                      <span className="text-sm text-muted-foreground mt-1 font-normal block">
+                                        {method.instructions || 'Pay securely'}
+                                      </span>
+                                    </Label>
+                                  </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-1">{method.description}</p>
-                              </Label>
-                            </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </RadioGroup>
+                        </RadioGroup>
+                      )}
+                    </>
+                  )}
 
                   <Button
-                    className="w-full mt-4"
+                    className="w-full mt-6"
                     size="lg"
                     onClick={handlePlaceOrder}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isLoadingMethods}
                   >
                     {isSubmitting && <Loader2 className="h-5 w-5 mr-2 animate-spin" />}
-                    {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                    {isSubmitting ? 'Placing Order...' : (forceWhatsAppCheckout ? 'Checkout via WhatsApp' : 'Place Order')}
                   </Button>
                 </div>
               </CardContent>

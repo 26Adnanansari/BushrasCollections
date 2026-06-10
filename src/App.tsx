@@ -29,6 +29,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ClientDairyPost = lazy(() => import("./pages/ClientDairyPost"));
 const ClientDairy = lazy(() => import("./pages/ClientDairy"));
+const WriteReview = lazy(() => import("./pages/WriteReview"));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -102,6 +103,7 @@ const App = () => {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/orders/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+          <Route path="/write-review" element={<WriteReview />} />
           <Route path="/client-dairy/post/:orderId" element={<ProtectedRoute><ClientDairyPost /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />

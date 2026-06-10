@@ -296,9 +296,12 @@ const OrderDetailsPage = () => {
                                     // Better: Link to the specific product they bought (order_items[0]).
 
                                     const firstItem = order.order_items?.[0];
-                                    const productLink = firstItem
-                                        ? `${window.location.origin}/product/${firstItem.product_id}`
-                                        : window.location.origin;
+                                    let productLink = window.location.origin;
+                                    if (firstItem) {
+                                        const tokenData = JSON.stringify({ p: firstItem.product_id, o: order.order_number || order.id });
+                                        const token = btoa(tokenData);
+                                        productLink = `${window.location.origin}/write-review?token=${token}`;
+                                    }
 
                                     const message = `Assalam-o-Alaikum ${order.profiles?.name || 'Customer'}! 🌟 Thank you for your purchase from Bushra's Collection. We would love to hear your feedback! Please rate your experience here: ${productLink}`;
                                     const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
