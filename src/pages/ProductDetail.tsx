@@ -14,7 +14,6 @@ import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 import { ShareModal } from "@/components/ShareModal";
 import { PriceDisplay } from "@/components/PriceDisplay";
@@ -530,11 +529,18 @@ const ProductDetail = () => {
                             {globalSizeChartUrl.endsWith('.pdf') ? (
                               <iframe src={globalSizeChartUrl} className="w-full h-[60vh]" />
                             ) : (
-                              <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit={true}>
-                                <TransformComponent>
-                                  <img src={globalSizeChartUrl} alt="Size Chart" className="w-full h-auto object-contain max-h-[70vh] cursor-move" draggable="false" />
-                                </TransformComponent>
-                              </TransformWrapper>
+                              <div
+                                className="overflow-auto w-full max-h-[70vh] cursor-move select-none"
+                                style={{ WebkitOverflowScrolling: 'touch' }}
+                              >
+                                <img
+                                  src={globalSizeChartUrl}
+                                  alt="Size Chart"
+                                  className="w-full h-auto object-contain"
+                                  draggable="false"
+                                  style={{ minWidth: '600px' }}
+                                />
+                              </div>
                             )}
                           </div>
                         </DialogContent>
