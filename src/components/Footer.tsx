@@ -164,11 +164,20 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Bushra's Collection. All rights reserved.
-            </p>
-            <div className="flex gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+            <div className="w-full md:w-1/3 text-center md:text-left">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} Bushra's Collection. All rights reserved.
+              </p>
+            </div>
+            
+            <div className="w-full md:w-1/3 text-center order-last md:order-none mt-2 md:mt-0">
+              <p className="text-sm text-muted-foreground">
+                Developed by : <span className="text-primary font-bold">Pakaiverse</span>
+              </p>
+            </div>
+            
+            <div className="w-full md:w-1/3 flex justify-center md:justify-end gap-6">
               <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy
               </a>
