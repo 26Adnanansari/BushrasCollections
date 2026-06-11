@@ -77,9 +77,7 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="block">
-              <h1 className="text-2xl font-serif font-bold text-foreground">
-                Bushra's Collection
-              </h1>
+              <img src="/logo.png" alt="Bushra's Collection" className="h-8 md:h-10 w-auto" />
             </Link>
           </div>
 
