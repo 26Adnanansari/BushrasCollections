@@ -19,16 +19,27 @@ const SocialAnalytics = () => {
     const [chartData, setChartData] = useState<any[]>([]);
     const [stats, setStats] = useState({ totalShares: 0, totalLikes: 0, totalReferrals: 0, topProduct: "" });
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const PAGE_SIZE = 15;
+    
     const { toast } = useToast();
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchAnalytics();
+        fetchAnalyticsStats();
+        fetchActivitiesChunk(0);
     }, []);
 
-    const fetchAnalytics = async () => {
+    const fetchActivitiesChunk = async (pageNum: number) => {
         try {
-            setLoading(true);
+            if (pageNum === 0) setLoading(true);
+            else setLoadingMore(true);
+
+            const from = pageNum * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
             const { data, error } = await supabase
                 .from('site_activity')
                 .select(`
@@ -37,15 +48,49 @@ const SocialAnalytics = () => {
                     referrer:referrer_id (name, phone),
                     products:product_id (name)
                 `)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
             if (error) throw error;
 
-            // Transform data to handle entity names from different tables if needed
-            // For now we assume if entity_type is product, it's in products table.
-            // If it's client_dairy, we might need a separate join or handle it via metadata.
+            if (data) {
+                if (pageNum === 0) {
+                    setActivities(data);
+                } else {
+                    setActivities(prev => [...prev, ...data]);
+                }
+                setHasMore(data.length === PAGE_SIZE);
+            }
+        } catch (error: any) {
+            toast({ title: "Error loading feed", description: error.message, variant: "destructive" });
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
 
-            setActivities(data || []);
+    const loadMore = () => {
+        if (!loadingMore && hasMore) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchActivitiesChunk(nextPage);
+        }
+    };
+
+    const fetchAnalyticsStats = async () => {
+        try {
+            // Fetch lightweight data for stats (up to 1000 latest interactions)
+            const { data, error } = await supabase
+                .from('site_activity')
+                .select(`
+                    type, entity_type, created_at, referrer_id, is_conversion,
+                    referrer:referrer_id (name, phone),
+                    products:product_id (name)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(1000);
+
+            if (error) throw error;
 
             // Calculate basic stats
             const shares = data?.filter(a => a.type === 'share').length || 0;
@@ -118,9 +163,7 @@ const SocialAnalytics = () => {
             setLeads(leadsData || []);
 
         } catch (error: any) {
-            toast({ title: "Failed to fetch analytics", description: error.message, variant: "destructive" });
-        } finally {
-            setLoading(false);
+            console.error("Failed to fetch stats", error);
         }
     };
 
@@ -329,6 +372,7 @@ const SocialAnalytics = () => {
                                 ) : activities.length === 0 ? (
                                     <div className="text-center py-20 text-muted-foreground italic">No social activity recorded yet.</div>
                                 ) : (
+                                    <>
                                     <Table>
                                         <TableHeader className="bg-muted/50">
                                             <TableRow>
@@ -392,6 +436,21 @@ const SocialAnalytics = () => {
                                             ))}
                                         </TableBody>
                                     </Table>
+                                    
+                                    {hasMore && (
+                                        <div className="p-4 flex justify-center border-t">
+                                            <Button 
+                                                variant="outline" 
+                                                onClick={loadMore} 
+                                                disabled={loadingMore}
+                                                className="w-full md:w-auto"
+                                            >
+                                                {loadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Load More Activity
+                                            </Button>
+                                        </div>
+                                    )}
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
