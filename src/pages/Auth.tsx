@@ -304,7 +304,12 @@ const Auth = () => {
           </Button>
 
           <div className="text-center flex flex-col items-center justify-center">
-            <img src="/logo.png" alt="Bushra's Collection" className="h-16 w-auto mb-4" />
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <img src="/logo.png" alt="Bushra's Collection Logo" className="h-12 md:h-16 w-auto" />
+              <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+                Bushra's Collection
+              </h1>
+            </div>
             <p className="text-muted-foreground">
               Sign in to your account or create a new one
             </p>

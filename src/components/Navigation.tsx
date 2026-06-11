@@ -76,8 +76,11 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="block">
-              <img src="/logo.png" alt="Bushra's Collection" className="h-8 md:h-10 w-auto" />
+            <Link to="/" className="flex items-center gap-2 md:gap-3">
+              <img src="/logo.png" alt="Bushra's Collection Logo" className="h-8 md:h-10 w-auto" />
+              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-foreground">
+                Bushra's Collection
+              </h1>
             </Link>
           </div>
 

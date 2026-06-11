@@ -55,7 +55,12 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
           {/* About */}
           <div className="col-span-2 md:col-span-1 lg:col-span-1">
-            <img src="/logo.png" alt="Bushra's Collection" className="h-10 w-auto mb-4" />
+            <div className="flex items-center gap-3 mb-4">
+              <img src="/logo.png" alt="Bushra's Collection Logo" className="h-10 w-auto" />
+              <h3 className="text-xl font-serif font-bold text-foreground">
+                Bushra's Collection
+              </h3>
+            </div>
             <p className="text-muted-foreground mb-4 leading-relaxed">
               Your destination for elegant traditional and contemporary fashion in Pakistan.
             </p>
