@@ -22,6 +22,7 @@ const FeaturedProducts = () => {
           .from('products')
           .select('id, name, price, image_url, category, created_at, is_featured, slug, is_new')
           .eq('is_featured', true)
+          .eq('is_active', true)
           .order('created_at', { ascending: false })
           .limit(6);
 

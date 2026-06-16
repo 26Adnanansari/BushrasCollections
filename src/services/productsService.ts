@@ -35,6 +35,7 @@ export const productsService = {
     let query = supabase
       .from('products')
       .select('id, name, price, category, images, image_url, is_featured, created_at', { count: 'exact' })
+      .eq('is_active', true)
       .range(start, end)
       .order('created_at', { ascending: false });
 
@@ -80,6 +81,7 @@ export const productsService = {
       .from('products')
       .select('id, name, price, category, images, image_url, created_at')
       .eq('is_featured', true)
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(limit);
 

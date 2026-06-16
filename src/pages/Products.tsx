@@ -40,7 +40,8 @@ const Products = () => {
     try {
       let query = supabase
         .from('products')
-        .select('*, slug, reviews(rating)');
+        .select('*, slug, reviews(rating)')
+        .eq('is_active', true);
 
       if (searchQuery) {
         // Smart Full-Text Search: matches name, description, category, fabric_type, AND hidden_keywords

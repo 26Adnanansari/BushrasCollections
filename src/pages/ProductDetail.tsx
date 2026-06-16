@@ -90,6 +90,7 @@ const ProductDetail = () => {
       } else {
         query = query.eq('slug', slug);
       }
+      query = query.eq('is_active', true);
       const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data;
